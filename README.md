@@ -7,7 +7,7 @@ spreadsheets, and notes into a searchable, validated, AI-ready litigation corpus
 
 [![Stonewall Home](https://img.shields.io/badge/Home-stnwl.ai-c96b3c?style=for-the-badge)](https://www.stnwl.ai/)
 [![Organization](https://img.shields.io/badge/GitHub-stnwlai-111827?style=for-the-badge&logo=github)](https://github.com/stnwlai)
-[![Verify](https://img.shields.io/badge/CI-verify.yml-2088ff?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/stnwlai/stnwl.ai/actions/workflows/verify.yml)
+[![Verify](https://github.com/stnwlai/stnwl.ai/actions/workflows/verify.yml/badge.svg)](https://github.com/stnwlai/stnwl.ai/actions/workflows/verify.yml)
 [![Python](https://img.shields.io/badge/Python-3.12-3776ab?style=flat-square)](#stack)
 [![Node](https://img.shields.io/badge/Node.js-22-5fa04e?style=flat-square)](#stack)
 [![Notion API](https://img.shields.io/badge/Notion-API-000000?style=flat-square)](#stack)
@@ -71,9 +71,10 @@ Headline metrics bind to [`docs/site-data.json`](docs/site-data.json) — see th
 
 ## Product surfaces
 
-- **[Stonewall home](https://www.stnwl.ai/)** — the canonical public product narrative, live.
+- **[Stonewall home](https://www.stnwl.ai/)** — the live product narrative.
+- **[Showcase exhibit](https://stnwlai.github.io/stnwl.ai/)** — this repository's deployed Pages front door.
 - **[Official brief](docs/overview/official-brief.md)** — the product thesis in long form.
-- **[Operator portal demo](docs/portal/)** — the static command-cockpit exhibit with JSON data snapshots.
+- **[Operator portal demo](https://stnwlai.github.io/stnwl.ai/portal/)** — the static command-cockpit exhibit with JSON data snapshots.
 - **[Architecture](docs/ARCHITECTURE.md)** — the engineering-grade walkthrough of every layer.
 - **[Reference corpus](hoss-stonewall/sample_corpus/)** — a deterministic, generator-built corpus that exercises ingest, classification, and verification end to end.
 
@@ -153,7 +154,7 @@ running anything that talks to Notion or OneDrive.
 ├── tests/                    # Node + Python verification suites
 ├── archive/                  # durable narrative edition of the showcase
 ├── .github/workflows/        # CI/CD pipelines
-└── .env.example              # every required environment variable, documented
+└── .env.example              # required environment variables
 ```
 
 ---
@@ -161,7 +162,7 @@ running anything that talks to Notion or OneDrive.
 ## Security posture
 
 - Credentials are never committed. API tokens, database IDs, and file paths load
-  from environment variables; `.env.example` documents every knob.
+  from environment variables documented in `.env.example`.
 - The verification workflow runs the full test suite, voice guard, consistency
   check, and hygiene sweep on every push.
 - Sync operations are idempotent and rate-limit aware by design.

@@ -131,7 +131,7 @@ function extractCaseNumber(text) {
 
 function extractClaimNumber(text) {
   const m = text.match(/(?:cl\s*#|claim\s*(?:no|number|#)[.:]*\s*)([A-Z]{1,3}\d[\d-]+)/i);
-  return m ? m[1] || m[0] : null;
+  return m ? m[1] : null;
 }
 
 async function run() {

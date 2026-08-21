@@ -626,7 +626,7 @@ def build_case_keywords(name: str, plaintiff: str, carrier_driver: str, case_tag
     if rhs:
         for part in rhs.split("&"):
             for token in tokenize(part):
-                if token not in {"inc", "llc", "co", "corp", "company", "logistics", "transport", "trucking"}:
+                if token not in {"inc", "llc", "corp", "company", "logistics", "transport", "trucking"}:
                     keywords.add(token)
     return {token for token in keywords if len(token) > 2}
 

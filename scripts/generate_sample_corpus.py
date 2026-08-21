@@ -14,6 +14,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1] / "hoss-stonewall" / "sample_corpus"
 
+CASE_COUNT = 12
+
 PLAINTIFFS = [
     "Smith", "Jones", "Doe", "Roe", "Brown", "Davis", "Wilson", "Taylor",
     "Anderson", "Thomas", "Jackson", "White", "Harris", "Martin", "Thompson",
@@ -37,16 +39,16 @@ def matter_id(idx: int) -> str:
 
 
 def case_matter(idx: int) -> str:
-    """Caption of case matter M{idx:04d} — the same derivation make_case uses."""
+    """Caption of case matter M{idx:04d}."""
     plaintiff = PLAINTIFFS[idx % len(PLAINTIFFS)]
     defendant = DEFENDANTS[(idx * 3) % len(DEFENDANTS)]
     return f"{plaintiff} v. {defendant}"
 
 
-def linked_case_index(idx: int, case_count: int = 12) -> int:
+def linked_case_index(idx: int) -> int:
     """Cycle non-case artifacts through the case matters so every artifact
-    references a matter that actually exists in the corpus."""
-    return ((idx - 1) % case_count) + 1
+    references a matter that exists in the corpus."""
+    return (idx - 1) % CASE_COUNT + 1
 
 
 def write(path: Path, content: str) -> None:
@@ -57,10 +59,8 @@ def write(path: Path, content: str) -> None:
 
 
 def make_case(idx: int) -> None:
-    plaintiff = PLAINTIFFS[idx % len(PLAINTIFFS)]
-    defendant = DEFENDANTS[(idx * 3) % len(DEFENDANTS)]
     mid = matter_id(idx)
-    name = f"{plaintiff} v. {defendant}"
+    name = case_matter(idx)
     body = f"""---
 id: {mid}
 type: case
@@ -316,7 +316,7 @@ Statement {bid}.
 
 def main() -> None:
     counts = {
-        "case": 12,
+        "case": CASE_COUNT,
         "deposition": 10,
         "transcript": 8,
         "email": 14,

@@ -14,7 +14,7 @@ Start with [Quarterback](../../archive/stonewall-showcase/quarterback/README.md)
 
 ## Companion surfaces
 
-- Pages exhibit: [`docs/index.html`](../index.html) — the deployed showcase front door
-- Official brief: [`docs/official-brief.html`](../official-brief.html)
-- Portal demo: [`docs/portal/`](../portal/index.html)
+- Pages exhibit: https://stnwlai.github.io/stnwl.ai/
+- Official brief: https://stnwlai.github.io/stnwl.ai/official-brief.html
+- Portal demo: https://stnwlai.github.io/stnwl.ai/portal/
 - Stonewall home: https://www.stnwl.ai/
