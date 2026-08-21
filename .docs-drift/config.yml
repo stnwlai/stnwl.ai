@@ -1,0 +1,26 @@
+# docs-drift-watcher configuration
+#
+# Tiny key:value / key:[a,b,c] file consumed by scripts/docs_drift_watcher.py.
+# Keep it simple — no nested structures, no anchors. The script ships
+# sensible defaults; this file just lets you tune them in-repo.
+
+# Which files in docs/ count as documentation.
+docs_globs: [**/*.md, **/*.html, **/*.mdx]
+
+# Which files in merged PRs the scanner reads as "API surface."
+code_extensions: [.py, .mjs, .js, .ts, .tsx, .jsx]
+
+# Symbols too generic to be useful drift signals — ignored on match.
+ignore_symbols: [self, cls, main, test, setUp, tearDown, render, create, delete, get, set, list, post, put, update, value, items, data, render_report, render_banner]
+
+# Below this length (and not a route), symbols are treated as noise.
+min_symbol_length: 5
+
+# Subtrees inside docs/ that are themselves machine-generated — skip them.
+ignore_doc_paths: [docs/_drift/, docs/portal/data/]
+
+# Cap per run so a backlog of merges does not blow the API budget.
+max_prs_per_run: 50
+
+# The base branch we treat as "production docs."
+base_branch: main

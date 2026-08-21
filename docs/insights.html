@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stonewall Workflow Notes</title>
+  <meta name="description" content="Workflow notes for the Stonewall legal intelligence platform.">
+  <meta property="og:title" content="Stonewall Workflow Notes">
+  <meta property="og:description" content="Workflow notes for the Stonewall legal intelligence platform.">
+  <meta property="og:type" content="article">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0d0b;
+      --surface: rgba(255,248,240,0.04);
+      --line: rgba(255,239,225,0.08);
+      --text: #f6eee6;
+      --muted: #b29e8e;
+      --accent: #cf7b47;
+      --max: 980px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Source Sans 3", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 16% 0%, rgba(207,123,71,0.16), transparent 24%),
+        linear-gradient(180deg, #15110f 0%, var(--bg) 54%, #120e0b 100%);
+    }
+    .shell {
+      width: min(var(--max), calc(100% - 28px));
+      margin: 0 auto;
+      padding: 26px 0 42px;
+    }
+    a { color: inherit; }
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+    .nav a {
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .hero,
+    .section {
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: var(--surface);
+      padding: 24px;
+    }
+    .section + .section { margin-top: 18px; }
+    .eyebrow {
+      margin: 0;
+      color: var(--accent);
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    h1, h2 {
+      margin: 12px 0 0;
+      font-family: "Newsreader", serif;
+      letter-spacing: -0.03em;
+      line-height: 0.98;
+    }
+    h1 { font-size: clamp(36px, 6vw, 72px); }
+    h2 { font-size: clamp(26px, 4vw, 42px); }
+    @media (max-width: 560px) {
+      .shell { padding: 18px 0 32px; }
+      p { font-size: 16px; }
+      .hero, .section { padding: 18px; border-radius: 22px; }
+      .nav a { padding: 6px 10px; font-size: 11px; }
+    }
+    p {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.65;
+    }
+    pre {
+      margin: 16px 0 0;
+      padding: 16px 18px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(8,6,5,0.5);
+      overflow-x: auto;
+      color: #f8e7d8;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <nav class="nav" aria-label="Workflow notes navigation">
+      <a href="showcase.html">Showcase</a>
+      <a href="official-brief.html">Official Brief</a>
+      <a href="portal/">Portal Demo</a>
+      <a href="https://www.stnwl.ai">stnwl.ai</a>
+      <a href="https://github.com/stnwlai/stnwl.ai">GitHub</a>
+    </nav>
+
+    <section class="hero">
+      <p class="eyebrow">Workflow Notes</p>
+      <h1>What makes Stonewall feel operational instead of theoretical.</h1>
+      <p>
+        The public story gets interesting when the platform stops sounding like document AI and starts sounding like a working control plane. The point is not that files can be searched. The point is that searching, staging, synchronizing, and validating those files changes what a lawyer can do in the middle of a real workday.
+      </p>
+    </section>
+
+    <section class="section">
+      <p class="eyebrow">01</p>
+      <h2>Notion is the live operator layer.</h2>
+      <p>
+        Stonewall splits responsibilities cleanly. The repository keeps the durable archive, the audit trail, and the search depth. Notion becomes the place where matter posture is visible fast: today’s runway, archive links, upcoming pressure points, and the state of current work. That is commercially legible because the operator does not want a file system in the morning. The operator wants a control board.
+      </p>
+      <pre><code>repo = durable truth
+notion = live command surface
+public docs = external proof of system quality</code></pre>
+    </section>
+
+    <section class="section">
+      <p class="eyebrow">02</p>
+      <h2>DataGavel readiness is a workflow story, not an integration brag.</h2>
+      <p>
+        The valuable move is not merely that the system can connect to report software. The valuable move is that chronology, treatment trail, and damages notes can already be assembled in a clean packet before the specialized report workflow begins. That means the handoff starts from order instead of reconstruction.
+      </p>
+      <pre><code>records pulled
+-> chronology checked
+-> treatment ledger aligned
+-> damages notes staged
+-> report packet ready</code></pre>
+    </section>
+
+    <section class="section">
+      <p class="eyebrow">03</p>
+      <h2>Live deposition tailoring is where the archive proves it is alive.</h2>
+      <p>
+        A static repository is useful. A repository that can change the next section of questioning while the witness is still in the room is a different category of system. Stonewall’s indexed corpus makes prior statements, chronology gaps, and issue clusters retrievable quickly enough to support live outline tightening, which is exactly the kind of operational leverage that makes a platform feel indispensable instead of merely impressive.
+      </p>
+      <pre><code>python scripts/stonewall.py find "corporate representative"
+python scripts/stonewall.py timeline --start 2025-02-01 --end 2025-02-28
+python scripts/stonewall.py show A1104</code></pre>
+    </section>
+  </main>
+</body>
+</html>

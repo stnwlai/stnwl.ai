@@ -1,0 +1,7 @@
+version: 1
+display_name: Document Intelligence Agent
+short_description: Legal document classification, case timeline construction, and corpus synthesis for law firm matter management.
+default_prompt: >-
+  Use the Document Intelligence Agent to analyze legal documents, classify document types,
+  extract key dates and parties, identify case relations, and synthesize matter summaries
+  from the document corpus.

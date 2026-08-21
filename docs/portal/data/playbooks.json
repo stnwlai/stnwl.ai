@@ -1,0 +1,114 @@
+{
+  "modules": [
+    {
+      "title": "Intake Orchestration",
+      "layer": "ingestion",
+      "summary": "Source roots, glob filters, and extension rules produce normalized sidecars and deterministic manifest writes.",
+      "signal": "root + glob + limit controls"
+    },
+    {
+      "title": "Email De-duplication Engine",
+      "layer": "communications",
+      "summary": "Overlapping exports are merged by signature, preserving strongest date confidence and removing redundant traffic.",
+      "signal": "cross-export signature matching"
+    },
+    {
+      "title": "Sync Payload Planner",
+      "layer": "notion operations",
+      "summary": "Before live writes, operations can emit explicit create/update payload plans for review and replay safety.",
+      "signal": "JSONL dry-run payload mode"
+    },
+    {
+      "title": "Override Governance",
+      "layer": "operator control",
+      "summary": "Manual case-link directives capture mode and rationale while preserving auditability for reprocessing.",
+      "signal": "link/no-case with reason stamps"
+    },
+    {
+      "title": "Consistency Sweep",
+      "layer": "quality control",
+      "summary": "Repo sweep identifies missing manifest paths, uncataloged canonical files, and sidecar coverage gaps.",
+      "signal": "blocking/non-blocking checks"
+    },
+    {
+      "title": "Daily Tactical Briefing",
+      "layer": "daily operations",
+      "summary": "today/case command paths convert raw corpus state into immediate operator runway and next actions.",
+      "signal": "daily + matter CLI brief modes"
+    },
+    {
+      "title": "Brain Skill v12.1",
+      "layer": "ai recall",
+      "summary": "Versioned recall routing aims Claude at canonical codex surfaces first, with read-before-assert discipline.",
+      "signal": "v12.1 codex + frozen lineage"
+    },
+    {
+      "title": "Governance + Audit Gate",
+      "layer": "repo regulation",
+      "summary": "Pre-commit hooks plus PR communication standard force a uniform audit trail across every change.",
+      "signal": "PR_CHECKLIST_SUMMARY block"
+    },
+    {
+      "title": "Notion Drift Report",
+      "layer": "operator control",
+      "summary": "Read-only Legal Matters audit surfaces drift between repo and Notion with no Notion writes.",
+      "signal": "markdown + JSON sidecar"
+    },
+    {
+      "title": "Watchlist Digest",
+      "layer": "daily operations",
+      "summary": "Declarative watchlist tracks the names, aliases, patterns, and cases the operator wants to keep warm.",
+      "signal": "tier + since + oneline modes"
+    },
+    {
+      "title": "Cloud Repo Repair",
+      "layer": "reliability",
+      "summary": "Deterministic cloud runs snapshot, refresh KPIs, run consistency checks, and bundle a handoff report.",
+      "signal": "branch-first + clean worktree"
+    }
+  ],
+  "pipeline": [
+    "Intake source files from controlled roots",
+    "Normalize documents and generate sidecars",
+    "Map artifacts to matter + pattern surfaces",
+    "Run consistency and quality checks",
+    "Stage operator payloads and runway boards",
+    "Publish static surfaces for review"
+  ],
+  "qc_checks": [
+    {
+      "name": "Manifest-path integrity",
+      "description": "Every tracked row resolves to a valid repo-relative source path."
+    },
+    {
+      "name": "Sidecar coverage",
+      "description": "Canonical PDFs and text assets provide normalized Markdown derivatives."
+    },
+    {
+      "name": "Duplicate-family control",
+      "description": "Variant families are clustered so duplicates are visible without collapsing canonical truth."
+    },
+    {
+      "name": "Payload validation",
+      "description": "Sync plans can be inspected before any external write is attempted."
+    }
+  ],
+  "readiness_lanes": [
+    {
+      "name": "Deposition prep lane",
+      "description": "Witness statements, chronology gaps, and outline anchors are surfaced in one pass."
+    },
+    {
+      "name": "Mediation packet lane",
+      "description": "Records, treatment, and damages notes stage into packet-ready structure."
+    },
+    {
+      "name": "Deadline runway lane",
+      "description": "Events are converted into urgency bands for portfolio triage."
+    },
+    {
+      "name": "Reporting lane",
+      "description": "Operational summaries become publishable artifacts on the showcase site."
+    }
+  ]
+}

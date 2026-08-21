@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings — Stonewall Portal</title>
+  <meta name="description" content="Operator settings for the Stonewall portal: profile, integrations, pipeline preferences, and notifications.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
+  <style>
+    /* Shared portal tokens and baseline styles come from ./style.css.
+       Keep only settings-specific additions in this inline block. */
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Source Sans 3", sans-serif;
+      color: var(--text);
+      line-height: 1.6;
+      background:
+        radial-gradient(circle at 12% 0%, rgba(207,125,78,0.14), transparent 24%),
+        linear-gradient(180deg, #17120f 0%, var(--bg) 48%, #140f0c 100%);
+      min-height: 100vh;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Layout ── */
+    .shell {
+      width: min(var(--max), calc(100% - 28px));
+      margin: 0 auto;
+      padding: 22px 0 48px;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 18px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+    }
+    .brand {
+      display: flex;
+      flex-direction: column;
+    }
+    .brand strong,
+    h1, h2, h3 {
+      font-family: "Newsreader", serif;
+      letter-spacing: -0.03em;
+    }
+    .brand strong { font-size: 24px; line-height: 1; }
+    .brand span { font-size: 14px; color: var(--muted); }
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .nav a {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+    .nav a:hover { color: var(--text); border-color: rgba(255,240,228,0.18); }
+    .nav a.active {
+      color: var(--accent);
+      border-color: var(--line-strong);
+      background: var(--accent-soft);
+    }
+
+    /* ── Page header ── */
+    .page-header {
+      margin-top: 22px;
+      margin-bottom: 28px;
+    }
+    .eyebrow {
+      margin: 0;
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .page-header h1 {
+      margin: 10px 0 8px;
+      font-size: clamp(36px, 5vw, 54px);
+      line-height: 1;
+    }
+    .page-header p {
+      margin: 0;
+      font-size: 17px;
+      color: var(--muted);
+      max-width: 60ch;
+    }
+
+    /* ── Settings layout ── */
+    .settings-layout {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* ── Sidebar nav ── */
+    .settings-nav {
+      position: sticky;
+      top: 18px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      padding: 6px;
+    }
+    .settings-nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 14px;
+      border-radius: 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      transition: color 0.15s, background 0.15s;
+    }
+    .settings-nav a:hover { color: var(--text); background: var(--panel-hover); }
+    .settings-nav a.active {
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .settings-nav .icon {
+      width: 18px;
+      height: 18px;
+      opacity: 0.7;
+      flex-shrink: 0;
+    }
+    .settings-nav a.active .icon { opacity: 1; }
+    .nav-divider {
+      height: 1px;
+      background: var(--line);
+      margin: 6px 8px;
+    }
+
+    /* ── Settings sections ── */
+    .settings-content {
+      display: grid;
+      gap: 20px;
+    }
+    .settings-section {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      padding: 22px 24px;
+    }
+    .settings-section h2 {
+      margin: 0 0 4px;
+      font-size: 22px;
+    }
+    .section-desc {
+      margin: 0 0 22px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    /* ── Form rows ── */
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .field-grid.single { grid-template-columns: 1fr; }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .field input,
+    .field select,
+    .field textarea {
+      padding: 10px 14px;
+      background: rgba(255,248,240,0.05);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: "Source Sans 3", sans-serif;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.15s;
+      appearance: none;
+    }
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: rgba(207,125,78,0.4);
+    }
+    .field select option { background: #1e160f; }
+    .field textarea { resize: vertical; min-height: 80px; }
+    .field-hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    /* ── Dividers between field groups ── */
+    .field-sep {
+      height: 1px;
+      background: var(--line);
+      margin: 4px 0 8px;
+      grid-column: 1 / -1;
+    }
+
+    /* ── Integration status cards ── */
+    .integration-list {
+      display: grid;
+      gap: 12px;
+    }
+    .integration-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 14px;
+      align-items: center;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,248,240,0.02);
+      transition: border-color 0.15s;
+    }
+    .integration-row:hover { border-color: rgba(255,240,228,0.15); }
+    .integration-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(207,125,78,0.08);
+      display: grid;
+      place-items: center;
+      font-family: "Newsreader", serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+    .integration-body strong {
+      display: block;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .integration-body span {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .status-badge::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .status-badge.connected {
+      background: var(--green-soft);
+      color: var(--green);
+      border: 1px solid rgba(110,210,140,0.2);
+    }
+    .status-badge.connected::before { background: var(--green); }
+    .status-badge.configured {
+      background: var(--yellow-soft);
+      color: var(--yellow);
+      border: 1px solid rgba(240,190,80,0.2);
+    }
+    .status-badge.configured::before { background: var(--yellow); }
+    .status-badge.disconnected {
+      background: var(--red-soft);
+      color: var(--red);
+      border: 1px solid rgba(230,100,80,0.2);
+    }
+    .status-badge.disconnected::before { background: var(--red); }
+
+    /* ── Toggle rows ── */
+    .toggle-list { display: grid; gap: 2px; }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 0;
+      border-top: 1px solid var(--line);
+    }
+    .toggle-row:first-child { border-top: 0; padding-top: 0; }
+    .toggle-label strong {
+      display: block;
+      font-size: 15px;
+    }
+    .toggle-label span {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: rgba(255,248,240,0.1);
+      border: 1px solid var(--line);
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .toggle-track::after {
+      content: "";
+      position: absolute;
+      left: 3px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: left 0.2s, background 0.2s;
+    }
+    .toggle input:checked + .toggle-track {
+      background: var(--accent-soft);
+      border-color: rgba(207,125,78,0.4);
+    }
+    .toggle input:checked + .toggle-track::after {
+      left: calc(100% - 21px);
+      background: var(--accent);
+    }
+    .toggle input:focus + .toggle-track {
+      outline: 2px solid rgba(207,125,78,0.5);
+      outline-offset: 2px;
+    }
+
+    /* ── Threshold sliders ── */
+    .slider-list { display: grid; gap: 18px; }
+    .slider-row { display: grid; gap: 6px; }
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .slider-header strong { font-size: 15px; }
+    .slider-val {
+      font-size: 14px;
+      color: var(--accent);
+      font-weight: 700;
+      min-width: 52px;
+      text-align: right;
+    }
+    .slider-desc { font-size: 13px; color: var(--muted); margin: 0; }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent) var(--pct, 40%), rgba(255,248,240,0.12) var(--pct, 40%));
+      cursor: pointer;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid #120f0d;
+      box-shadow: 0 0 0 3px rgba(207,125,78,0.22);
+      cursor: pointer;
+      transition: box-shadow 0.15s;
+    }
+    input[type="range"]:focus::-webkit-slider-thumb {
+      box-shadow: 0 0 0 5px rgba(207,125,78,0.32);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid #120f0d;
+      cursor: pointer;
+    }
+
+    /* ── Danger zone ── */
+    .danger-zone {
+      border-color: rgba(230,100,80,0.2);
+    }
+    .danger-zone h2 { color: rgba(230,100,80,0.9); }
+    .danger-list { display: grid; gap: 12px; }
+    .danger-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 0;
+      border-top: 1px solid var(--line);
+    }
+    .danger-row:first-child { border-top: 0; padding-top: 0; }
+    .danger-row strong { display: block; font-size: 15px; }
+    .danger-row span { font-size: 13px; color: var(--muted); }
+    .btn-danger {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(230,100,80,0.3);
+      background: rgba(230,100,80,0.08);
+      color: rgba(230,100,80,0.9);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      font-family: "Source Sans 3", sans-serif;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .btn-danger:hover {
+      background: rgba(230,100,80,0.14);
+      border-color: rgba(230,100,80,0.5);
+    }
+
+    /* ── Action bar ── */
+    .action-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+      margin-top: 4px;
+    }
+    .btn-secondary {
+      padding: 10px 20px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--muted);
+      font-family: "Source Sans 3", sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .btn-secondary:hover { color: var(--text); border-color: rgba(255,240,228,0.2); }
+    .btn-primary {
+      padding: 10px 20px;
+      border-radius: 999px;
+      border: 1px solid rgba(207,125,78,0.4);
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-family: "Source Sans 3", sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .btn-primary:hover {
+      background: rgba(207,125,78,0.2);
+      border-color: rgba(207,125,78,0.6);
+    }
+
+    /* ── Save confirmation toast ── */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      padding: 14px 20px;
+      border-radius: 16px;
+      border: 1px solid rgba(110,210,140,0.3);
+      background: rgba(18,15,13,0.92);
+      backdrop-filter: blur(12px);
+      color: var(--green);
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.22s ease, transform 0.22s ease;
+      pointer-events: none;
+      z-index: 100;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .toast::before {
+      content: "✓";
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--green-soft);
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .footer-note {
+      margin-top: 22px;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    @media (max-width: 900px) {
+      .settings-layout { grid-template-columns: 1fr; }
+      .settings-nav {
+        position: static;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        padding: 8px;
+        border-radius: 16px;
+      }
+      .settings-nav a { font-size: 13px; padding: 8px 12px; }
+      .nav-divider { display: none; }
+    }
+    @media (max-width: 640px) {
+      .field-grid { grid-template-columns: 1fr; }
+      .topbar { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="../">
+        <strong>Stonewall Portal</strong>
+        <span>Static operator demo</span>
+      </a>
+      <nav class="nav" aria-label="Portal navigation">
+        <a href="../">Showcase</a>
+        <a href="../official-brief.html">Official Brief</a>
+        <a href="../insights.html">Workflow Notes</a>
+        <a href="settings.html" class="active">Settings</a>
+      </nav>
+    </header>
+
+    <div class="page-header">
+      <p class="eyebrow">Operator Configuration</p>
+      <h1>Settings</h1>
+      <p>Manage your profile, integration credentials, pipeline defaults, and notification thresholds.</p>
+    </div>
+
+    <div class="settings-layout">
+
+      <!-- Sidebar nav -->
+      <nav class="settings-nav" aria-label="Settings sections">
+        <a href="#profile" class="active">
+          <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="7" r="3.5"/><path d="M3 17c0-3.3 3.1-6 7-6s7 2.7 7 6"/></svg>
+          Profile
+        </a>
+        <a href="#integrations">
+          <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="2" width="7" height="7" rx="2"/><rect x="11" y="2" width="7" height="7" rx="2"/><rect x="2" y="11" width="7" height="7" rx="2"/><rect x="11" y="11" width="7" height="7" rx="2"/></svg>
+          Integrations
+        </a>
+        <a href="#pipeline">
+          <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 10h12M4 5h12M4 15h12"/></svg>
+          Pipeline
+        </a>
+        <div class="nav-divider" role="separator"></div>
+        <a href="#notifications">
+          <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M10 2a6 6 0 0 1 6 6c0 5 2 6 2 6H2s2-1 2-6a6 6 0 0 1 6-6z"/><path d="M8.5 17.5a1.5 1.5 0 0 0 3 0"/></svg>
+          Notifications
+        </a>
+        <a href="#display">
+          <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="3" width="16" height="12" rx="2"/><path d="M7 18h6M10 15v3"/></svg>
+          Display
+        </a>
+        <div class="nav-divider" role="separator"></div>
+        <a href="#danger">
+          <svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M10 2L2 17h16L10 2z"/><path d="M10 8v4M10 14v1"/></svg>
+          Danger Zone
+        </a>
+      </nav>
+
+      <!-- Settings panels -->
+      <div class="settings-content">
+
+        <!-- Profile -->
+        <section class="settings-section" id="profile" aria-labelledby="profile-heading">
+          <h2 id="profile-heading">Operator profile</h2>
+          <p class="section-desc">Your name, role, and firm details are used in generated reports and briefs.</p>
+          <form id="profile-form" novalidate>
+            <div class="field-grid">
+              <div class="field">
+                <label for="first-name">First name</label>
+                <input id="first-name" type="text" value="" placeholder="First name" autocomplete="given-name">
+              </div>
+              <div class="field">
+                <label for="last-name">Last name</label>
+                <input id="last-name" type="text" value="" placeholder="Last name" autocomplete="family-name">
+              </div>
+              <div class="field">
+                <label for="role">Role</label>
+                <select id="role">
+                  <option selected>Lead Paralegal</option>
+                  <option>Litigation Support Specialist</option>
+                  <option>Associate Attorney</option>
+                  <option>Managing Attorney</option>
+                  <option>Case Manager</option>
+                  <option>Administrator</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="firm-name">Firm name</label>
+                <input id="firm-name" type="text" value="" placeholder="Firm name" autocomplete="organization">
+              </div>
+              <div class="field field-grid single">
+                <label for="timezone">Timezone</label>
+                <select id="timezone">
+                  <option>America/Denver (MST/MDT)</option>
+                  <option>America/Los_Angeles (PST/PDT)</option>
+                  <option>America/Chicago (CST/CDT)</option>
+                  <option selected>America/New_York (EST/EDT)</option>
+                  <option>UTC</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="brief-format">Default brief format</label>
+                <select id="brief-format">
+                  <option selected>Tactical (short-form)</option>
+                  <option>Full narrative</option>
+                  <option>Checklist only</option>
+                </select>
+              </div>
+            </div>
+            <div class="action-bar">
+              <button type="button" class="btn-secondary" onclick="resetSection('profile-form')">Discard</button>
+              <button type="button" class="btn-primary" onclick="showToast()">Save profile</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Integrations -->
+        <section class="settings-section" id="integrations" aria-labelledby="integrations-heading">
+          <h2 id="integrations-heading">Integration status</h2>
+          <p class="section-desc">Live connection status for each external system. Credentials are loaded from environment variables — never stored here.</p>
+          <div class="integration-list">
+            <div class="integration-row">
+              <div class="integration-icon" aria-hidden="true">N</div>
+              <div class="integration-body">
+                <strong>Notion API</strong>
+                <span>Legal Matters, All Email, Document Archive databases</span>
+              </div>
+              <span class="status-badge connected" role="status">Connected</span>
+            </div>
+            <div class="integration-row">
+              <div class="integration-icon" aria-hidden="true">OD</div>
+              <div class="integration-body">
+                <strong>OneDrive — Firm Root</strong>
+                <span>Case documents, evidence, PDF and DOCX source files</span>
+              </div>
+              <span class="status-badge connected" role="status">Connected</span>
+            </div>
+            <div class="integration-row">
+              <div class="integration-icon" aria-hidden="true">OD</div>
+              <div class="integration-body">
+                <strong>OneDrive — Personal Root</strong>
+                <span>Draft files, working documents, personal workspace</span>
+              </div>
+              <span class="status-badge configured" role="status">Configured</span>
+            </div>
+            <div class="integration-row">
+              <div class="integration-icon" aria-hidden="true">AI</div>
+              <div class="integration-body">
+                <strong>Anthropic Claude API</strong>
+                <span>Document classification, analysis, and skill modules</span>
+              </div>
+              <span class="status-badge connected" role="status">Connected</span>
+            </div>
+            <div class="integration-row">
+              <div class="integration-icon" aria-hidden="true">AI</div>
+              <div class="integration-body">
+                <strong>OpenAI API</strong>
+                <span>GPT-based property fill and tagging tasks</span>
+              </div>
+              <span class="status-badge connected" role="status">Connected</span>
+            </div>
+          </div>
+          <p style="margin: 16px 0 0; font-size: 13px; color: var(--muted);">
+            To update credentials, edit your <code style="font-family: monospace; color: var(--accent);">.env</code> file and restart the pipeline. See <code style="font-family: monospace; color: var(--accent);">.env.example</code> for required variables.
+          </p>
+        </section>
+
+        <!-- Pipeline Preferences -->
+        <section class="settings-section" id="pipeline" aria-labelledby="pipeline-heading">
+          <h2 id="pipeline-heading">Pipeline preferences</h2>
+          <p class="section-desc">Default runtime parameters for ingestion, sync, and batch processing jobs.</p>
+          <form id="pipeline-form" novalidate>
+            <div class="field-grid">
+              <div class="field">
+                <label for="default-root">Default OneDrive root</label>
+                <select id="default-root">
+                  <option selected>firm</option>
+                  <option>personal</option>
+                </select>
+                <p class="field-hint">Used when <code>--root</code> is not specified in ingest commands.</p>
+              </div>
+              <div class="field">
+                <label for="ingest-limit">Default ingest limit</label>
+                <input id="ingest-limit" type="number" value="50" min="1" max="5000">
+                <p class="field-hint">Maximum documents processed per ingest run.</p>
+              </div>
+              <div class="field">
+                <label for="sync-workers">Notion sync workers</label>
+                <input id="sync-workers" type="number" value="4" min="1" max="16">
+                <p class="field-hint">Concurrent workers for <code>sync-notion</code> operations.</p>
+              </div>
+              <div class="field">
+                <label for="batch-size">Batch API chunk size</label>
+                <input id="batch-size" type="number" value="100" min="10" max="1000">
+                <p class="field-hint">Documents per chunk for Anthropic Batch API jobs.</p>
+              </div>
+              <div class="field field-grid single">
+                <label for="default-glob">Default file glob</label>
+                <input id="default-glob" type="text" value="*.pdf" placeholder="e.g. *.pdf, *.docx">
+                <p class="field-hint">File pattern used when <code>--glob</code> is not specified.</p>
+              </div>
+            </div>
+            <div class="field-grid" style="margin-top: 16px;">
+              <div class="field-sep"></div>
+              <div class="field">
+                <label for="log-level">Log verbosity</label>
+                <select id="log-level">
+                  <option>ERROR</option>
+                  <option>WARNING</option>
+                  <option selected>INFO</option>
+                  <option>DEBUG</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="retry-max">Max API retries</label>
+                <input id="retry-max" type="number" value="5" min="1" max="20">
+                <p class="field-hint">Retry ceiling for Notion API exponential backoff.</p>
+              </div>
+            </div>
+            <div class="action-bar">
+              <button type="button" class="btn-secondary" onclick="resetSection('pipeline-form')">Discard</button>
+              <button type="button" class="btn-primary" onclick="showToast()">Save preferences</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Notifications -->
+        <section class="settings-section" id="notifications" aria-labelledby="notifications-heading">
+          <h2 id="notifications-heading">Notifications</h2>
+          <p class="section-desc">Control which pipeline events and matter alerts surface in your daily brief and operator view.</p>
+
+          <div class="slider-list">
+            <div class="slider-row">
+              <div class="slider-header">
+                <strong>Deadline runway alert</strong>
+                <span class="slider-val" id="runway-val">14 days</span>
+              </div>
+              <p class="slider-desc">Matters inside this window are flagged as urgent in the operator view.</p>
+              <input type="range" id="runway" min="3" max="60" value="14" step="1"
+                style="--pct: 19%"
+                oninput="updateSlider(this, 'runway-val', v => v + ' days', 3, 60)">
+            </div>
+            <div class="slider-row">
+              <div class="slider-header">
+                <strong>QC alert sensitivity</strong>
+                <span class="slider-val" id="qc-val">Medium</span>
+              </div>
+              <p class="slider-desc">How aggressively the QC sweep flags inconsistencies in corpus alignment.</p>
+              <input type="range" id="qc-sensitivity" min="1" max="3" value="2" step="1"
+                style="--pct: 50%"
+                oninput="updateSlider(this, 'qc-val', v => ['Low','Medium','High'][v-1], 1, 3)">
+            </div>
+          </div>
+
+          <div class="toggle-list" style="margin-top: 22px;">
+            <div class="toggle-row">
+              <div class="toggle-label">
+                <strong>Pipeline failure alerts</strong>
+                <span>Notify when an ingestion or sync job exits with errors.</span>
+              </div>
+              <label class="toggle" aria-label="Pipeline failure alerts">
+                <input type="checkbox" checked>
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-label">
+                <strong>New matter detection</strong>
+                <span>Surface newly matched matters in the daily brief.</span>
+              </div>
+              <label class="toggle" aria-label="New matter detection">
+                <input type="checkbox" checked>
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-label">
+                <strong>Corpus growth summary</strong>
+                <span>Include document count and artifact delta in morning brief.</span>
+              </div>
+              <label class="toggle" aria-label="Corpus growth summary">
+                <input type="checkbox" checked>
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-label">
+                <strong>Duplicate detection warnings</strong>
+                <span>Flag when email consolidation finds high-confidence duplicates.</span>
+              </div>
+              <label class="toggle" aria-label="Duplicate detection warnings">
+                <input type="checkbox">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-label">
+                <strong>AI tagging confidence alerts</strong>
+                <span>Alert when classification confidence falls below threshold.</span>
+              </div>
+              <label class="toggle" aria-label="AI tagging confidence alerts">
+                <input type="checkbox">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+          </div>
+          <div class="action-bar">
+            <button type="button" class="btn-primary" onclick="showToast()">Save notifications</button>
+          </div>
+        </section>
+
+        <!-- Display -->
+        <section class="settings-section" id="display" aria-labelledby="display-heading">
+          <h2 id="display-heading">Display</h2>
+          <p class="section-desc">Adjust how the portal and operator views are presented.</p>
+          <div class="toggle-list">
+            <div class="toggle-row">
+              <div class="toggle-label">
+                <strong>Show matter posture chips</strong>
+                <span>Display status labels on the case board (e.g. "deposition prep").</span>
+              </div>
+              <label class="toggle" aria-label="Show matter posture chips">
+                <input type="checkbox" checked>
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-label">
+                <strong>Compact metric grid</strong>
+                <span>Use a denser layout for the headline stats row.</span>
+              </div>
+              <label class="toggle" aria-label="Compact metric grid">
+                <input type="checkbox">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-label">
+                <strong>Show script meta labels</strong>
+                <span>Display the script filename tags beneath pipeline stage descriptions.</span>
+              </div>
+              <label class="toggle" aria-label="Show script meta labels">
+                <input type="checkbox" checked>
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-label">
+                <strong>Animated transitions</strong>
+                <span>Enable subtle entrance animations on page load.</span>
+              </div>
+              <label class="toggle" aria-label="Animated transitions">
+                <input type="checkbox" checked>
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+          </div>
+          <div class="action-bar">
+            <button type="button" class="btn-primary" onclick="showToast()">Save display</button>
+          </div>
+        </section>
+
+        <!-- Danger Zone -->
+        <section class="settings-section danger-zone" id="danger" aria-labelledby="danger-heading">
+          <h2 id="danger-heading">Danger zone</h2>
+          <p class="section-desc">Irreversible operations. These actions affect your local case cache and index files.</p>
+          <div class="danger-list">
+            <div class="danger-row">
+              <div>
+                <strong>Clear local case cache</strong>
+                <span>Deletes the cached <code>cases.json</code> snapshot. Requires a fresh <code>refresh-cases</code> run before the next ingest.</span>
+              </div>
+              <button class="btn-danger" type="button" onclick="confirmDanger('Clear case cache?')">Clear cache</button>
+            </div>
+            <div class="danger-row">
+              <div>
+                <strong>Reset pipeline preferences</strong>
+                <span>Restores all pipeline settings to their factory defaults.</span>
+              </div>
+              <button class="btn-danger" type="button" onclick="confirmDanger('Reset all pipeline preferences to defaults?')">Reset defaults</button>
+            </div>
+            <div class="danger-row">
+              <div>
+                <strong>Clear local index</strong>
+                <span>Removes the local file index used by <code>verify_repo_consistency.py</code>. A full consistency run will rebuild it.</span>
+              </div>
+              <button class="btn-danger" type="button" onclick="confirmDanger('Clear the local index? This cannot be undone.')">Clear index</button>
+            </div>
+          </div>
+        </section>
+
+      </div><!-- /settings-content -->
+    </div><!-- /settings-layout -->
+
+    <p class="footer-note">Static product demo — changes on this page do not modify the main portal's persisted settings.</p>
+  </main>
+
+  <!-- Save toast -->
+  <div class="toast" id="save-toast" role="status" aria-live="polite">Settings saved</div>
+
+  <script>
+    // Highlight active sidebar link based on scroll position
+    const sections = document.querySelectorAll('.settings-section');
+    const sidebarLinks = document.querySelectorAll('.settings-nav a');
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          sidebarLinks.forEach(a => a.classList.remove('active'));
+          const active = document.querySelector(`.settings-nav a[href="#${entry.target.id}"]`);
+          if (active) active.classList.add('active');
+        }
+      });
+    }, { threshold: 0.4 });
+
+    sections.forEach(s => observer.observe(s));
+
+    // Toast
+    let toastTimer;
+    function showToast() {
+      const toast = document.getElementById('save-toast');
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
+    }
+
+    // Range slider label + gradient update
+    function updateSlider(el, labelId, fmt, min, max) {
+      const pct = ((el.value - min) / (max - min)) * 100;
+      el.style.setProperty('--pct', pct + '%');
+      document.getElementById(labelId).textContent = fmt(parseInt(el.value, 10));
+    }
+
+    // Danger zone confirmation
+    function confirmDanger(msg) {
+      if (window.confirm(msg + '\n\nThis is a static demo — no data will actually be deleted.')) {
+        showToast();
+      }
+    }
+
+    // Discard / reset (no-op in static demo)
+    function resetSection(formId) {
+      const form = document.getElementById(formId);
+      if (form) form.reset();
+    }
+  </script>
+</body>
+</html>

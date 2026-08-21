@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stonewall Official Brief</title>
+  <meta name="description" content="Printable official brief for the Stonewall legal intelligence platform.">
+  <meta property="og:title" content="Stonewall Official Brief">
+  <meta property="og:description" content="Printable official brief for the Stonewall legal intelligence platform.">
+  <meta property="og:type" content="article">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #f5efe8;
+      --ink: #1f1712;
+      --muted: #5e5046;
+      --line: rgba(31, 23, 18, 0.12);
+      --accent: #b86435;
+      --max: 920px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Source Sans 3", sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, #e9dfd5 0%, var(--paper) 30%, #efe9e1 100%);
+    }
+    .shell {
+      width: min(var(--max), calc(100% - 40px));
+      margin: 0 auto;
+      padding: 26px 0 60px;
+    }
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 24px;
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .topbar a {
+      color: inherit;
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+    }
+    .topbar a:hover { border-color: var(--accent); }
+    .page {
+      padding: 34px;
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      background: rgba(255,255,255,0.55);
+      box-shadow: 0 30px 90px rgba(0,0,0,0.10);
+    }
+    .eyebrow,
+    .meta {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    h1, h2 {
+      font-family: "Newsreader", serif;
+      letter-spacing: -0.03em;
+      line-height: 0.98;
+    }
+    h1 {
+      margin: 14px 0 0;
+      font-size: clamp(38px, 7vw, 88px);
+      max-width: 11ch;
+    }
+    h2 {
+      margin: 34px 0 0;
+      font-size: clamp(26px, 4vw, 42px);
+    }
+    @media (max-width: 560px) {
+      .shell { width: min(var(--max), calc(100% - 24px)); padding: 18px 0 36px; }
+      .page { padding: 22px; border-radius: 22px; }
+      p, li { font-size: 16px; line-height: 1.65; }
+      .quote { font-size: 16px; padding: 14px 16px; }
+    }
+    p, li {
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.74;
+    }
+    p { margin: 16px 0 0; }
+    ul { margin: 18px 0 0; padding-left: 20px; }
+    li + li { margin-top: 8px; }
+    .rule {
+      height: 1px;
+      margin-top: 24px;
+      background: var(--line);
+    }
+    .quote {
+      margin-top: 22px;
+      padding: 18px 20px;
+      border-left: 3px solid var(--accent);
+      background: rgba(184,100,53,0.06);
+      color: #46372d;
+      font-size: 19px;
+      line-height: 1.62;
+    }
+    .note {
+      margin-top: 28px;
+      font-size: 14px;
+    }
+    @media print {
+      body { background: white; }
+      .shell { width: 100%; padding: 0; }
+      .topbar { display: none; }
+      .page {
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <nav class="topbar" aria-label="Official brief navigation">
+      <a href="./">Showcase</a>
+      <a href="portal/">Portal Demo</a>
+      <a href="insights.html">Workflow Notes</a>
+      <a href="https://www.stnwl.ai">stnwl.ai</a>
+      <a href="https://github.com/stnwlai/stnwl.ai">GitHub</a>
+    </nav>
+
+    <article class="page">
+      <p class="eyebrow">Stonewall Official Brief</p>
+      <h1>Legal intelligence built as a control plane, not a dashboard costume.</h1>
+      <p class="meta">Print edition · GitHub Pages</p>
+      <div class="rule"></div>
+
+      <h2>Executive summary</h2>
+      <p>
+        Stonewall is a production-grade legal document intelligence platform built by a solo litigation attorney to organize, retrieve, validate, and publish a large litigation corpus without relying on a conventional database backend. The system demonstrates that a version-controlled flat-file archive can operate as a real intelligence layer when it is paired with disciplined indexing, repeatable ingestion, operator-facing synchronization, and verification gates.
+      </p>
+      <p>
+        The commercial appeal is not generic legal AI. The commercial appeal is that the archive becomes a working control plane: a place where today’s pressure points, report-prep readiness, witness-prep leverage, and portfolio posture can be surfaced quickly enough to matter during actual work.
+      </p>
+
+      <h2>Core product claim</h2>
+      <p>
+        Stonewall’s thesis is that legal operations do not need to begin with a heavyweight proprietary platform. They can begin with a rigorously structured corpus. Once every artifact is cataloged with dates, types, matter links, entity references, pattern references, and durable IDs, the same archive can serve five jobs at once: search layer, validation layer, operator layer, publishing layer, and AI retrieval layer.
+      </p>
+
+      <h2>What distinguishes the system</h2>
+      <ul>
+        <li>A flat-file manifest functions as a durable searchable database while remaining human-readable and Git-trackable.</li>
+        <li>A stdlib-only CLI presents stats, search, case, timeline, pattern, validation, and doctor workflows directly from the corpus.</li>
+        <li>A versioned AI brain uses source-routed recall rather than invisible memorization.</li>
+        <li>Automated ingestion turns PDFs, DOCX files, screenshots, and email exports into searchable sidecars and normalized metadata.</li>
+        <li>Verification gates make the system trustworthy by design instead of trustworthy by aspiration.</li>
+      </ul>
+
+      <h2>Tactical workflow layer</h2>
+      <p>
+        The platform becomes commercially legible when its workflow layer comes into view. Notion operates as the live command surface where deadlines, archive links, and matter posture become immediately legible. DataGavel-style report workflows become easier because chronology, treatment trail, and damages notes can already be staged in one packet before the specialist work begins. Live deposition outline tailoring becomes possible because prior statements, chronology gaps, and issue clusters are indexed deeply enough to change the next section of questioning while the witness is still in the room.
+      </p>
+
+      <div class="quote">
+        The difference between a smart archive and an indispensable platform is whether it changes the next decision, not merely whether it remembers the last one.
+      </div>
+
+      <h2>Commercial logic</h2>
+      <p>
+        Buyers do not need to be persuaded that documents exist. They need to be persuaded that the system reduces friction in expensive, recurring workflows. Stonewall’s strongest commercial claims are practical: daily dossier, deadline intelligence, report-packet readiness, witness-prep leverage, and durable institutional memory.
+      </p>
+
+      <h2>Publication stack</h2>
+      <p>
+        Stonewall publishes through coordinated surfaces. The canonical product narrative lives at stnwl.ai, while this repository’s Pages exhibit provides an immediate engineering showcase. The official brief is the print and PDF edition of the same thesis. Together they present one coherent argument in complementary tempos: canonical, immediate, and formal.
+      </p>
+
+      <p class="note">
+        This page is formatted as the printable edition of the Stonewall product thesis. For the markdown edition intended for long-form documentation, see <code>docs/overview/official-brief.md</code> in the repository.
+      </p>
+    </article>
+  </main>
+</body>
+</html>

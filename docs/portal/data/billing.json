@@ -1,0 +1,12 @@
+{
+  "default_hourly": 200,
+  "currency": "USD",
+  "line_items": [
+    { "matter": "M0001", "hours": 12.5, "phase": "Mediation packet" },
+    { "matter": "M0002", "hours": 8.0, "phase": "Deposition prep" },
+    { "matter": "M0005", "hours": 6.5, "phase": "Witness prep" },
+    { "matter": "M0006", "hours": 3.5, "phase": "Monitoring & reserves" },
+    { "matter": "M0008", "hours": 9.0, "phase": "Motion to compel" },
+    { "matter": "M0010", "hours": 5.0, "phase": "Demand package staging" }
+  ]
+}

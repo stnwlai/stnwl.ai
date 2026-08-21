@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Stonewall Private Prototype — Internal operational dashboard for pipeline monitoring, script management, and system health.">
+  <meta name="theme-color" content="#0b0f14">
+  <title>Stonewall — Private Prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to content</a>
+
+  <header class="topbar">
+    <div class="topbar__inner">
+      <a class="brand" href="#top" aria-label="Stonewall Prototype home">
+        <span class="brand__mark">SW</span>
+        <span class="brand__copy">
+          <strong>Stonewall</strong>
+          <span>Private Prototype</span>
+        </span>
+      </a>
+
+      <nav class="topnav" aria-label="Primary">
+        <a href="#top">Dashboard</a>
+        <a href="#pipeline">Pipeline</a>
+        <a href="#scripts">Scripts</a>
+        <a href="#skills">Skills</a>
+        <a href="#integrations">Integrations</a>
+        <a href="../">Public Showcase</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="content">
+    <!-- Dashboard Hero -->
+    <section class="hero" id="top">
+      <div class="hero__sigil" aria-hidden="true">SW</div>
+      <div class="wrap hero__grid">
+        <div class="hero__content">
+          <p class="eyebrow">Prototype</p>
+          <h1>Stonewall operational control plane.</h1>
+          <p class="lede">
+            Internal dashboard for the Stonewall platform. Pipeline monitoring, script orchestration,
+            AI skill modules, and system health — all wired to the live corpus infrastructure.
+          </p>
+
+          <div class="actions">
+            <a class="button" href="https://github.com/stnwlai/stnwl.ai">Repository</a>
+            <a class="secondary" href="../">Public Showcase</a>
+          </div>
+
+          <dl class="hero__facts" aria-label="System status">
+            <div class="fact fact--live">
+              <dt>Scripts</dt>
+              <dd>40+</dd>
+              <p>Automation scripts across 8 categories powering the pipeline.</p>
+            </div>
+            <div class="fact fact--live">
+              <dt>Test Coverage</dt>
+              <dd>7</dd>
+              <p>Test suites across Python unittest and Node ESM test runners.</p>
+            </div>
+            <div class="fact fact--live">
+              <dt>AI Skills</dt>
+              <dd>6</dd>
+              <p>Claude-powered skills for document intelligence and case analysis.</p>
+            </div>
+            <div class="fact fact--live">
+              <dt>Workflows</dt>
+              <dd>4</dd>
+              <p>GitHub Actions workflows for CI, deployment, and code review.</p>
+            </div>
+          </dl>
+        </div>
+
+        <aside class="hero__aside">
+          <p class="aside__label">Quick Commands</p>
+          <div class="cmd-list">
+            <div class="cmd">
+              <code>python scripts/tactical_brief.py today</code>
+              <span>Daily operating brief from the live corpus.</span>
+            </div>
+            <div class="cmd">
+              <code>uv run python scripts/ingest_onedrive.py refresh-cases</code>
+              <span>Refresh local case cache from Notion Legal Matters.</span>
+            </div>
+            <div class="cmd">
+              <code>uv run python scripts/ingest_onedrive.py ingest --root firm</code>
+              <span>Ingest documents from firm OneDrive root.</span>
+            </div>
+            <div class="cmd">
+              <code>node scripts/qc_sweep.mjs</code>
+              <span>Run QC cross-check against Notion and local index.</span>
+            </div>
+            <div class="cmd">
+              <code>python scripts/verify_repo_consistency.py</code>
+              <span>Validate catalog alignment and corpus integrity.</span>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Pipeline Architecture -->
+    <section class="section" id="pipeline">
+      <div class="wrap section__heading">
+        <h2>Pipeline architecture.</h2>
+        <p>
+          Six layers, strict sequencing. Source files arrive, the processing layer converts them
+          into structured text, Notion carries the relationships, AI fills the gaps, and QC closes the loop.
+        </p>
+      </div>
+
+      <div class="wrap stack" role="list" aria-label="Stonewall pipeline">
+        <div class="stack__row" role="listitem">
+          <div class="stack__layer">01 Source</div>
+          <div class="stack__body">
+            <strong>OneDrive and Outlook feed the system.</strong>
+            <p>PDFs, DOCX, XLSX, and CSV email exports enter as raw evidence rather than polished product data.</p>
+            <div class="stack__meta">Inputs: OneDrive, Outlook CSV exports</div>
+          </div>
+        </div>
+
+        <div class="stack__row" role="listitem">
+          <div class="stack__layer">02 Ingestion</div>
+          <div class="stack__body">
+            <strong>Documents become structured text.</strong>
+            <p><code>ingest_onedrive.py</code> and <code>parse_emails.ps1</code> walk folders, match matters, and write usable derivatives.</p>
+            <div class="stack__meta">Scripts: ingest_onedrive.py, parse_emails.ps1, ingest_onedrive.ps1</div>
+          </div>
+        </div>
+
+        <div class="stack__row" role="listitem">
+          <div class="stack__layer">03 Processing</div>
+          <div class="stack__body">
+            <strong>Dupes disappear and formats settle down.</strong>
+            <p><code>email_consolidator.mjs</code>, <code>email_to_md.py</code>, <code>docx_to_md.py</code>, and <code>email_defuzz.mjs</code> build a clean working corpus.</p>
+            <div class="stack__meta">Scripts: email_consolidator.mjs, email_to_md.py, docx_to_md.py, email_defuzz.mjs, transcribe_repo_pdfs.py</div>
+          </div>
+        </div>
+
+        <div class="stack__row" role="listitem">
+          <div class="stack__layer">04 Sync</div>
+          <div class="stack__body">
+            <strong>Notion becomes the case registry.</strong>
+            <p><code>notion_wire_cases.py</code>, <code>notion_wire_batch.py</code>, and <code>notion_case_dates.py</code> keep matters, dates, and relations aligned.</p>
+            <div class="stack__meta">Scripts: notion_wire_cases.py, notion_wire_batch.py, notion_case_dates.py, notion_consolidate_emails.py, notion_fast_consolidate.py</div>
+          </div>
+        </div>
+
+        <div class="stack__row" role="listitem">
+          <div class="stack__layer">05 AI Tagging</div>
+          <div class="stack__body">
+            <strong>Models label the content and fill the gaps.</strong>
+            <p><code>email_deep_tag.mjs</code>, <code>legal_matters_fill.mjs</code>, and <code>legal_hold_backfill.mjs</code> turn raw material into decision-ready structure.</p>
+            <div class="stack__meta">Scripts: email_deep_tag.mjs, email_audit.mjs, legal_matters_fill.mjs, legal_hold_backfill.mjs, legal_matters_pdf.py</div>
+          </div>
+        </div>
+
+        <div class="stack__row" role="listitem">
+          <div class="stack__layer">06 QC</div>
+          <div class="stack__body">
+            <strong>Every push gets checked against the corpus.</strong>
+            <p><code>qc_sweep.mjs</code>, <code>repo_sweep.py</code>, <code>verify_repo_consistency.py</code>, and <code>tactical_brief.py</code> keep the front door honest.</p>
+            <div class="stack__meta">Scripts: qc_sweep.mjs, repo_sweep.py, verify_repo_consistency.py, tactical_brief.py, repo_data_push.mjs</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scripts Inventory -->
+    <section class="section" id="scripts">
+      <div class="wrap section__heading">
+        <h2>Script inventory.</h2>
+        <p>
+          40+ automation scripts across 8 categories. Each script has a defined role in the pipeline,
+          tested interfaces, and documented CLI arguments.
+        </p>
+      </div>
+
+      <div class="wrap script-categories">
+        <article class="script-category">
+          <h3>Ingestion Layer</h3>
+          <ul class="script-list">
+            <li><code>ingest_onedrive.py</code> <span>Core engine — walk, convert, match, sync</span></li>
+            <li><code>ingest_onedrive.ps1</code> <span>PowerShell wrapper for ingest</span></li>
+            <li><code>parse_emails.ps1</code> <span>Outlook CSV parser &amp; case matcher</span></li>
+          </ul>
+        </article>
+
+        <article class="script-category">
+          <h3>Processing Layer</h3>
+          <ul class="script-list">
+            <li><code>email_consolidator.mjs</code> <span>Dedup &amp; normalize email records</span></li>
+            <li><code>email_defuzz.mjs</code> <span>Fuzzy-match emails to Notion</span></li>
+            <li><code>email_to_md.py</code> <span>Email to Markdown converter</span></li>
+            <li><code>docx_to_md.py</code> <span>DOCX to Markdown converter</span></li>
+            <li><code>transcribe_repo_pdfs.py</code> <span>PDF text extraction</span></li>
+          </ul>
+        </article>
+
+        <article class="script-category">
+          <h3>Notion Sync Layer</h3>
+          <ul class="script-list">
+            <li><code>notion_wire_cases.py</code> <span>Wire email→case relations</span></li>
+            <li><code>notion_wire_batch.py</code> <span>Batch email uploads</span></li>
+            <li><code>notion_case_dates.py</code> <span>Sync dates from CSV</span></li>
+            <li><code>notion_consolidate_emails.py</code> <span>Merge datasources</span></li>
+            <li><code>notion_fast_consolidate.py</code> <span>High-throughput consolidation</span></li>
+            <li><code>notion_fast_dates.py</code> <span>High-throughput date repair</span></li>
+            <li><code>notion_date_repair.py</code> <span>Repair malformed dates</span></li>
+            <li><code>notion_date_repair_all.py</code> <span>Repair across datasources</span></li>
+            <li><code>notion_email_body_update.py</code> <span>Update email body property</span></li>
+            <li><code>notion_backfill_legal_matters.py</code> <span>Backfill missing properties</span></li>
+          </ul>
+        </article>
+
+        <article class="script-category">
+          <h3>AI Tagging Layer</h3>
+          <ul class="script-list">
+            <li><code>email_deep_tag.mjs</code> <span>Semantic email classification</span></li>
+            <li><code>email_audit.mjs</code> <span>Audit &amp; repair tagging gaps</span></li>
+            <li><code>legal_matters_fill.mjs</code> <span>AI-fill matter properties</span></li>
+            <li><code>legal_hold_backfill.mjs</code> <span>Set hold status on matters</span></li>
+            <li><code>legal_matters_pdf.py</code> <span>PDF/HTML case report</span></li>
+            <li><code>legal_matters_offline_backfill.py</code> <span>Offline property backfill</span></li>
+          </ul>
+        </article>
+
+        <article class="script-category">
+          <h3>QC &amp; Reporting</h3>
+          <ul class="script-list">
+            <li><code>qc_sweep.mjs</code> <span>Comprehensive QC audit</span></li>
+            <li><code>repo_sweep.py</code> <span>Repository hygiene checks</span></li>
+            <li><code>verify_repo_consistency.py</code> <span>Corpus alignment validation</span></li>
+            <li><code>tactical_brief.py</code> <span>Daily operating brief CLI</span></li>
+            <li><code>repo_data_push.mjs</code> <span>Push repo data to Notion</span></li>
+          </ul>
+        </article>
+
+        <article class="script-category">
+          <h3>Batch Processing</h3>
+          <ul class="script-list">
+            <li><code>split_batches.ps1</code> <span>Split JSON into Batch API chunks</span></li>
+            <li><code>check_output.ps1</code> <span>Inspect batch output distribution</span></li>
+            <li><code>run_nap_job.ps1</code> <span>Launch NAP job</span></li>
+            <li><code>start_nap_job.ps1</code> <span>Start background NAP job</span></li>
+            <li><code>nap_job_status.ps1</code> <span>Check NAP job status</span></li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <!-- AI Skill Modules -->
+    <section class="section" id="skills">
+      <div class="wrap section__heading">
+        <h2>AI skill modules.</h2>
+        <p>
+          Six purpose-built Claude skills operate under strict execution boundaries. Each skill
+          has a defined trigger, authority scope, and output format.
+        </p>
+      </div>
+
+      <div class="wrap module-grid">
+        <article class="module-card module-card--private">
+          <span class="module-card__tag">Intelligence</span>
+          <h3>Stonewall Brain</h3>
+          <p>Document classification, case timeline construction, email corpus analysis, matter synthesis, and gap analysis with source traceability.</p>
+        </article>
+        <article class="module-card module-card--private">
+          <span class="module-card__tag">Lookup</span>
+          <h3>Case Lookup</h3>
+          <p>Fast case fact retrieval — hold status, OC contact, trial dates, offer history. Parallel searches across Legal Matters, All Email, and OneDrive.</p>
+        </article>
+        <article class="module-card module-card--private">
+          <span class="module-card__tag">Search</span>
+          <h3>Case File Finder</h3>
+          <p>Locate case files across OneDrive workspace by client name, matter keywords, date range, and document type with ranked results.</p>
+        </article>
+        <article class="module-card module-card--private">
+          <span class="module-card__tag">Finance</span>
+          <h3>Billing Reconciler</h3>
+          <p>Reconcile timesheets, prebills, and billing imports. Validates duplicates, missing matter numbers, and zero-hour entries.</p>
+        </article>
+        <article class="module-card module-card--private">
+          <span class="module-card__tag">Narrative</span>
+          <h3>Legal Chapter</h3>
+          <p>Long-form legal narrative generation with incremental file saves, section-by-section assembly, and citation-backed final output.</p>
+        </article>
+        <article class="module-card module-card--private">
+          <span class="module-card__tag">Upload</span>
+          <h3>Notion Upload</h3>
+          <p>Bulk CSV/PDF to Notion database uploads with batching, schema validation, and parallel agent execution for large datasets.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Integrations -->
+    <section class="section" id="integrations">
+      <div class="wrap section__heading">
+        <h2>System integrations.</h2>
+        <p>
+          The platform connects to three primary external systems. All credentials and database IDs
+          are loaded from environment variables — never hardcoded.
+        </p>
+      </div>
+
+      <div class="wrap three-col">
+        <article class="block block--integration">
+          <h3>Notion</h3>
+          <div class="integration-detail">
+            <div class="integration-item">
+              <strong>Legal Matters</strong>
+              <span>Case registry with dates, holds, and posture tracking</span>
+            </div>
+            <div class="integration-item">
+              <strong>All Email</strong>
+              <span>Email corpus with case relations and AI tags</span>
+            </div>
+            <div class="integration-item">
+              <strong>Document Archive</strong>
+              <span>Ingested document derivatives and metadata</span>
+            </div>
+          </div>
+        </article>
+        <article class="block block--integration">
+          <h3>OneDrive</h3>
+          <div class="integration-detail">
+            <div class="integration-item">
+              <strong>Personal Root</strong>
+              <span>Personal OneDrive for draft and working files</span>
+            </div>
+            <div class="integration-item">
+              <strong>Firm Root</strong>
+              <span>Firm OneDrive for case documents and evidence</span>
+            </div>
+            <div class="integration-item">
+              <strong>Supported Types</strong>
+              <span>PDF, DOCX, XLSX, CSV, EML, MSG, TXT, HTML, XML, ZIP</span>
+            </div>
+          </div>
+        </article>
+        <article class="block block--integration">
+          <h3>AI Services</h3>
+          <div class="integration-detail">
+            <div class="integration-item">
+              <strong>Claude API</strong>
+              <span>Anthropic Claude for document classification and analysis</span>
+            </div>
+            <div class="integration-item">
+              <strong>OpenAI API</strong>
+              <span>GPT models for property fill and tagging</span>
+            </div>
+            <div class="integration-item">
+              <strong>Batch API</strong>
+              <span>Anthropic Batch API for high-volume processing jobs</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- CI/CD -->
+    <section class="section" id="cicd">
+      <div class="wrap section__heading">
+        <h2>CI/CD workflows.</h2>
+        <p>
+          Four GitHub Actions workflows govern verification, deployment, and code review automation.
+        </p>
+      </div>
+
+      <div class="wrap surface-links">
+        <article class="surface-link surface-link--static">
+          <strong>verify.yml</strong>
+          <span>Runs Python and Node test suites on every push and pull request. Generates consistency reports.</span>
+        </article>
+        <article class="surface-link surface-link--static">
+          <strong>static.yml</strong>
+          <span>Deploys the <code>docs/</code> folder to GitHub Pages on push to main branch.</span>
+        </article>
+        <article class="surface-link surface-link--static">
+          <strong>claude.yml</strong>
+          <span>Claude Code agent automation triggered by issue comments, PR reviews, and @claude mentions.</span>
+        </article>
+        <article class="surface-link surface-link--static">
+          <strong>claude-code-review.yml</strong>
+          <span>Automated code review powered by Claude Code for pull request analysis.</span>
+        </article>
+      </div>
+    </section>
+
+    <!-- Closing -->
+    <section class="section closing">
+      <div class="wrap closing__panel">
+        <div>
+          <p class="eyebrow">Private Prototype</p>
+          <h2>The operational layer behind the showcase.</h2>
+          <p class="lede">
+            This prototype interface presents the full script inventory, AI skill modules,
+            integration details, and CI/CD infrastructure that powers the Stonewall platform.
+          </p>
+        </div>
+        <div class="closing__actions">
+          <a class="button" href="https://github.com/stnwlai/stnwl.ai">Open Repository</a>
+          <a class="secondary" href="../">Public Showcase</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>Stonewall &middot; Private Prototype &middot; Internal operational dashboard</span>
+    <span>Last updated 2026-04-03.</span>
+  </footer>
+</body>
+</html>

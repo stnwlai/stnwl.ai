@@ -1,0 +1,14 @@
+{
+  "characters": [
+    { "alias": "Defense Counsel 001", "role": "Defense Counsel", "matters": 8, "note": "Lead defense strategy and motion practice" },
+    { "alias": "Witness 002", "role": "Fact Witness", "matters": 6, "note": "Percipient witness across commercial fleet matters" },
+    { "alias": "Expert 003", "role": "Expert Witness", "matters": 5, "note": "Causation and damages analysis" },
+    { "alias": "Investigator 004", "role": "Field Investigator", "matters": 7, "note": "Scene reconstruction and evidence collection" },
+    { "alias": "Adjuster 005", "role": "Claims Adjuster", "matters": 9, "note": "Reserve authority and coverage coordination" },
+    { "alias": "Defense Counsel 006", "role": "Defense Counsel", "matters": 4, "note": "Trial counsel on high-exposure matters" },
+    { "alias": "Witness 007", "role": "Corporate Designee", "matters": 3, "note": "30(b)(6) designee appearances" },
+    { "alias": "Expert 008", "role": "Medical Expert", "matters": 5, "note": "Treatment causation and prognosis review" },
+    { "alias": "Investigator 009", "role": "Field Investigator", "matters": 4, "note": "Vehicle inspection and data recovery" },
+    { "alias": "Adjuster 010", "role": "Senior Adjuster", "matters": 6, "note": "Complex coverage and subrogation desk" }
+  ]
+}

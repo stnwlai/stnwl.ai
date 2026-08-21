@@ -1,0 +1,64 @@
+{
+  "items": [
+    {
+      "date": "2026-05-18",
+      "matter": "M0005",
+      "label": "Deposition — corporate designee",
+      "band": "urgent"
+    },
+    {
+      "date": "2026-05-22",
+      "matter": "M0002",
+      "label": "Deposition window closes",
+      "band": "urgent"
+    },
+    {
+      "date": "2026-05-24",
+      "matter": "M0011",
+      "label": "Expert report cutoff",
+      "band": "urgent"
+    },
+    {
+      "date": "2026-05-26",
+      "matter": "M0001",
+      "label": "Mediation submission deadline",
+      "band": "soon"
+    },
+    {
+      "date": "2026-05-29",
+      "matter": "M0010",
+      "label": "Demand package due",
+      "band": "soon"
+    },
+    {
+      "date": "2026-06-02",
+      "matter": "M0008",
+      "label": "Motion to compel hearing",
+      "band": "soon"
+    },
+    {
+      "date": "2026-06-05",
+      "matter": "M0006",
+      "label": "Reserve committee review",
+      "band": "planned"
+    },
+    {
+      "date": "2026-06-12",
+      "matter": "M0003",
+      "label": "Discovery conference",
+      "band": "planned"
+    },
+    {
+      "date": "2026-06-19",
+      "matter": "M0004",
+      "label": "Expert witness designation",
+      "band": "planned"
+    },
+    {
+      "date": "2026-07-15",
+      "matter": "M0009",
+      "label": "Trial readiness hearing",
+      "band": "planned"
+    }
+  ]
+}

@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stonewall — Legal Document Intelligence Platform</title>
+  <meta name="description" content="Stonewall is a legal document intelligence platform that turns flat files, validation, AI recall, and static deployment into a litigation control plane.">
+  <meta property="og:title" content="Stonewall — Legal Document Intelligence Platform">
+  <meta property="og:description" content="Stonewall is a legal document intelligence platform that turns flat files, validation, AI recall, and static deployment into a litigation control plane.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0b09;
+      --surface: #171310;
+      --surface-soft: rgba(255,248,240,0.04);
+      --text: #f4ede3;
+      --muted: #a59583;
+      --accent: #c96b3c;
+      --accent-soft: rgba(201,107,60,0.14);
+      --line: rgba(255,241,230,0.09);
+      --line-strong: rgba(201,107,60,0.30);
+      --shadow: 0 30px 80px rgba(0,0,0,0.34);
+      --max: 1200px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Source Sans 3", sans-serif;
+      color: var(--text);
+      line-height: 1.6;
+      background:
+        radial-gradient(circle at 15% 8%, rgba(201,107,60,0.18), transparent 28%),
+        radial-gradient(circle at 84% 0%, rgba(201,107,60,0.08), transparent 24%),
+        linear-gradient(180deg, #110f0d 0%, var(--bg) 42%, #14100d 100%);
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 36px 36px;
+      mask-image: linear-gradient(180deg, rgba(0,0,0,0.6), transparent 78%);
+    }
+    a { color: inherit; }
+    .shell { width: min(var(--max), calc(100% - 32px)); margin: 0 auto; position: relative; }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand {
+      text-decoration: none;
+      font-family: "Newsreader", serif;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    nav a {
+      padding: 8px 14px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+    }
+    nav a:hover,
+    nav a.active {
+      background: var(--accent-soft);
+      color: var(--text);
+      transform: translateY(-1px);
+    }
+    h1, h2, h3 {
+      margin: 0;
+      font-family: "Newsreader", serif;
+      font-weight: 700;
+      line-height: 1.02;
+      letter-spacing: -0.04em;
+    }
+    h1 { font-size: clamp(38px, 7vw, 84px); max-width: 11ch; margin-top: 18px; }
+    h2 { font-size: clamp(34px, 4vw, 52px); }
+    h3 { font-size: 28px; }
+    .hero,
+    .section-head,
+    .portal-preview { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(280px,0.7fr); gap: 28px; }
+    .hero { padding: 64px 0 28px; align-items: end; }
+    .eyebrow,
+    .section-tag,
+    .terminal-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line-strong);
+      background: rgba(201,107,60,0.10);
+      color: #efb089;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .eyebrow::before,
+    .section-tag::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 6px rgba(201,107,60,0.12);
+    }
+    .hero p,
+    .section-head p {
+      color: var(--muted);
+      font-size: 18px;
+      max-width: 60ch;
+      margin: 18px 0 0;
+    }
+    .hero-actions,
+    .badge-row,
+    .footer-links { display: flex; flex-wrap: wrap; gap: 12px; }
+    .hero-actions { margin-top: 28px; }
+    .badge-row { margin-top: 22px; gap: 10px; }
+    .btn,
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 13px 20px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 700;
+      transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+    }
+    .btn {
+      color: #fff8f0;
+      background: linear-gradient(135deg, var(--accent), #e48d58);
+      box-shadow: 0 18px 42px rgba(201,107,60,0.26);
+    }
+    .btn-secondary {
+      color: var(--text);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+    }
+    .btn:hover,
+    .btn-secondary:hover,
+    .card:hover,
+    .innovation:hover,
+    .matrix-card:hover,
+    .tour-card:hover { transform: translateY(-3px); box-shadow: 0 22px 48px rgba(201,107,60,0.20); border-color: var(--line-strong); }
+
+    /* Quick Tour grid — large clickable buttons that jump to each surface */
+    .tour-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 28px;
+    }
+    .tour-card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015));
+      color: var(--text);
+      text-decoration: none;
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .tour-card::after {
+      content: "→";
+      position: absolute;
+      top: 18px;
+      right: 22px;
+      color: var(--accent);
+      font-size: 22px;
+      font-weight: 700;
+      transition: transform 180ms ease;
+    }
+    .tour-card:hover::after { transform: translateX(4px); }
+    .tour-card .tour-icon { font-size: 28px; line-height: 1; }
+    .tour-card .tour-label {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .tour-card h3 {
+      margin: 4px 0 0;
+      font-family: "Newsreader", serif;
+      font-size: 22px;
+      font-weight: 700;
+    }
+    .tour-card p { margin: 4px 0 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+
+    /* Scale comparison table */
+    .scale-table-wrap {
+      margin-top: 22px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015));
+    }
+    .scale-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+    }
+    .scale-table thead th {
+      text-align: left;
+      padding: 16px 22px;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.02);
+      font-weight: 700;
+    }
+    .scale-table tbody td {
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .scale-table tbody tr:last-child td { border-bottom: none; }
+    .scale-table tbody tr:hover td { background: rgba(201,107,60,0.05); }
+    .scale-table .num {
+      font-family: "Newsreader", serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #ffd0af;
+    }
+    .scale-table .delta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(98, 200, 145, 0.12);
+      color: #8de7b4;
+      border: 1px solid rgba(98, 200, 145, 0.25);
+    }
+    .scale-table .delta.flat {
+      background: rgba(255,255,255,0.04);
+      color: var(--muted);
+      border-color: var(--line);
+    }
+    @media (max-width: 760px) {
+      .scale-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        clip-path: inset(50%);
+        white-space: nowrap;
+        border: 0;
+      }
+      .scale-table tbody td { display: block; padding: 8px 18px; border-bottom: none; }
+      .scale-table tbody tr { display: block; padding: 14px 0; border-bottom: 1px solid var(--line); }
+      .scale-table tbody tr:last-child { border-bottom: none; }
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.04);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .panel,
+    .stat-tile,
+    .innovation,
+    .terminal,
+    .frame,
+    .notes,
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      box-shadow: var(--shadow);
+    }
+    .panel,
+    .terminal,
+    .notes,
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
+      padding: 22px;
+    }
+    .panel-grid,
+    .metrics,
+    .outcome-grid,
+    .innovation-grid,
+    .matrix-grid,
+    .demo-grid { display: grid; gap: 16px; }
+    .panel-grid { grid-template-columns: repeat(2, minmax(0,1fr)); margin-top: 18px; gap: 14px; }
+    .metrics { grid-template-columns: repeat(6, minmax(0,1fr)); }
+    .outcome-grid { grid-template-columns: repeat(4, minmax(0,1fr)); }
+    .innovation-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px; }
+    .matrix-grid { grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+    .demo-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .mini-stat,
+    .stat-tile { background: var(--surface-soft); padding: 16px 16px 18px; }
+    .mini-stat strong,
+    .stat-tile strong {
+      display: block;
+      font-family: "Newsreader", serif;
+      line-height: 1;
+    }
+    .mini-stat strong { font-size: 29px; color: #f6c3a0; }
+    .stat-tile strong { font-size: 42px; color: #ffd0af; }
+    .mini-stat span,
+    .stat-tile span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+    .stat-tile p,
+    .innovation p,
+    .card p,
+    .notes li,
+    footer p { color: var(--muted); font-size: 14px; margin: 10px 0 0; }
+    .section { padding: 52px 0 0; }
+    .section-head { align-items: end; margin-bottom: 24px; }
+    .section-head .aside {
+      color: var(--muted);
+      font-size: 15px;
+      border-left: 1px solid var(--line);
+      padding-left: 18px;
+    }
+    .card strong {
+      display: block;
+      color: #efb089;
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .card h3 { margin-top: 10px; font-size: 24px; }
+    .innovation {
+      background:
+        linear-gradient(160deg, rgba(201,107,60,0.10), transparent 35%),
+        linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
+      padding: 24px;
+    }
+    .matrix-card {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
+    }
+    .matrix-card .layer {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line-strong);
+      background: rgba(201,107,60,0.10);
+      color: #efb089;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .matrix-card h3 {
+      margin-top: 12px;
+      font-size: 22px;
+    }
+    .matrix-card p {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 10px 0 0;
+    }
+    .matrix-card code {
+      display: block;
+      margin-top: 12px;
+      font-size: 12px;
+      color: #f1c8ab;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: rgba(8,7,6,0.55);
+      line-height: 1.4;
+    }
+    .innovation .icon {
+      width: 46px;
+      height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      background: rgba(201,107,60,0.12);
+      border: 1px solid var(--line-strong);
+      font-size: 22px;
+      margin-bottom: 14px;
+    }
+    .terminal {
+      background: linear-gradient(180deg, rgba(8,7,6,0.90), rgba(18,14,11,0.94));
+    }
+    .terminal-label {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: #efb089;
+    }
+    .terminal-label::before {
+      content: ">_";
+      color: var(--accent);
+      font-size: 13px;
+    }
+    pre {
+      margin: 16px 0 0;
+      padding: 16px 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(6,5,4,0.65);
+      overflow-x: auto;
+      color: #f8e8da;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .diagram {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 24px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      box-shadow: var(--shadow);
+    }
+    .diagram pre { margin: 0; }
+    .frame {
+      min-height: 420px;
+      overflow: hidden;
+      background: rgba(10,8,6,0.74);
+    }
+    .frame iframe {
+      width: 100%;
+      min-height: 420px;
+      border: 0;
+      background: #120f0d;
+    }
+    .notes ul { margin: 14px 0 0; padding-left: 18px; }
+    .notes li + li { margin-top: 8px; }
+    footer {
+      padding: 40px 0 64px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      border-top: 1px solid var(--line);
+      margin-top: 52px;
+    }
+    footer p { margin: 0; max-width: 52ch; }
+    .footer-links a {
+      text-decoration: none;
+      color: var(--text);
+      border-bottom: 1px solid transparent;
+    }
+    .footer-links a:hover { border-color: var(--accent); }
+    @media (max-width: 1100px) {
+      .hero,
+      .section-head,
+      .portal-preview,
+      .demo-grid { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    }
+    @media (max-width: 760px) {
+      .shell { width: min(var(--max), calc(100% - 20px)); }
+      .topbar { padding: 16px 0; }
+      .hero { padding-top: 42px; }
+      .panel-grid,
+      .metrics,
+      .outcome-grid,
+      .innovation-grid,
+      .matrix-grid { grid-template-columns: 1fr; }
+      footer { padding-bottom: 40px; }
+    }
+    @media (max-width: 560px) {
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      nav { justify-content: flex-start; gap: 6px; }
+      nav a { padding: 6px 10px; font-size: 13px; }
+      .hero { padding-top: 28px; }
+      .hero p, .section-head p { font-size: 16px; }
+      .stat-tile strong { font-size: 36px; }
+      .scale-table .num { font-size: 17px; }
+      .tour-card { padding: 18px; }
+      .tour-card::after { top: 16px; right: 18px; font-size: 18px; }
+      .tour-card h3 { font-size: 19px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="shell topbar">
+    <a class="brand" href="./">Stonewall</a>
+    <nav>
+      <a class="active" href="./">Showcase</a>
+      <a href="official-brief.html">Official Brief</a>
+      <a href="portal/">Portal Demo</a>
+      <a href="insights.html">Workflow Notes</a>
+      <a href="https://www.stnwl.ai">stnwl.ai</a>
+      <a href="https://github.com/stnwlai/stnwl.ai">GitHub</a>
+    </nav>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Live Product Surface</div>
+        <h1>Stonewall — Legal Document Intelligence Platform</h1>
+        <p>Stonewall is a production-grade legal document intelligence control plane built by a solo litigation attorney. It turns flat files, validated sidecars, AI recall discipline, and static deployment surfaces into a portfolio command dashboard for artifacts, deadlines, workflow readiness, and daily operating visibility.</p>
+        <div class="hero-actions">
+          <a class="btn" href="portal/">Open Portal Demo</a>
+          <a class="btn-secondary" href="https://www.stnwl.ai">Open stnwl.ai</a>
+          <a class="btn-secondary" href="official-brief.html">Read Official Brief</a>
+          <a class="btn-secondary" href="https://github.com/stnwlai/stnwl.ai">View Source on GitHub</a>
+        </div>
+        <div class="badge-row">
+          <span class="badge">Python 3.12+</span>
+          <span class="badge">Flat-File Database</span>
+          <span class="badge">Notion Operator Layer</span>
+          <span class="badge">Claude Recall Stack</span>
+          <span class="badge">GitHub Actions</span>
+          <span class="badge">800-Test Suite</span>
+        </div>
+      </div>
+      <aside class="panel">
+        <strong style="display:block;color:var(--muted);font-size:12px;letter-spacing:.12em;text-transform:uppercase;">Live Snapshot</strong>
+        <div class="panel-grid">
+          <div class="mini-stat"><strong id="heroCataloged">1,887</strong><span>cataloged artifacts</span></div>
+          <div class="mini-stat"><strong id="heroCases">64</strong><span>active matters represented</span></div>
+          <div class="mini-stat"><strong id="heroPatterns">197</strong><span>behavioral patterns indexed</span></div>
+          <div class="mini-stat"><strong id="heroEmails">6,000+</strong><span>emails processed</span></div>
+        </div>
+        <p style="margin:18px 0 0;color:var(--muted);font-size:14px;">Publication stack: GitHub Pages for immediate impact, the official brief for print and PDF circulation, and the public source repo for collaborators who want to read the implementation.</p>
+      </aside>
+    </section>
+
+    <section class="section" id="tour" style="padding-top: 24px;">
+      <div class="section-head">
+        <div>
+          <div class="section-tag">Quick Tour</div>
+          <h2>Four surfaces, one product</h2>
+          <p>Jump straight into any layer of the showcase. Each card is a clickable destination — no scavenger hunting for the goods.</p>
+        </div>
+        <div class="aside">The whole stack is static, fork-friendly, and fully runnable in under sixty seconds.</div>
+      </div>
+      <div class="tour-grid">
+        <a class="tour-card" href="portal/">
+          <span class="tour-icon">🖥️</span>
+          <span class="tour-label">Live Demo</span>
+          <h3>Operator Portal</h3>
+          <p>Multi-page dashboard with matters, deadlines, artifacts, patterns, cast, and billing — all from static JSON.</p>
+        </a>
+        <a class="tour-card" href="https://www.stnwl.ai">
+          <span class="tour-icon">📚</span>
+          <span class="tour-label">Home</span>
+          <h3>stnwl.ai</h3>
+          <p>The full canonical codices — case codex, character dossiers, phenomenology registry, discovery registry, and the corpus compendium.</p>
+        </a>
+        <a class="tour-card" href="official-brief.html">
+          <span class="tour-icon">📜</span>
+          <span class="tour-label">Long Form</span>
+          <h3>Official Brief</h3>
+          <p>The print-edition product brief for circulation, valuation, and the full architectural argument.</p>
+        </a>
+        <a class="tour-card" href="insights.html">
+          <span class="tour-icon">🧠</span>
+          <span class="tour-label">Deep Cuts</span>
+          <h3>Workflow Notes</h3>
+          <p>The operator-feel commentary explaining why this stack changes what a lawyer can do under pressure.</p>
+        </a>
+        <a class="tour-card" href="https://github.com/stnwlai/stnwl.ai">
+          <span class="tour-icon">⌨️</span>
+          <span class="tour-label">Source</span>
+          <h3>GitHub Repo</h3>
+          <p>Read the implementation. 800-test verification suite, 78-artifact corpus, CI-enforced voice guard.</p>
+        </a>
+      </div>
+    </section>
+
+    <section class="section" id="numbers">
+      <div class="section-head">
+        <div>
+          <div class="section-tag">By The Numbers</div>
+          <h2>Scale without a database server</h2>
+          <p>These counters load from <code>site-data.json</code> so the page deploys as a static artifact while preserving the real operating scale and architecture of the platform.</p>
+        </div>
+        <div class="aside">The underlying corpus remains Git-tracked, grep-queryable, and validation-friendly, which is the central architectural thesis of the platform and the reason it can serve as both corpus layer and operator surface.</div>
+      </div>
+      <div class="metrics">
+        <article class="stat-tile"><strong id="metricArtifacts">1,887</strong><span>Artifacts Cataloged</span><p>Manifest-backed catalog with type, date, entities, patterns, and summary metadata.</p></article>
+        <article class="stat-tile"><strong id="metricCases">64</strong><span>Active Matters</span><p>Portfolio structure remains legible across a broad litigation workload.</p></article>
+        <article class="stat-tile"><strong id="metricPatterns">197</strong><span>Behavioral Patterns</span><p>A full phenomenology registry makes recurring dynamics traceable across the corpus.</p></article>
+        <article class="stat-tile"><strong id="metricCharacters">179</strong><span>Character Profiles</span><p>Role and actor modeling give the archive memory about who drives which outcomes.</p></article>
+        <article class="stat-tile"><strong id="metricEmails">6,000+</strong><span>Emails Processed</span><p>Normalized communication flows preserve timeline, leverage, and workflow context.</p></article>
+        <article class="stat-tile"><strong id="metricTypes">23</strong><span>Artifact Classes</span><p>Deposition, pleading, email, notes, records, and workflow objects live in one durable catalog.</p></article>
+      </div>
+      <div class="scale-table-wrap" role="region" aria-label="Scale at a glance">
+        <table class="scale-table">
+          <thead>
+            <tr>
+              <th>Surface</th>
+              <th>Earlier Snapshot</th>
+              <th>Current</th>
+              <th>Delta</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Manifest Rows</td><td>1,206</td><td><span class="num">1,887</span></td><td><span class="delta">+681</span></td></tr>
+            <tr><td>Analyzed %</td><td>65.2%</td><td><span class="num">83.8%</span></td><td><span class="delta">+18.6 pts</span></td></tr>
+            <tr><td>Validation Errors / Warnings</td><td>0 / 153</td><td><span class="num">0 / 0</span></td><td><span class="delta">−153 warn</span></td></tr>
+            <tr><td>Brain Codex Version</td><td>v10.4</td><td><span class="num">v12.1</span></td><td><span class="delta">+1.7</span></td></tr>
+            <tr><td>Verification Suite</td><td>45 tests</td><td><span class="num">800 tests</span></td><td><span class="delta">+755</span></td></tr>
+            <tr><td>Corpus Artifacts On Disk</td><td>—</td><td><span class="num">78</span></td><td><span class="delta">new</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="outcomes">
+      <div class="section-head">
+        <div>
+          <div class="section-tag">Operator Value</div>
+          <h2>More than storage, more than search</h2>
+          <p>The real pitch is operational compression. Stonewall makes a litigation corpus usable under time pressure, not merely organized in hindsight.</p>
+        </div>
+        <div class="aside">This is where the platform becomes commercially legible: daily dossier visibility, deadline intelligence, workflow staging, and live tactical support all arise from the same indexed substrate.</div>
+      </div>
+      <div class="outcome-grid">
+        <article class="card"><strong>Daily Dossier</strong><h3>Immediate situational awareness</h3><p>The operator opens one surface and sees what changed, what is urgent, and which artifacts now matter today.</p></article>
+        <article class="card"><strong>Deadline Intelligence</strong><h3>Runway instead of raw dates</h3><p>Scattered source records become a usable agenda for upcoming work rather than a passive calendar dump.</p></article>
+        <article class="card"><strong>Workflow Readiness</strong><h3>Prep without scavenger hunts</h3><p>The same corpus supports deposition prep, mediation prep, intake triage, billing reconstruction, and chronology repair.</p></article>
+        <article class="card"><strong>Production Guarantees</strong><h3>Validation built into the operating rhythm</h3><p>Manifest checks, ontology enforcement, consistency scans, and deployment guards make the output trustworthy by design.</p></article>
+      </div>
+    </section>
+
+    <section class="section" id="innovation">
+      <div class="section-head">
+        <div>
+          <div class="section-tag">Innovation Stack</div>
+          <h2>Eight layers working together</h2>
+          <p>Each layer is modest in isolation. The novelty is how they reinforce one another: flat-file durability, CLI access, AI recall, workflow sync, and public deployment all hang off the same corpus discipline.</p>
+        </div>
+        <div class="aside">The showcase keeps the system legible to buyers, collaborators, and technically curious readers by focusing on architecture, leverage, and operator experience.</div>
+      </div>
+      <div class="innovation-grid">
+        <article class="innovation"><div class="icon">📚</div><h3>Flat-File Searchable Database</h3><p><code>catalog/manifest.md</code> operates as a real database in Markdown. Every artifact receives a durable ID, date, type, matter link, entity links, pattern links, and summary text, with derivative indexes for date, case, character, pattern, and email lookups.</p><pre><code>$ rg "deposition" catalog/manifest.md
+$ rg "Pattern: MOTION-DENSITY" catalog/index_by_pattern.md</code></pre></article>
+        <article class="innovation"><div class="icon">⌨️</div><h3>CLI Intelligence Layer</h3><p>The stdlib-only CLI makes the corpus queryable without standing up a server or a database engine. It handles stats, matter views, pattern lookups, timelines, validation, and artifact inspection from one consistent interface.</p><pre><code>$ python scripts/stonewall.py stats
+$ python scripts/stonewall.py case "Motor Vehicle Case A"</code></pre></article>
+        <article class="innovation"><div class="icon">🧠</div><h3>AI Recall Architecture</h3><p>The brain is explicit recall architecture, not mystery memory. Codex files point the model to source surfaces first, then require reading before assertions, with version lineage preserved through frozen snapshots up to <code>v12.1</code> ("the ultimate cut").</p><pre><code>brain/
+  cast_codex.md
+  cases_codex.md
+  phenomenology_codex.md</code></pre></article>
+        <article class="innovation"><div class="icon">⚙️</div><h3>Automated Ingestion Pipeline</h3><p>Documents move from the source reservoir into normalized Markdown sidecars, OCR-assisted PDF transcriptions, DOCX conversions, and email imports. The result is a searchable corpus that remains Git-native.</p><pre><code>ingest_onedrive.py
+transcribe_repo_pdfs.py
+docx_to_verbatim_md.py</code></pre></article>
+        <article class="innovation"><div class="icon">🔄</div><h3>Multi-Platform Sync</h3><p>GitHub stores the durable corpus, OneDrive remains the source reservoir, and Notion becomes the operator layer for live matter management, task runway, and daily command views. Cross-reference manifests keep IDs aligned across surfaces.</p><pre><code>python scripts/notion_wire_cases.py
+python scripts/notion_case_dates.py</code></pre></article>
+        <article class="innovation"><div class="icon">🛡️</div><h3>Verification & QC Automation</h3><p>Repo consistency checks, ontology enforcement, sidecar audits, and deployment guards make the output structurally sound. The same discipline that protects the corpus also increases commercial credibility.</p><pre><code>$ python scripts/stonewall.py validate --strict
+0 error(s), 153 warning(s) across 1206 rows</code></pre></article>
+        <article class="innovation"><div class="icon">🧭</div><h3>Phenomenology Registry</h3><p>Stonewall tracks a 197-pattern behavioral taxonomy that can be instantiated across artifacts and traced longitudinally across the corpus.</p><pre><code>$ python scripts/stonewall.py pattern "NEGOTIATION-TEMPO"</code></pre></article>
+        <article class="innovation"><div class="icon">🖥️</div><h3>Static Portal</h3><p>The portal proves that a multi-page operational dashboard can run as a fully static site from JSON snapshots alone. Dashboard, matters, deadlines, artifacts, patterns, cast, billing-style totals, and local settings all render without a backend in the live build.</p><pre><code>docs/portal/
+  index.html
+  data/*.json</code></pre></article>
+      </div>
+    </section>
+
+    <section class="section" id="tactical">
+      <div class="section-head">
+        <div>
+          <div class="section-tag">Tactical Workflow Layer</div>
+          <h2>Notion, DataGavel, and live deposition tailoring</h2>
+          <p>This is the part that moves the system from impressive archive to working legal machine. The repository remains the durable evidence trail while tactical layers turn the same corpus into forward motion.</p>
+        </div>
+        <div class="aside">The workflow thesis is direct: Stonewall is valuable because it stages the next move faster and more coherently than scattered folders, ad hoc notes, or one-off searches.</div>
+      </div>
+      <div class="demo-grid">
+        <article class="card"><strong>Notion as Operator Layer</strong><h3>Live command surface</h3><p>Stonewall is strongest when the repository and Notion do different jobs well. The repository preserves the durable archive; Notion turns that into matter posture, archive relations, task runway, and daily operational control.</p><pre><code>python scripts/notion_wire_cases.py
+python scripts/notion_case_dates.py
+node scripts/repo_data_push.mjs</code></pre></article>
+        <article class="card"><strong>DataGavel Workflow Readiness</strong><h3>Report packets staged upstream</h3><p>Records can be pulled into a chronology, treatment trails checked, and damages notes staged into a packet that is ready for valuation or report work instead of requiring another scavenger hunt.</p><pre><code>records pulled
+→ chronology checked
+→ treatment ledger aligned
+→ damages notes staged
+→ report packet ready</code></pre></article>
+        <article class="card"><strong>Live Deposition Tailoring</strong><h3>Outline tightening while the room is still warm</h3><p>Because transcripts, filings, emails, and notes all live in one indexed corpus, the operator can sharpen the next section of an outline in real time by surfacing prior statements, chronology gaps, and issue clusters.</p><pre><code>python scripts/stonewall.py find "corporate representative"
+python scripts/stonewall.py timeline --start 2025-02-01 --end 2025-02-28
+python scripts/stonewall.py show A1104</code></pre></article>
+      </div>
+    </section>
+
+    <section class="section" id="innovation-matrix">
+      <div class="section-head">
+        <div>
+          <div class="section-tag">Innovation Matrix</div>
+          <h2>Operating innovations across the Stonewall stack</h2>
+          <p>This matrix walks through the high-value innovations powering the platform — architecture, workflow utility, and the implementation surfaces that ship today.</p>
+        </div>
+        <div class="aside">Each card maps one subsystem to its design signal so collaborators can see product polish and operational depth at the same time.</div>
+      </div>
+      <div class="matrix-grid" id="innovationMatrix">
+        <article class="matrix-card">
+          <span class="layer">Ingestion</span>
+          <h3>OneDrive Intake Orchestration</h3>
+          <p>Transforms source folders into normalized Markdown sidecars and structured manifest rows.</p>
+          <code>Batch intake with root + glob controls</code>
+        </article>
+        <article class="matrix-card">
+          <span class="layer">Quality Control</span>
+          <h3>Repo Consistency Sweep</h3>
+          <p>Flags manifest drift, uncataloged canonical files, and missing sidecar coverage.</p>
+          <code>Blocking vs non-blocking report output</code>
+        </article>
+        <article class="matrix-card">
+          <span class="layer">Case Management</span>
+          <h3>Runway Deadline Bands</h3>
+          <p>Converts raw event dates into urgency bands for immediate triage.</p>
+          <code>urgent / soon / planned labels</code>
+        </article>
+      </div>
+      <div class="hero-actions" style="margin-top:20px;">
+        <a class="btn" href="portal/?page=playbooks">Open Playbooks Surface</a>
+        <a class="btn-secondary" href="insights.html">Read Workflow Notes</a>
+      </div>
+    </section>
+
+    <section class="section" id="architecture">
+      <div class="section-head">
+        <div>
+          <div class="section-tag">Architecture</div>
+          <h2>Pipeline from source reservoir to static command surface</h2>
+          <p>The architecture is visible enough to show why the platform works and why it is commercially credible.</p>
+        </div>
+        <div class="aside">The charm here is not just automation. It is the refusal to require a heavyweight backend before the operator can have useful control over a large corpus.</div>
+      </div>
+      <div class="diagram">
+        <pre><code>OneDrive / Source Reservoir
+            |
+            v
+      Ingestion Layer
+  ingest_onedrive.py
+  transcribe_repo_pdfs.py
+  docx_to_verbatim_md.py
+            |
+            v
+      Processing Layer
+  sidecars / normalization / tagging
+            |
+            v
+        Notion Sync
+  notion_wire_cases.py
+  notion_wire_batch.py
+  notion_case_dates.py
+            |
+            v
+         Catalog Layer
+  manifest.md + derivative indexes
+            |
+            v
+          CLI Query
+  stats / find / case / pattern / timeline
+            |
+            v
+        Static Portal
+  site-data.json + docs/portal/data/*.json</code></pre>
+      </div>
+    </section>
+
+    <section class="section" id="cli-demo">
+      <div class="section-head">
+        <div>
+          <div class="section-tag">CLI Demo</div>
+          <h2>Command examples from the operating surface</h2>
+          <p>The examples below show the interface shape, query velocity, and validation discipline that make the platform useful under pressure.</p>
+        </div>
+        <div class="aside">The key product point is velocity: a lawyer can query, validate, and reorient the corpus from the terminal with no external dependencies and no opaque search appliance.</div>
+      </div>
+      <div class="demo-grid">
+        <article class="terminal"><div class="terminal-label">stats</div><pre><code>$ python scripts/stonewall.py stats
+total rows      : 1887
+active          : 1604
+tombstoned      : 283
+analyzed        : 1344 (83.8%)
+patterns        : 197
+characters      : 179
+cases           : 64</code></pre></article>
+        <article class="terminal"><div class="terminal-label">find</div><pre><code>$ python scripts/stonewall.py find "deposition"
+A0198  Public Deposition Transcript    2025-02-28  deposition
+A0441  Expert Deposition Outline       2025-07-16  deposition
+A0917  Corporate Representative Prep   2026-01-11  deposition</code></pre></article>
+        <article class="terminal"><div class="terminal-label">validate</div><pre><code>$ python scripts/stonewall.py validate --strict
+0 error(s), 0 warning(s) across 1887 rows
+ontology          : pass
+filesystem links  : pass
+date checks       : pass</code></pre></article>
+        <article class="terminal"><div class="terminal-label">verify (CI)</div><pre><code>$ node --test tests/tracker_helpers.test.mjs tests/email_consolidator.test.mjs
+# tests 9
+# pass 9
+$ python -m unittest tests.test_ingest_onedrive \
+    tests.test_verify_repo_consistency \
+    tests.test_sample_corpus
+Ran 743 tests in 3.083s
+OK</code></pre></article>
+      </div>
+    </section>
+
+    <section class="section" id="portal">
+      <div class="section-head">
+        <div>
+          <div class="section-tag">Portal Preview</div>
+          <h2>Static dashboard, real product energy</h2>
+          <p>The included portal is the operator-facing face of the platform. It demonstrates how structured JSON snapshots can power a dashboard, matter view, deadlines board, artifact browser, and pattern registry with no backend required.</p>
+        </div>
+        <div class="aside">Pages is the immediate reveal surface. The official brief is the print edition. The portal is the live operator-facing demo. Together they present one coherent argument instead of a pile of disconnected docs.</div>
+      </div>
+      <div class="portal-preview">
+        <div class="frame">
+          <iframe src="portal/" title="Stonewall portal preview"></iframe>
+        </div>
+        <aside class="notes">
+          <strong style="display:block;color:var(--muted);font-size:12px;letter-spacing:.12em;text-transform:uppercase;">Included surfaces</strong>
+          <ul>
+            <li>Dashboard, matters, deadlines, artifacts, patterns, cast, billing-style totals, and local Settings</li>
+            <li>Structured JSON payloads under <code>docs/portal/data/</code></li>
+            <li>Role-based abstractions, generic matter labels, and portable workflow models</li>
+            <li>Fast enough to host as plain static files while still feeling like an application</li>
+          </ul>
+          <div class="hero-actions" style="margin-top:22px;">
+            <a class="btn" href="portal/">Open Portal</a>
+            <a class="btn-secondary" href="official-brief.html">Open Official Brief</a>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="shell">
+    <p>Stonewall demonstrates how a litigation team can build durable document intelligence from disciplined flat files, strong validation, and tightly integrated workflow surfaces rather than a heavyweight proprietary stack.</p>
+    <div class="footer-links">
+      <a href="https://www.stnwl.ai">stnwl.ai</a>
+      <a href="https://github.com/stnwlai/stnwl.ai">GitHub Repo</a>
+      <a href="official-brief.html">Official Brief</a>
+      <a href="portal/">Portal</a>
+    </div>
+  </footer>
+
+  <script>
+    (async function () {
+      try {
+        const response = await fetch('site-data.json', { cache: 'no-store' });
+        if (!response.ok) return;
+        const data = await response.json();
+        const format = (value) => new Intl.NumberFormat('en-US').format(value);
+        const manifest = data.manifest || {};
+        const patterns = data.patterns || {};
+        const cases = data.cases || {};
+        const characters = data.characters || {};
+        const showcase = data.showcase_metrics || {};
+        const innovationMatrix = Array.isArray(data.innovation_matrix) ? data.innovation_matrix : [];
+
+        const values = {
+          heroCataloged: format(manifest.total_rows || 0),
+          heroCases: format(cases.total_unique || 0),
+          heroPatterns: format(patterns.total || 0),
+          heroEmails: `${format(showcase.emails_processed || 0)}+`,
+          metricArtifacts: format(manifest.total_rows || 0),
+          metricCases: format(cases.total_unique || 0),
+          metricPatterns: format(patterns.total || 0),
+          metricCharacters: format(characters.total_unique || 0),
+          metricEmails: `${format(showcase.emails_processed || 0)}+`,
+          metricTypes: format(showcase.artifact_classes || 0)
+        };
+
+        Object.entries(values).forEach(([id, value]) => {
+          const node = document.getElementById(id);
+          if (node) node.textContent = value;
+        });
+
+        const matrixRoot = document.getElementById('innovationMatrix');
+        if (matrixRoot && innovationMatrix.length) {
+          matrixRoot.innerHTML = '';
+          innovationMatrix.forEach((item) => {
+            const card = document.createElement('article');
+            card.className = 'matrix-card';
+            const layer = document.createElement('span');
+            layer.className = 'layer';
+            layer.textContent = item.layer || 'Innovation';
+            const title = document.createElement('h3');
+            title.textContent = item.title || 'Untitled innovation';
+            const impact = document.createElement('p');
+            impact.textContent = item.impact || '';
+            const signal = document.createElement('code');
+            signal.textContent = item.signal || '';
+            card.appendChild(layer);
+            card.appendChild(title);
+            card.appendChild(impact);
+            card.appendChild(signal);
+            matrixRoot.appendChild(card);
+          });
+        }
+      } catch (error) {
+        console.warn('Stonewall showcase metrics unavailable', error);
+      }
+    }());
+  </script>
+</body>
+</html>
