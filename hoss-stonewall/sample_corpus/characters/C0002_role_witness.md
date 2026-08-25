@@ -1,15 +1,15 @@
 ---
 id: C0002
 type: character
-role: Witness
+date: 2025-03-03
 ---
 
-# Character Card — Witness 002
+# Actor Card C0002 — Witness Role
 
 ## Role
 
-Witness appearing in commercial litigation matters. Tracked across the
-portfolio for cast-codex routing and pattern analysis.
+Witness vocabulary record used to exercise deterministic retrieval and citation
+verification across the reference corpus.
 
 ## Pattern Tags
 

@@ -1,16 +1,14 @@
 ---
 id: D0002
 type: deposition
-matter: Doe v. Massive Dynamic
-witness: Witness 002
 date: 2025-03-03
 ---
 
-# Deposition Outline — Doe v. Massive Dynamic
+# Deposition Plan D0002
 
 ## Background
 
-1. Confirm name and current employer.
+1. Confirm the witness role and organizational relationship.
 2. Confirm role at the time of the underlying event.
 3. Walk through training history at a high level.
 

@@ -109,9 +109,9 @@ function renderDashboard() {
   const glance = document.getElementById("dash-glance");
   if (glance) {
     glance.innerHTML = `
-      <li><strong>${m.urgent_runway ?? 0} matters inside urgent runway</strong><br><span>Deposition prep, mediation staging, and deadline confirmation surfaced in the board.</span></li>
-      <li><strong>${m.packets_ready ?? 0} report packets nearly ready</strong><br><span>Chronology aligned, records pulled, and damages notes staged for downstream workflow.</span></li>
-      <li><strong>${m.live_threads ?? 0} live witness-prep thread active</strong><br><span>Prior statements, chronology gaps, and issue clusters stay query-ready.</span></li>
+      <li><strong>${m.email_records ?? 0} coded communication records</strong><br><span>Communication artifacts exercise chronology, retrieval, and citation verification.</span></li>
+      <li><strong>${m.role_records ?? 0} coded role records</strong><br><span>Role vocabulary broadens retrieval while retaining the same three-field metadata contract.</span></li>
+      <li><strong>${m.bundle_outputs ?? 0} deterministic bundle outputs</strong><br><span>Catalog, search index, and attestation rebuild byte for byte.</span></li>
     `;
   }
 }
@@ -144,13 +144,13 @@ function renderDeadlines() {
   const { showMatterIds, showRunwayBadges } = state.settings;
   tbody.innerHTML = items
     .map((row) => {
-      const matter = showMatterIds ? row.matter : "Matter";
+      const record = showMatterIds ? row.record : "Record";
       const band = showRunwayBadges ? row.band : "scheduled";
       const chipClass =
         band === "urgent" ? "chip chip--urgent" : band === "soon" ? "chip chip--soon" : "chip chip--planned";
       return `<tr>
         <td class="mono">${row.date}</td>
-        <td class="mono">${matter}</td>
+        <td class="mono">${record}</td>
         <td>${row.label}</td>
         <td><span class="${chipClass}">${band}</span></td>
       </tr>`;
@@ -162,13 +162,12 @@ function renderArtifacts() {
   const tbody = document.querySelector("#artifacts-table tbody");
   if (!tbody) return;
   const arts = state.data.artifacts?.artifacts || [];
-  const { showMatterIds } = state.settings;
   tbody.innerHTML = arts
     .map(
       (a) => `<tr>
       <td class="mono">${a.id}</td>
       <td>${a.type}</td>
-      <td class="mono">${showMatterIds ? a.matter : "—"}</td>
+      <td class="mono">${a.source}</td>
       <td>${a.summary}</td>
       <td class="mono">${a.date}</td>
     </tr>`,
@@ -184,7 +183,7 @@ function renderPatterns() {
     .map(
       (p) => `<article class="pattern-card">
       <code>${p.code}</code>
-      <p style="margin:8px 0 0;font-size:13px;color:var(--muted);">${p.band} · ${formatNumber(p.hits)} hits</p>
+      <p style="margin:8px 0 0;font-size:13px;color:var(--muted);">${p.band} · ${formatNumber(p.artifacts)} coded artifact</p>
     </article>`,
     )
     .join("");
@@ -257,9 +256,9 @@ function renderCast() {
     .map(
       (c) => `<article class="cast-card">
       <div class="cast-meta">${c.role}</div>
-      <h3>${c.alias}</h3>
+      <h3>${c.id}</h3>
       <p style="margin:6px 0 0;font-size:14px;color:var(--muted);">${c.note}</p>
-      <p style="margin:10px 0 0;font-size:13px;"><span class="chip">${formatNumber(c.matters)} matters</span></p>
+      <p style="margin:10px 0 0;font-size:13px;"><span class="chip">${formatNumber(c.records)} coded records</span></p>
     </article>`,
     )
     .join("");
@@ -292,7 +291,7 @@ function renderBilling() {
     tbody.innerHTML = lineItems
       .map(
         (row) => `<tr>
-        <td class="mono">${state.settings.showMatterIds ? row.matter : "Matter"}</td>
+        <td class="mono">${state.settings.showMatterIds ? row.record : "Record"}</td>
         <td>${row.phase}</td>
         <td class="mono">${row.hours}</td>
         <td class="mono">${formatMoney(row.hours * rate, currency)}</td>

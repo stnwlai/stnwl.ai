@@ -1,23 +1,21 @@
 ---
-id: M0003
+id: M0001
 type: case
-matter: Roe v. Wayne Logistics
-status: active
-opened: 2025-04-04
+date: 2025-02-02
 ---
 
-# Roe v. Wayne Logistics
+# Matter M0001 — Commercial Transport
 
 ## Posture
 
-Discovery phase. Plaintiff alleges a commercial vehicle incident; defendant
-has answered and demanded jury trial. The matter sits in the active runway
+Discovery phase. Claimant Role A alleges a commercial vehicle event;
+Organization Role B has answered and requested trial. The matter sits in the active runway
 with discovery requests outstanding and the deposition window opening next
 quarter.
 
 ## Key Dates
 
-- Filed: 2025-04-04
+- Filed: 2025-02-02
 - Answer due: see runway lane
 - Discovery cutoff: rolling
 
@@ -29,4 +27,4 @@ quarter.
 
 ## Notes
 
-Matter M0003.
+Matter M0001.

@@ -16,7 +16,7 @@ import { join, dirname } from "path";
 
 const TOKEN = process.env.NOTION_TOKEN || "";
 const DB = process.env.NOTION_ALL_EMAIL_DB || "";
-const EMAILS_JSON = join(dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, "$1")), "..", "sources", "emails", "consolidated_emails.json");
+const EMAILS_JSON = join(dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, "$1")), "..", "reference_data", "mail", "consolidated_emails.json");
 const DRY_RUN = process.argv.includes("--dry-run");
 
 function api(method, path, body) {
@@ -69,7 +69,7 @@ const SPAM = ["unsubscribe", "webinar", "save 30", "early bird", "holiday sale",
   "workflow costing", "free trial", "lien headaches", "ims insights", "dri ",
   "law.com", "bloomberg", "lexisnexis", "westlaw", "clio", "smokeball",
   "litify", "filevine calendar", "reauthentication",
-  "pro bono", "your network", "florida law con", "nashville seminar",
+  "pro bono", "your network", "region-0000 law con", "nashville seminar",
   "aaj ", "super bowl", "attorney self-evaluation"];
 
 async function run() {

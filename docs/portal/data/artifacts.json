@@ -1,16 +1,18 @@
 {
+  "schema_version": 1,
+  "source_class": "coded_reference",
   "artifacts": [
-    { "id": "D0001", "type": "deposition", "matter": "M0001", "summary": "Witness outline — Jones v. Umbrella Shipping", "date": "2025-02-02" },
-    { "id": "D0002", "type": "deposition", "matter": "M0002", "summary": "Witness outline — Doe v. Massive Dynamic", "date": "2025-03-03" },
-    { "id": "D0003", "type": "deposition", "matter": "M0003", "summary": "Witness outline — Roe v. Wayne Logistics", "date": "2025-04-04" },
-    { "id": "D0005", "type": "deposition", "matter": "M0005", "summary": "Witness outline — Davis v. Aperture Hauling", "date": "2025-06-06" },
-    { "id": "X0001", "type": "motion", "matter": "M0001", "summary": "Motion to compel — Jones v. Umbrella Shipping", "date": "2025-09-10" },
-    { "id": "X0003", "type": "motion", "matter": "M0003", "summary": "Motion to compel — Roe v. Wayne Logistics", "date": "2025-11-01" },
-    { "id": "X0007", "type": "motion", "matter": "M0007", "summary": "Motion to compel — Taylor v. Globex Logistics", "date": "2026-01-15" },
-    { "id": "E0002", "type": "email", "matter": "M0002", "summary": "Counsel correspondence — Doe v. Massive Dynamic", "date": "2025-10-05" },
-    { "id": "E0006", "type": "email", "matter": "M0006", "summary": "Discovery update thread — Wilson v. Strickland Propane", "date": "2025-12-12" },
-    { "id": "E0010", "type": "email", "matter": "M0010", "summary": "Carrier correspondence — Jackson v. Hooli Transport", "date": "2026-02-20" },
-    { "id": "B0003", "type": "billing", "matter": "M0003", "summary": "Period billing statement — Roe v. Wayne Logistics", "date": "2026-03-01" },
-    { "id": "B0005", "type": "billing", "matter": "M0005", "summary": "Period billing statement — Davis v. Aperture Hauling", "date": "2026-04-01" }
+    { "id": "D0001", "type": "deposition", "source": "coded_reference", "summary": "Deposition plan", "date": "2025-02-02" },
+    { "id": "D0002", "type": "deposition", "source": "coded_reference", "summary": "Deposition plan", "date": "2025-03-03" },
+    { "id": "D0003", "type": "deposition", "source": "coded_reference", "summary": "Deposition plan", "date": "2025-04-04" },
+    { "id": "D0005", "type": "deposition", "source": "coded_reference", "summary": "Deposition plan", "date": "2025-06-06" },
+    { "id": "X0001", "type": "motion", "source": "coded_reference", "summary": "Motion record", "date": "2025-02-02" },
+    { "id": "X0003", "type": "motion", "source": "coded_reference", "summary": "Motion record", "date": "2025-04-04" },
+    { "id": "X0007", "type": "motion", "source": "coded_reference", "summary": "Motion record", "date": "2025-08-08" },
+    { "id": "E0002", "type": "email", "source": "coded_reference", "summary": "Communication record", "date": "2025-03-03" },
+    { "id": "E0006", "type": "email", "source": "coded_reference", "summary": "Communication record", "date": "2025-07-07" },
+    { "id": "E0010", "type": "email", "source": "coded_reference", "summary": "Communication record", "date": "2025-11-11" },
+    { "id": "B0003", "type": "billing", "source": "coded_reference", "summary": "Billing period", "date": "2025-04-01" },
+    { "id": "B0005", "type": "billing", "source": "coded_reference", "summary": "Billing period", "date": "2025-06-01" }
   ]
 }

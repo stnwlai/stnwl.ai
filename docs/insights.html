@@ -10,7 +10,7 @@
   <meta property="og:type" content="article">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,700&amp;family=Source+Sans+3:wght@400;600;700&amp;display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #0f0d0b;
@@ -151,9 +151,12 @@ public docs = external proof of system quality</code></pre>
       <p>
         A static repository is useful. A repository that can change the next section of questioning while the witness is still in the room is a different category of system. Stonewall’s indexed corpus makes prior statements, chronology gaps, and issue clusters retrievable quickly enough to support live outline tightening, which is exactly the kind of operational leverage that makes a platform feel indispensable instead of merely impressive.
       </p>
-      <pre><code>python scripts/stonewall.py find "corporate representative"
-python scripts/stonewall.py timeline --start 2025-02-01 --end 2025-02-28
-python scripts/stonewall.py show A1104</code></pre>
+      <pre><code>PYTHONPATH=src python3 -m stonewall \
+  query "deposition scheduling" \
+  --limit 3 --verify-citations
+
+PYTHONPATH=src python3 \
+  scripts/check_public_boundary.py</code></pre>
     </section>
   </main>
 </body>

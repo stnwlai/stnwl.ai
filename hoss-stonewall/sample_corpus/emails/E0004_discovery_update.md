@@ -1,14 +1,12 @@
 ---
 id: E0004
 type: email
-matter: Brown v. Wonka Industries
-direction: outbound
 date: 2025-05-05
 ---
 
-# Email — Discovery Status
+# Communication Record E0004 — Discovery Status
 
-Subject: Brown v. Wonka Industries — Discovery Update
+Subject: Communication E0004 — Discovery Update
 
 Counsel,
 

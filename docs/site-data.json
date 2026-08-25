@@ -1,119 +1,62 @@
 {
-  "generated": "2026-08-21T00:00:00-04:00",
+  "generated": "2026-08-25T09:26:12-04:00",
   "manifest": {
-    "total_rows": 1887,
-    "active": 1604,
-    "tombstoned": 283,
-    "analyzed": 1344,
-    "analysis_rate": 0.838
+    "total_rows": 78,
+    "active": 78,
+    "tombstoned": 0,
+    "analyzed": 78,
+    "analysis_rate": 1.0
   },
   "patterns": {
-    "total": 197,
-    "instantiated": 197
+    "total": 8,
+    "instantiated": 8
   },
   "cases": {
-    "total_unique": 64
+    "total_unique": 12
   },
   "characters": {
-    "total_unique": 179
+    "total_unique": 10
   },
   "validation": {
     "errors": 0,
     "warnings": 0,
     "missing_manifest_paths": 0,
     "uncataloged_canonical_sources": 0,
-    "pdfs_missing_markdown": 0,
     "duplicate_clusters_unresolved": 0
   },
-  "test_suite": {
-    "total": 800,
-    "python": 791,
-    "node": 9,
-    "sample_corpus_fixtures": 78,
-    "headline": "800-test verification suite"
-  },
-  "brain": {
-    "version": "v12.1",
-    "release": "cd7fe11c",
-    "tagline": "the ultimate cut"
+  "evidence": {
+    "chunks": 554,
+    "bundle_outputs": 3,
+    "citation_scheme": "line-range-plus-sha256"
   },
   "showcase_metrics": {
-    "emails_processed": 6000,
-    "artifact_classes": 23
+    "emails_processed": 14,
+    "artifact_classes": 8
   },
   "innovation_matrix": [
     {
-      "title": "OneDrive Intake Orchestration",
-      "layer": "Ingestion",
-      "impact": "Transforms source folders into normalized Markdown sidecars and structured manifest rows.",
-      "signal": "Batch intake with root + glob controls"
+      "title": "Content-Addressed Evidence",
+      "layer": "Integrity",
+      "impact": "Binds the artifact catalog and retrieval index to one deterministic corpus root.",
+      "signal": "Canonical JSON + SHA-256 + Merkle attestation"
     },
     {
-      "title": "Email Consolidation & De-duplication",
-      "layer": "Communications",
-      "impact": "Merges overlapping exports, preserves strongest dates, and removes redundant rows.",
-      "signal": "Cross-export identity + date confidence scoring"
+      "title": "Line-Verifiable Citations",
+      "layer": "Provenance",
+      "impact": "Carries source paths, line ranges, and content digests with every retrieved span.",
+      "signal": "Artifact and span verification"
     },
     {
-      "title": "Sync Payload Planning",
-      "layer": "Notion Operations",
-      "impact": "Generates deterministic create/update payload plans before live sync execution.",
-      "signal": "Dry-run payload JSONL mode"
+      "title": "Explainable Retrieval",
+      "layer": "Search",
+      "impact": "Reports deterministic relevance components alongside each result and citation.",
+      "signal": "BM25 + heading + exact-phrase scores"
     },
     {
-      "title": "Manual Override Governance",
-      "layer": "Operator Control",
-      "impact": "Allows explicit case-link or no-case directives with reason tracking and replay safety.",
-      "signal": "Overrides recorded with mode + rationale"
-    },
-    {
-      "title": "Repo Consistency Sweep",
-      "layer": "Quality Control",
-      "impact": "Flags manifest drift, uncataloged canonical files, and missing sidecar coverage.",
-      "signal": "Blocking vs non-blocking report output"
-    },
-    {
-      "title": "Tactical Brief CLI",
-      "layer": "Daily Operations",
-      "impact": "Builds matter-specific and daily operating briefs from manifest + case indexes.",
-      "signal": "today/case command surfaces"
-    },
-    {
-      "title": "Pattern Phenomenology Registry",
-      "layer": "Analytics",
-      "impact": "Tracks recurring behavioral patterns for longitudinal retrieval and pattern heat.",
-      "signal": "Pattern hits grouped by strategic band"
-    },
-    {
-      "title": "Character/Cast Indexing",
-      "layer": "Knowledge Graph",
-      "impact": "Clusters recurring actors and aliases to preserve context across matters.",
-      "signal": "Role-based cast cards with matter counts"
-    },
-    {
-      "title": "Runway Deadline Bands",
-      "layer": "Case Management",
-      "impact": "Converts raw event dates into urgency bands for immediate triage.",
-      "signal": "urgent / soon / planned labels"
-    },
-    {
-      "title": "Static Portal App State",
-      "layer": "Deployment",
-      "impact": "Delivers dashboard + tables + preferences using JSON snapshots and local storage only.",
-      "signal": "No backend runtime required"
-    },
-    {
-      "title": "Billing Readiness Snapshots",
-      "layer": "Commercial Ops",
-      "impact": "Computes line-item totals from configurable rates for rapid engagement previews.",
-      "signal": "Live currency + rate preference toggles"
-    },
-    {
-      "title": "Workflow Packet Staging",
-      "layer": "Report Readiness",
-      "impact": "Stages chronology, treatment, and damages notes before downstream packet workflows.",
-      "signal": "Pre-report packet readiness lane"
-
+      "title": "Publication Boundary",
+      "layer": "Delivery",
+      "impact": "Requires the candidate tree, coded metadata, and reviewed file manifest to agree before release.",
+      "signal": "Fail-closed exact-tree gate"
     }
   ]
 }

@@ -1,11 +1,10 @@
 ---
 id: B0003
 type: billing
-matter: Roe v. Wayne Logistics
-period: 2025-04
+date: 2025-04-01
 ---
 
-# Billing — Roe v. Wayne Logistics
+# Billing Record B0003
 
 | Date       | Task                          | Hours | Rate  | Amount  |
 |------------|-------------------------------|-------|-------|---------|

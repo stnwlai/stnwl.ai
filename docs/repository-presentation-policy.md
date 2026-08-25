@@ -34,7 +34,7 @@ Use descriptive, lowercase, hyphenated names:
 
 **Required:** the name must state what changed (`fix-ci-pipeline-errors`, `public-content-policy`).
 
-**Forbidden:** joke names, meme references, session nicknames, or opaque placeholders (`naughty-boy-handling`, `sleepy-mayer`, `implement-new-feature` with no context).
+**Forbidden:** joke names, meme references, session nicknames, or opaque placeholders (`session-0000`, `misc-changes`, `implement-new-feature` with no context).
 
 ## Lifecycle
 

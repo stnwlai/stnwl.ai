@@ -1,14 +1,12 @@
 ---
 id: E0012
 type: email
-matter: Harris v. Octan Freight
-direction: outbound
 date: 2025-01-13
 ---
 
-# Email — Discovery Status
+# Communication Record E0012 — Discovery Status
 
-Subject: Harris v. Octan Freight — Discovery Update
+Subject: Communication E0012 — Discovery Update
 
 Counsel,
 

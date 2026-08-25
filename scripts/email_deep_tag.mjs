@@ -16,7 +16,7 @@ import { join, dirname } from "path";
 const TOKEN = process.env.NOTION_TOKEN || "";
 const DB = process.env.NOTION_ALL_EMAIL_DB || "YOUR_ALL_EMAIL_DATABASE_ID";
 const LEGAL_DB = process.env.NOTION_LEGAL_MATTERS_DB || "YOUR_LEGAL_MATTERS_DATABASE_ID";
-const EMAILS_JSON = join(dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, "$1")), "..", "sources", "emails", "consolidated_emails.json");
+const EMAILS_JSON = join(dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, "$1")), "..", "reference_data", "mail", "consolidated_emails.json");
 
 const args = new Set(process.argv.slice(2));
 const AUDIT = args.has("--audit");
@@ -64,7 +64,7 @@ const SPAM = ["unsubscribe", "webinar", "save 30", "early bird", "holiday sale",
   "daily briefing from", "networking event", "cle credit", "seminar registration",
   "gift card", "referral partnership", "strategically invest", "mass tort",
   "stronger demand letters", "workflow costing", "free trial", "lien headaches",
-  "ims insights", "florida law con", "nashville seminar", "board elections",
+  "ims insights", "region-0000 law con", "nashville seminar", "board elections",
   "bloomberg law", "lexisnexis weekly", "clio", "smokeball newsletter"];
 
 async function fetchAll(dbId, filter) {

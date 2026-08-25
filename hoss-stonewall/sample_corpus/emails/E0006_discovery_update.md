@@ -1,14 +1,12 @@
 ---
 id: E0006
 type: email
-matter: Wilson v. Strickland Propane
-direction: outbound
 date: 2025-07-07
 ---
 
-# Email — Discovery Status
+# Communication Record E0006 — Discovery Status
 
-Subject: Wilson v. Strickland Propane — Discovery Update
+Subject: Communication E0006 — Discovery Update
 
 Counsel,
 

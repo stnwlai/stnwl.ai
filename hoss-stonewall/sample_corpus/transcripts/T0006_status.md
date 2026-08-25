@@ -1,21 +1,19 @@
 ---
 id: T0006
 type: transcript
-matter: Wilson v. Strickland Propane
-forum: Status Conference
 date: 2025-07-07
 ---
 
-# Status Conference Transcript — Wilson v. Strickland Propane
+# Status Conference Transcript T0006
 
-THE COURT: We are on the record in matter T0006. Counsel, please state
-your appearances for the record.
+PRESIDING OFFICIAL: We are on the record in coded proceeding T0006. Counsel roles,
+please state your appearances for the record.
 
-MR. ATTORNEY (for Plaintiff): Good morning, Your Honor.
+COUNSEL ROLE A: Good morning.
 
-MS. ATTORNEY (for Defendant): Good morning, Your Honor.
+COUNSEL ROLE B: Good morning.
 
-THE COURT: The court has reviewed the joint status report. We will
+PRESIDING OFFICIAL: The tribunal has reviewed the joint status report. We will
 schedule a follow-up status in sixty days.
 
 (Proceedings concluded.)

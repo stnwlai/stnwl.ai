@@ -15,12 +15,10 @@ DEFAULT_OUTPUT = REPO_ROOT / "catalog" / "intake" / "repo_consistency_report.jso
 IGNORE_SOURCE_PARTS = {"onedrive_ingest", "__pycache__"}
 IGNORE_SOURCE_NAMES = {".gitkeep", "README.md"}
 IGNORE_EXACT_SOURCE_PATHS = {
-    "sources/emails/consolidated_emails.json",
     "sources/skills/tracker_helpers.mjs",
 }
 IGNORE_SOURCE_PATH_PREFIXES = {
     "sources/depositions/",
-    "sources/emails/md/",
 }
 IGNORE_SKILL_CODE_SUFFIXES = {".js", ".jsx", ".mjs", ".ts", ".tsx"}
 TEXTUAL_COMPANION_SUFFIXES = {".md", ".txt"}

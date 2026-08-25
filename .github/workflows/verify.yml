@@ -11,6 +11,8 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: src
 
     steps:
       - name: Checkout repository
@@ -31,6 +33,17 @@ jobs:
 
       - name: Run Python tests
         run: python -m unittest discover -s tests -p "test_*.py"
+
+      - name: Verify coded reference corpus
+        run: python scripts/generate_sample_corpus.py --check
+
+      - name: Build and verify evidence bundle
+        run: |
+          python -m stonewall --corpus hoss-stonewall/sample_corpus build --output build/reference
+          python -m stonewall --corpus hoss-stonewall/sample_corpus verify --output build/reference
+
+      - name: Verify publication boundary
+        run: python scripts/check_public_boundary.py
 
       - name: Showcase voice guard
         run: python scripts/check_showcase_voice.py

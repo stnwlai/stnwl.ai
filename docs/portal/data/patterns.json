@@ -1,12 +1,14 @@
 {
+  "schema_version": 1,
+  "source_class": "coded_reference",
   "patterns": [
-    { "code": "OVERPRODUCE_TO_BURY", "band": "discovery", "hits": 47 },
-    { "code": "PRIVILEGE_SHIELD_DRIFT", "band": "privilege", "hits": 38 },
-    { "code": "CALENDAR_GAMING", "band": "scheduling", "hits": 33 },
-    { "code": "WITNESS_SHUFFLE", "band": "testimony", "hits": 29 },
-    { "code": "DOCUMENT_HOLD_LATE", "band": "preservation", "hits": 22 },
-    { "code": "DEADLINE_CREEP", "band": "scheduling", "hits": 19 },
-    { "code": "MEET_AND_CONFER_FORMALISM", "band": "procedure", "hits": 16 },
-    { "code": "STALL_AND_DELAY", "band": "tactics", "hits": 12 }
+    { "code": "PROCEDURE_SIGNAL_01", "band": "reference", "artifacts": 1 },
+    { "code": "PROCEDURE_SIGNAL_02", "band": "reference", "artifacts": 1 },
+    { "code": "PROCEDURE_SIGNAL_03", "band": "reference", "artifacts": 1 },
+    { "code": "PROCEDURE_SIGNAL_04", "band": "reference", "artifacts": 1 },
+    { "code": "PROCEDURE_SIGNAL_05", "band": "reference", "artifacts": 1 },
+    { "code": "PROCEDURE_SIGNAL_06", "band": "reference", "artifacts": 1 },
+    { "code": "PROCEDURE_SIGNAL_07", "band": "reference", "artifacts": 1 },
+    { "code": "PROCEDURE_SIGNAL_08", "band": "reference", "artifacts": 1 }
   ]
 }

@@ -39,7 +39,7 @@ These surfaces are in scope:
 ### Must not
 
 - Hand-enter public counts in HTML, Markdown, or README copy when a JSON binding exists for that metric.
-- Pin literal metric values, brain versions, or test-suite totals in policy docs, runbooks, or architecture narratives. Those values belong in JSON only.
+- Pin literal metric values or verification totals in policy docs, runbooks, or architecture narratives. Those values belong in JSON only.
 - Introduce a second unpublished source of truth (spreadsheet, comment block, or inline script constant) for metrics that already have a JSON field.
 
 Static HTML may include placeholder text for first paint, but runtime scripts must overwrite placeholders from JSON. If fetch fails, the page should degrade gracefully rather than presenting stale literals as authoritative.
@@ -72,12 +72,12 @@ Use this table to locate the authoritative field for each public aggregate. Valu
 | Artifact classes | `docs/site-data.json` | `showcase_metrics.artifact_classes` |
 | Analyzed share | `docs/site-data.json` | `manifest.analysis_rate` |
 | Validation errors / warnings | `docs/site-data.json` | `validation.errors`, `validation.warnings` |
-| Brain codex version | `docs/site-data.json` | `brain.version` |
-| Verification suite total | `docs/site-data.json` | `test_suite.total` |
+| Line-addressed chunks | `docs/site-data.json` | `evidence.chunks` |
+| Deterministic bundle outputs | `docs/site-data.json` | `evidence.bundle_outputs` |
 | Portal cataloged artifacts | `docs/portal/data/metrics.json` | `cataloged_artifacts` |
 | Portal active matters | `docs/portal/data/metrics.json` | `active_matters` |
 | Portal pattern tags | `docs/portal/data/metrics.json` | `pattern_tags` |
-| Portal runway / packet counters | `docs/portal/data/metrics.json` | `urgent_runway`, `packets_ready`, `live_threads` |
+| Portal reference counters | `docs/portal/data/metrics.json` | `email_records`, `role_records`, `bundle_outputs` |
 
 When a metric appears on more than one surface, all surfaces must read the same field (directly or by keeping both JSON files synchronized during publication).
 

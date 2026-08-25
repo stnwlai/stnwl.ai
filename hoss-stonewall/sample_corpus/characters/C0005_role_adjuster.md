@@ -1,15 +1,15 @@
 ---
 id: C0005
 type: character
-role: Adjuster
+date: 2025-06-06
 ---
 
-# Character Card — Adjuster 005
+# Actor Card C0005 — Adjuster Role
 
 ## Role
 
-Adjuster appearing in commercial litigation matters. Tracked across the
-portfolio for cast-codex routing and pattern analysis.
+Adjuster vocabulary record used to exercise deterministic retrieval and citation
+verification across the reference corpus.
 
 ## Pattern Tags
 

@@ -2,7 +2,7 @@
 /**
  * Email Consolidator - Stonewall
  * ==========================================
- * Reads Outlook CSV email exports from sources/emails/,
+ * Reads Outlook CSV email exports from reference_data/mail/,
  * extracts usable dates from the body/subject,
  * deduplicates overlapping exports,
  * and outputs consolidated data for Notion import.
@@ -17,7 +17,7 @@ import { readdirSync, readFileSync, writeFileSync } from "fs";
 import { join, resolve } from "path";
 import { fileURLToPath } from "url";
 
-const EMAILS_DIR = join(import.meta.dirname, "..", "sources", "emails");
+const EMAILS_DIR = join(import.meta.dirname, "..", "reference_data", "mail");
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function discoverSources() {
@@ -525,7 +525,7 @@ export function run(argv = process.argv.slice(2)) {
   console.log("=== EMAIL CONSOLIDATOR - Stonewall ===\n");
 
   const sources = discoverSources();
-  console.log(`Found ${sources.length} CSV files in sources/emails/:\n`);
+  console.log(`Found ${sources.length} CSV files in reference_data/mail/:\n`);
   for (const source of sources) {
     console.log(
       `  ${source.direction.padEnd(6)} ${source.dateRange.start} -> ${source.dateRange.end}  ${source.filename}`,
@@ -661,7 +661,7 @@ export function run(argv = process.argv.slice(2)) {
   console.log(`\nEmails with case references (v./v ): ${caseEmails.length}`);
 
   if (outputJson) {
-    const outPath = join(import.meta.dirname, "..", "sources", "emails", "consolidated_emails.json");
+    const outPath = join(import.meta.dirname, "..", "reference_data", "mail", "consolidated_emails.json");
     const exportData = [...unique]
       .sort((left, right) => (left.date || "").localeCompare(right.date || ""))
       .map(({ _bodyStart, ...rest }) => rest);
@@ -670,7 +670,7 @@ export function run(argv = process.argv.slice(2)) {
   }
 
   if (outputCsv) {
-    const outPath = join(import.meta.dirname, "..", "sources", "emails", "consolidated_emails.csv");
+    const outPath = join(import.meta.dirname, "..", "reference_data", "mail", "consolidated_emails.csv");
     const rows = [...unique]
       .sort((left, right) => (left.date || "").localeCompare(right.date || ""))
       .map(email =>

@@ -1,16 +1,14 @@
 ---
 id: D0010
 type: deposition
-matter: Jackson v. Hooli Transport
-witness: Witness 010
 date: 2025-11-11
 ---
 
-# Deposition Outline — Jackson v. Hooli Transport
+# Deposition Plan D0010
 
 ## Background
 
-1. Confirm name and current employer.
+1. Confirm the witness role and organizational relationship.
 2. Confirm role at the time of the underlying event.
 3. Walk through training history at a high level.
 

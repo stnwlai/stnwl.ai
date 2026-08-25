@@ -1,16 +1,14 @@
 ---
 id: D0005
 type: deposition
-matter: Davis v. Aperture Hauling
-witness: Witness 005
 date: 2025-06-06
 ---
 
-# Deposition Outline — Davis v. Aperture Hauling
+# Deposition Plan D0005
 
 ## Background
 
-1. Confirm name and current employer.
+1. Confirm the witness role and organizational relationship.
 2. Confirm role at the time of the underlying event.
 3. Walk through training history at a high level.
 

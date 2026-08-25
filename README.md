@@ -1,176 +1,210 @@
 # Stonewall
 
-**Legal document intelligence for litigation teams that move fast.**
+**Citation-first legal document intelligence for litigation teams.**
 
-Stonewall turns scattered emails, pleadings, medical records, deposition material,
-spreadsheets, and notes into a searchable, validated, AI-ready litigation corpus.
+Stonewall turns a structured litigation corpus into evidence that can be found,
+explained, cited, and verified. This repository pairs the product story with a
+compact, executable engineering reference built entirely on the Python standard
+library.
 
 [![Stonewall Home](https://img.shields.io/badge/Home-stnwl.ai-c96b3c?style=for-the-badge)](https://www.stnwl.ai/)
 [![Organization](https://img.shields.io/badge/GitHub-stnwlai-111827?style=for-the-badge&logo=github)](https://github.com/stnwlai)
 [![Verify](https://github.com/stnwlai/stnwl.ai/actions/workflows/verify.yml/badge.svg)](https://github.com/stnwlai/stnwl.ai/actions/workflows/verify.yml)
-[![Python](https://img.shields.io/badge/Python-3.12-3776ab?style=flat-square)](#stack)
-[![Node](https://img.shields.io/badge/Node.js-22-5fa04e?style=flat-square)](#stack)
-[![Notion API](https://img.shields.io/badge/Notion-API-000000?style=flat-square)](#stack)
+[![Python](https://img.shields.io/badge/Python-3.12-3776ab?style=flat-square)](#quickstart)
+[![Node](https://img.shields.io/badge/Node.js-22-5fa04e?style=flat-square)](#verification)
 
----
+## The product
 
-## The pitch
+Litigation teams do not need another document dump. They need a command surface
+that answers practical questions:
 
-Law firms do not need another document dump.
+- What evidence supports this assertion?
+- Where did the quoted span come from?
+- Why did this result rank above the next one?
+- Has the underlying artifact changed since it was cited?
 
-They need a command surface that answers:
+Stonewall makes those answers inspectable. The corpus remains readable on disk;
+the derived catalog, search index, and citations remain reproducible from
+the same sources.
 
-- What changed?
-- What matters now?
-- What deadlines are moving?
-- Which documents support the next filing, deposition, demand, or client update?
-- Which facts are verified, and which still need QC?
+## Engineering reference
 
-Stonewall is that layer.
+The checked-in implementation concentrates on four contracts that reinforce one
+another:
 
----
+| Contract | What is demonstrable in this repository |
+| --- | --- |
+| **Content-addressed evidence** | Canonical JSON, artifact digests, a deterministic Merkle root, and a build attestation bind every generated surface to its inputs. |
+| **Line-verifiable citations** | Each retrieval result carries an artifact ID, relative path, line range, artifact digest, and cited-span digest that can be checked against the source. |
+| **Explainable retrieval** | Dependency-free BM25 ranking exposes its score components and adds deterministic heading and exact-phrase signals. |
+| **Publication boundary** | An exact-tree manifest, metadata allowlist, path rules, and non-echoing content checks fail closed before publication. |
 
-## What it does
+Read the concise design note in
+[`docs/evidence-fabric.md`](docs/evidence-fabric.md), or start with the package in
+[`src/stonewall/`](src/stonewall/).
 
-| Surface | Outcome |
+## Quickstart
+
+No service, database, model key, or third-party Python package is required.
+
+```bash
+PYTHONPATH=src python3 -m stonewall \
+  --corpus hoss-stonewall/sample_corpus \
+  build --output build/reference
+
+PYTHONPATH=src python3 -m stonewall \
+  --corpus hoss-stonewall/sample_corpus \
+  query "deposition scheduling" --limit 3 --verify-citations
+
+PYTHONPATH=src python3 -m stonewall \
+  --corpus hoss-stonewall/sample_corpus \
+  verify --output build/reference
+```
+
+The build emits three deterministic files:
+
+```text
+build/reference/
+├── attestation.json
+├── catalog.json
+└── search-index.json
+```
+
+`verify` recompiles the corpus in an independent temporary build and requires byte-for-byte parity with
+the bundle on disk. A changed artifact, citation span, catalog entry, or index
+chunk therefore has an explicit verification consequence.
+
+## Reference corpus
+
+The generator-built corpus exercises the implementation across 78 artifacts:
+
+| Surface | Count |
 | --- | ---: |
-| **Ingestion** | Pulls OneDrive, Outlook, PDF, DOCX, XLSX, CSV, EML, MSG, TXT, HTML, XML, and ZIP material into a normalized corpus. |
-| **Classification** | Extracts dates, parties, claim numbers, document types, matter links, and workflow signals. |
-| **Notion Sync** | Turns case data into an operator-facing matter board with dates, status, links, and review queues. |
-| **AI Review** | Uses Claude and OpenAI workflows for summarization, classification, recall, and tactical drafting support. |
-| **QC Automation** | Runs validation sweeps so bad metadata, missing links, and drift are visible before they become liability. |
-| **Publication** | Ships polished static surfaces for demos, briefs, portal views, and stakeholder review. |
+| Matter records | 12 |
+| Role cards | 10 |
+| Pattern definitions | 8 |
+| Total artifact classes | 8 |
+| Line-addressed chunks | 554 |
+| Deterministic bundle outputs | 3 |
 
----
+Every record uses coded identifiers and the same three-field metadata contract.
+The generator can prove that the checked-in corpus matches its deterministic
+output:
 
-## Why it wins
+```bash
+python3 scripts/generate_sample_corpus.py --check
+```
 
-- **Built for litigation reality.** Messy exports, late records, fragmented folders, and deadline pressure are first-class design constraints.
-- **Operator-first.** The platform is not just storage. It stages the next move.
-- **AI with guardrails.** Structured sidecars, source links, validation, and review queues keep outputs traceable.
-- **Static where possible. Automated where useful.** Fast to deploy, easy to inspect, hard to break.
-- **Commercially legible.** Home, showcase, portal, and official brief all tell one clean product story.
+## Citation shape
 
----
+A query result contains both an inspectable score and a verifiable citation:
 
-## Proof points
+```json
+{
+  "score_breakdown": {
+    "bm25": 4.36619916,
+    "exact_phrase": 0.0,
+    "heading_boost": 0.95257955
+  },
+  "citation": {
+    "address": "D0001:7-7@af7d25ba403d",
+    "artifact_id": "D0001",
+    "path": "depositions/D0001_outline.md",
+    "line_start": 7,
+    "line_end": 7
+  }
+}
+```
 
-Headline metrics bind to [`docs/site-data.json`](docs/site-data.json) — see the
-[public content policy](docs/public-content-policy.md).
-
-| Metric | Scale |
-| --- | ---: |
-| Artifacts cataloged | 1,887 |
-| Active matters represented | 64 |
-| Behavioral patterns indexed | 197 |
-| Emails processed | 6,000+ |
-| Artifact classes | 23 |
-| Verification suite | 800 tests |
-
----
-
-## Product surfaces
-
-- **[Stonewall home](https://www.stnwl.ai/)** — the live product narrative.
-- **[Showcase exhibit](https://stnwlai.github.io/stnwl.ai/)** — this repository's deployed Pages front door.
-- **[Official brief](docs/overview/official-brief.md)** — the product thesis in long form.
-- **[Operator portal demo](https://stnwlai.github.io/stnwl.ai/portal/)** — the static command-cockpit exhibit with JSON data snapshots.
-- **[Architecture](docs/ARCHITECTURE.md)** — the engineering-grade walkthrough of every layer.
-- **[Reference corpus](hoss-stonewall/sample_corpus/)** — a deterministic, generator-built corpus that exercises ingest, classification, and verification end to end.
-
----
+The complete result also carries full SHA-256 digests for the artifact and
+selected span. `--verify-citations` reopens the source, checks the artifact
+digest, reselects the exact line range, and checks the span digest.
 
 ## Architecture
 
 ```text
-OneDrive / Outlook / Case Files
-            |
-            v
-      Ingestion Pipeline
-            |
-            v
-  Parsing + Markdown Sidecars
-            |
-            v
- Classification + AI Review
-            |
-            v
-      Notion Operator Layer
-            |
-            v
- QC Reports + Static Showcase
+Coded Markdown corpus
+        |
+        v
+strict compiler + heading-aware chunker
+                  |
+                  v
+explainable retrieval + verified citations
+                  |
+                  v
+       content-addressed bundle
+                  |
+                  v
+      reproducibility + boundary gates
 ```
 
-The system favors inspectable files, repeatable scripts, environment-based configuration,
-and CI-visible checks over opaque one-off automation.
+This is intentionally a small, legible system: strict inputs, deterministic
+derivations, source-addressed outputs, and failure modes that are easy to test.
 
----
+## Publication boundary
 
-## Quickstart
+[`public-boundary.toml`](public-boundary.toml) declares the repository boundary.
+The checker enumerates tracked and non-ignored candidates directly from Git,
+rejects denied paths and file types, validates the coded-corpus metadata
+contract, scans common contact and credential shapes without printing matched
+values, and compares every candidate with
+[`public-tree-manifest.json`](public-tree-manifest.json).
 
-The exact sequence CI runs on every push (`.github/workflows/verify.yml`):
+```bash
+PYTHONPATH=src python3 scripts/check_public_boundary.py
+```
+
+The committed manifest records each file's path, byte length, SHA-256 digest,
+executable bit, content class, generator, and destination. Adding or changing a candidate without
+refreshing and reviewing that manifest blocks CI.
+
+## Verification
+
+The pull-request gate runs:
 
 ```bash
 node --test tests/tracker_helpers.test.mjs tests/email_consolidator.test.mjs
 python3 -m unittest discover -s tests -p "test_*.py"
+python3 scripts/generate_sample_corpus.py --check
+PYTHONPATH=src python3 -m stonewall --corpus hoss-stonewall/sample_corpus build --output build/reference
+PYTHONPATH=src python3 -m stonewall --corpus hoss-stonewall/sample_corpus verify --output build/reference
+PYTHONPATH=src python3 scripts/check_public_boundary.py
 python3 scripts/check_showcase_voice.py
 python3 scripts/verify_repo_consistency.py
 python3 scripts/repo_sweep.py
 ```
 
-There is no `package.json` or `requirements.txt` — the Node scripts are
-zero-dependency ESM, and Python scripts that need extraction libraries take them
-at runtime via `uv run --with <pkg>`. Copy `.env.example` to `.env` before
-running anything that talks to Notion or OneDrive.
-
----
-
-## Stack
-
-| Layer | Tools |
-| --- | --- |
-| Runtime | Python 3.12, Node.js 22, PowerShell 7+ |
-| Package management | `uv` (runtime dependency injection) |
-| AI | Anthropic Claude API, OpenAI API |
-| Case management | Notion API |
-| Storage | Microsoft OneDrive |
-| Automation | GitHub Actions |
-| Delivery | Static HTML on Pages |
-
----
+Tests cover strict parsing, coded-record provenance, byte-identical independent
+builds, citation drift, retrieval explanations, boundary canaries,
+manifest drift, and generator parity.
 
 ## Repository map
 
 ```text
 .
-├── docs/                     # showcase site, product docs, and operator portal
-│   ├── overview/             # official brief, product architecture, workflow surfaces
-│   ├── showcase/             # engineering-exhibit narratives
-│   └── portal/               # portal demo app and JSON data snapshots
-├── hoss-stonewall/
-│   └── sample_corpus/        # deterministic reference corpus, verified in CI
-├── scripts/                  # ingestion, sync, QC, and reporting automation
-├── agents/                   # AI agent configuration
-├── tests/                    # Node + Python verification suites
-├── archive/                  # durable narrative edition of the showcase
-├── .github/workflows/        # CI/CD pipelines
-└── .env.example              # required environment variables
+├── src/stonewall/                # evidence compiler, retrieval, bundle, boundary
+├── hoss-stonewall/sample_corpus/ # deterministic coded reference corpus
+├── tests/                        # focused contracts plus existing automation tests
+├── scripts/                      # corpus generator, boundary check, automation utilities
+├── docs/                         # product site, portal, and engineering notes
+├── public-boundary.toml          # declared publication rules
+└── public-tree-manifest.json     # exact candidate-tree attestation
 ```
 
----
+## Product surfaces
+
+- [Stonewall home](https://www.stnwl.ai/)
+- [Engineering showcase](https://stnwlai.github.io/stnwl.ai/)
+- [Operator portal](https://stnwlai.github.io/stnwl.ai/portal/)
+- [Official brief](docs/overview/official-brief.md)
 
 ## Security posture
 
-- Credentials are never committed. API tokens, database IDs, and file paths load
-  from environment variables documented in `.env.example`.
-- The verification workflow runs the full test suite, voice guard, consistency
-  check, and hygiene sweep on every push.
-- Sync operations are idempotent and rate-limit aware by design.
+- Credentials and environment-specific identifiers stay outside the repository.
+- Generated evidence bundles are derived outputs and remain ignored by Git.
+- Citation verification fails on source or span drift.
+- Publication checks emit rule and location only, never the matched value.
+- CI requires the candidate tree to match the reviewed publication manifest.
 
----
-
-## Bottom line
-
-**Stonewall converts litigation chaos into operational leverage.**
-
-It is the control plane between the document mess and the legal move that wins the day.
+Stonewall turns document collections into an evidence surface that can explain
+what it found and prove where it came from.

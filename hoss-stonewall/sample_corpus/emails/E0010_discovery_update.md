@@ -1,14 +1,12 @@
 ---
 id: E0010
 type: email
-matter: Jackson v. Hooli Transport
-direction: outbound
 date: 2025-11-11
 ---
 
-# Email — Discovery Status
+# Communication Record E0010 — Discovery Status
 
-Subject: Jackson v. Hooli Transport — Discovery Update
+Subject: Communication E0010 — Discovery Update
 
 Counsel,
 

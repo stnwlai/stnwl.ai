@@ -1,0 +1,72 @@
+version = 1
+manifest_path = "public-tree-manifest.json"
+reference_root = "hoss-stonewall/sample_corpus"
+
+allowed_exact_paths = [
+  ".env.example",
+  ".gitignore",
+  "AGENTS.md",
+  "CLAUDE.md",
+  "LICENSE",
+  "README.md",
+  "SKILL.md",
+  "public-boundary.toml",
+  "public-tree-manifest.json",
+  "pyproject.toml",
+  "wrangler.toml",
+]
+
+allowed_path_prefixes = [
+  ".claude/",
+  ".docs-drift/",
+  ".github/",
+  "agents/",
+  "archive/",
+  "docs/",
+  "hoss-stonewall/",
+  "scripts/",
+  "src/",
+  "tests/",
+]
+
+allowed_email_domains = [
+  "example.com",
+  "example.test",
+  "users.noreply.github.com",
+]
+
+denied_exact_paths = [
+  ".env",
+  ".env.local",
+  ".env.production",
+  ".claude/settings.local.json",
+]
+
+denied_path_prefixes = [
+  ".stonewall/",
+  "build/",
+  "catalog/",
+  "sources/",
+  "tmp/",
+]
+
+denied_suffixes = [
+  ".db",
+  ".docx",
+  ".key",
+  ".msg",
+  ".p12",
+  ".pdf",
+  ".pem",
+  ".pfx",
+  ".sqlite",
+  ".xls",
+  ".xlsx",
+  ".zip",
+]
+
+reference_metadata_fields = [
+  "date",
+  "id",
+  "type",
+]

@@ -4,7 +4,7 @@ Email to Markdown — Stonewall Legal Intelligence Platform
 ==========================================
 Reads consolidated_emails.json and generates:
 1. EMAIL_MASTER_INDEX.md — metadata table for quick scanning
-2. Per-month .md files in sources/emails/md/ with full body text
+2. Per-month .md files in reference_data/mail/md/ with full body text
 
 Usage:
   python3 scripts/email_to_md.py
@@ -16,8 +16,8 @@ from collections import defaultdict
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_DIR = os.path.join(SCRIPT_DIR, '..')
-EMAILS_JSON = os.path.join(REPO_DIR, 'sources', 'emails', 'consolidated_emails.json')
-EMAILS_DIR = os.path.join(REPO_DIR, 'sources', 'emails')
+EMAILS_JSON = os.path.join(REPO_DIR, 'reference_data', 'mail', 'consolidated_emails.json')
+EMAILS_DIR = os.path.join(REPO_DIR, 'reference_data', 'mail')
 MD_DIR = os.path.join(EMAILS_DIR, 'md')
 
 os.makedirs(MD_DIR, exist_ok=True)

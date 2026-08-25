@@ -1,17 +1,15 @@
 ---
 id: M0011
 type: case
-matter: White v. Dunder Mifflin
-status: active
-opened: 2025-12-12
+date: 2025-12-12
 ---
 
-# White v. Dunder Mifflin
+# Matter M0011 — Commercial Transport
 
 ## Posture
 
-Discovery phase. Plaintiff alleges a commercial vehicle incident; defendant
-has answered and demanded jury trial. The matter sits in the active runway
+Discovery phase. Claimant Role A alleges a commercial vehicle event;
+Organization Role B has answered and requested trial. The matter sits in the active runway
 with discovery requests outstanding and the deposition window opening next
 quarter.
 

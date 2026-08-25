@@ -1,14 +1,12 @@
 ---
 id: E0011
 type: email
-matter: White v. Dunder Mifflin
-direction: outbound
 date: 2025-12-12
 ---
 
-# Email — Discovery Status
+# Communication Record E0011 — Discovery Status
 
-Subject: White v. Dunder Mifflin — Discovery Update
+Subject: Communication E0011 — Discovery Update
 
 Counsel,
 

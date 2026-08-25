@@ -1,15 +1,15 @@
 ---
 id: C0009
 type: character
-role: Investigator
+date: 2025-10-10
 ---
 
-# Character Card — Investigator 009
+# Actor Card C0009 — Investigator Role
 
 ## Role
 
-Investigator appearing in commercial litigation matters. Tracked across the
-portfolio for cast-codex routing and pattern analysis.
+Investigator vocabulary record used to exercise deterministic retrieval and citation
+verification across the reference corpus.
 
 ## Pattern Tags
 

@@ -1,19 +1,11 @@
 {
-  "cataloged_artifacts": 1887,
-  "active_matters": 64,
-  "pattern_tags": 197,
-  "artifact_classes": 23,
-  "emails_indexed": 6000,
-  "analyzed_pct": 83.8,
-  "active_rows": 1604,
-  "tombstoned_rows": 283,
-  "validation_errors": 0,
-  "validation_warnings": 0,
-  "brain_version": "v12.1",
-  "urgent_runway": 3,
-  "packets_ready": 2,
-  "live_threads": 1,
-  "showcase_matters": 12,
-  "showcase_artifacts": 78,
-  "showcase_patterns": 8
+  "schema_version": 1,
+  "source_class": "coded_reference",
+  "cataloged_artifacts": 78,
+  "active_matters": 12,
+  "pattern_tags": 8,
+  "artifact_classes": 8,
+  "email_records": 14,
+  "role_records": 10,
+  "bundle_outputs": 3
 }

@@ -68,7 +68,7 @@ class IngestOneDriveTests(unittest.TestCase):
         self.assertGreaterEqual(primary.score, 120)
 
     def test_classify_artifact_detects_billing(self) -> None:
-        category, tags = classify_artifact(Path("Timesheet 2026-03-19 (timekeeper golden hours).csv"), "")
+        category, tags = classify_artifact(Path("Timesheet 2026-03-19 (timekeeper TK0000).csv"), "")
         self.assertEqual(category, "Billing Forensics")
         self.assertEqual(tags, ["billing", "forensics"])
 
@@ -183,7 +183,7 @@ class IngestOneDriveTests(unittest.TestCase):
 
     def test_normalize_path_for_export_strips_absolute_derivative(self) -> None:
         """normalize_path_for_export anchors at sources/ for derivative paths."""
-        abs_path = r"C:\Users\<username>\Documents\Stonewall\sources\onedrive_ingest\firm\doc.pdf.md"
+        abs_path = r"C:\Users\example\reference-repo\sources\onedrive_ingest\firm\doc.pdf.md"
         self.assertEqual(
             normalize_path_for_export(abs_path, "firm"),
             "sources/onedrive_ingest/firm/doc.pdf.md",

@@ -1,11 +1,10 @@
 ---
 id: B0002
 type: billing
-matter: Doe v. Massive Dynamic
-period: 2025-03
+date: 2025-03-01
 ---
 
-# Billing — Doe v. Massive Dynamic
+# Billing Record B0002
 
 | Date       | Task                          | Hours | Rate  | Amount  |
 |------------|-------------------------------|-------|-------|---------|

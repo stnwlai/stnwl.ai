@@ -1,8 +1,8 @@
 # Core Legal Intelligence Use Cases
 
-**Perspective:** Founder as first user
+**Perspective:** Litigation team
 
-This document defines the core user jobs, key workflows, and success criteria for Stonewall's legal intelligence product. The use cases are drawn from active daily use by the founding operator across a high-volume civil litigation docket. Each entry maps to a concrete workflow the platform must execute reliably before it can be packaged for a second operator.
+This document defines the core user jobs, key workflows, and success criteria for Stonewall's legal intelligence product. The use cases model recurring work across a high-volume civil litigation docket. Each entry maps to a concrete workflow the platform must execute reliably for a litigation team.
 
 ---
 
@@ -115,7 +115,7 @@ This document defines the core user jobs, key workflows, and success criteria fo
 ### Workflow
 
 1. Operator opens the Shelby chat surface.
-2. Operator poses a question: "What is the current posture on the Wonka Industries matter?" or "Which matters have a statute of limitations expiring before October?"
+2. Operator poses a question: "What is the current posture on matter M0004?" or "Which matters have a statute of limitations expiring before October?"
 3. Shelby resolves the question through routed recall: it identifies the relevant codex files and corpus sections, reads them fresh, then synthesizes a response with inline source citations.
 4. Operator follows a citation to the underlying artifact in one click.
 5. If Shelby cannot answer with confidence from the corpus, it says so — and identifies what additional ingestion would close the gap.

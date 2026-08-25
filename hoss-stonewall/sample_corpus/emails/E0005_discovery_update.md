@@ -1,14 +1,12 @@
 ---
 id: E0005
 type: email
-matter: Davis v. Aperture Hauling
-direction: outbound
 date: 2025-06-06
 ---
 
-# Email — Discovery Status
+# Communication Record E0005 — Discovery Status
 
-Subject: Davis v. Aperture Hauling — Discovery Update
+Subject: Communication E0005 — Discovery Update
 
 Counsel,
 
