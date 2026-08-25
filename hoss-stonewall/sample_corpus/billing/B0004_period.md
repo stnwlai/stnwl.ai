@@ -1,11 +1,10 @@
 ---
 id: B0004
 type: billing
-matter: Brown v. Wonka Industries
-period: 2025-05
+date: 2025-05-01
 ---
 
-# Billing — Brown v. Wonka Industries
+# Billing Record B0004
 
 | Date       | Task                          | Hours | Rate  | Amount  |
 |------------|-------------------------------|-------|-------|---------|

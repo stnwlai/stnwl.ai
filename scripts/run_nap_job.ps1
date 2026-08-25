@@ -66,7 +66,7 @@ try {
 
     & "$PSScriptRoot\ingest_onedrive.ps1" refresh-cases --output "scripts/case_index.json"
     & "$PSScriptRoot\ingest_onedrive.ps1" ingest --root all --since $since --limit $Limit --sync-notion --sync-workers $SyncWorkers
-    & "$PSScriptRoot\ingest_onedrive.ps1" report --output "catalog/intake/onedrive_status_report.md"
+    & "$PSScriptRoot\ingest_onedrive.ps1" report --output "reference_data/reports/onedrive_status_report.md"
     python scripts\tactical_brief.py today | Tee-Object -FilePath $briefPath
 
     Write-NapStatus -State "completed" -Extra @{

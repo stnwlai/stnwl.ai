@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Stonewall is a legal document intelligence platform for law firms handling high-volume civil litigation. It automates email ingestion, document processing, AI-powered tagging, Notion-based case management, and QC reporting.
 
 The platform consists of:
+- **`src/stonewall/`** — standard-library evidence compiler, retrieval, citation, bundle, and publication-boundary package
 - **`scripts/`** — Python, Node.js, and PowerShell automation scripts
 - **`tests/`** — Test suites for the automation scripts
 - **`.github/workflows/`** — CI/CD pipeline definitions
@@ -49,7 +50,13 @@ node --test tests/tracker_helpers.test.mjs
 node --test tests/email_consolidator.test.mjs
 
 # Python test suite
-python -m unittest discover -s tests -p "test_*.py"
+python3 -m unittest discover -s tests -p "test_*.py"
+
+# Evidence reference
+PYTHONPATH=src python3 -m stonewall --corpus hoss-stonewall/sample_corpus build --output build/reference
+PYTHONPATH=src python3 -m stonewall --corpus hoss-stonewall/sample_corpus query "deposition scheduling" --verify-citations
+PYTHONPATH=src python3 -m stonewall --corpus hoss-stonewall/sample_corpus verify --output build/reference
+PYTHONPATH=src python3 scripts/check_public_boundary.py
 ```
 
 ## Common Commands

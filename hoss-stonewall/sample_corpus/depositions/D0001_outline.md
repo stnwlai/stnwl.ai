@@ -1,16 +1,14 @@
 ---
 id: D0001
 type: deposition
-matter: Jones v. Umbrella Shipping
-witness: Witness 001
 date: 2025-02-02
 ---
 
-# Deposition Outline — Jones v. Umbrella Shipping
+# Deposition Plan D0001
 
 ## Background
 
-1. Confirm name and current employer.
+1. Confirm the witness role and organizational relationship.
 2. Confirm role at the time of the underlying event.
 3. Walk through training history at a high level.
 

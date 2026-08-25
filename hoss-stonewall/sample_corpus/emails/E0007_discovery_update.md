@@ -1,14 +1,12 @@
 ---
 id: E0007
 type: email
-matter: Taylor v. Globex Logistics
-direction: outbound
 date: 2025-08-08
 ---
 
-# Email — Discovery Status
+# Communication Record E0007 — Discovery Status
 
-Subject: Taylor v. Globex Logistics — Discovery Update
+Subject: Communication E0007 — Discovery Update
 
 Counsel,
 

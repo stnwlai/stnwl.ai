@@ -1,11 +1,10 @@
 ---
 id: B0006
 type: billing
-matter: Wilson v. Strickland Propane
-period: 2025-07
+date: 2025-07-01
 ---
 
-# Billing — Wilson v. Strickland Propane
+# Billing Record B0006
 
 | Date       | Task                          | Hours | Rate  | Amount  |
 |------------|-------------------------------|-------|-------|---------|

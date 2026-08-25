@@ -4,11 +4,11 @@ push plan without requiring a live ``NOTION_TOKEN``.
 
 Aggregates case metadata from ``scripts/case_index.json`` and
 ``scripts/case_dates.json``, optionally enriches with complaint-date
-candidates extracted from ``sources/emails/consolidated_emails.json``
+candidates extracted from ``reference_data/mail/consolidated_emails.json``
 and markdown scans, and writes:
 
-* ``catalog/intake/legal_matters_offline_backfill_{stamp}.csv``
-* ``catalog/intake/legal_matters_offline_backfill_{stamp}.md``
+* ``reference_data/reports/legal_matters_offline_backfill_{stamp}.csv``
+* ``reference_data/reports/legal_matters_offline_backfill_{stamp}.md``
 
 Usage::
 
@@ -32,7 +32,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 DEFAULT_CASE_INDEX = REPO_ROOT / "scripts" / "case_index.json"
 DEFAULT_CASE_DATES = REPO_ROOT / "scripts" / "case_dates.json"
-DEFAULT_EMAILS = REPO_ROOT / "sources" / "emails" / "consolidated_emails.json"
+DEFAULT_EMAILS = REPO_ROOT / "reference_data" / "mail" / "consolidated_emails.json"
 
 MAX_SCAN_FILE_BYTES = 512_000
 
@@ -148,7 +148,7 @@ def scan_markdown_candidates(
     candidates: defaultdict[str, list[str]] = defaultdict(list)
     if patterns is None:
         patterns = [
-            str(REPO_ROOT / "sources" / "emails" / "**" / "*.md"),
+            str(REPO_ROOT / "reference_data" / "mail" / "**" / "*.md"),
             str(REPO_ROOT / "catalog" / "**" / "*.md"),
         ]
     case_names = list(cases.keys()) if cases else []

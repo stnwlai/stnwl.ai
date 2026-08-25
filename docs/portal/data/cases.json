@@ -1,85 +1,87 @@
 {
+  "schema_version": 1,
+  "source_class": "coded_reference",
   "matters": [
     {
       "id": "M0001",
-      "label": "Jones v. Umbrella Shipping",
+      "label": "Matter M0001 — Commercial Transport",
       "posture": "Mediation packet staging",
       "runway": "8d",
       "status": "readying packet"
     },
     {
       "id": "M0002",
-      "label": "Doe v. Massive Dynamic",
+      "label": "Matter M0002 — Commercial Transport",
       "posture": "Deposition window open",
       "runway": "5d",
       "status": "deposition prep"
     },
     {
       "id": "M0003",
-      "label": "Roe v. Wayne Logistics",
+      "label": "Matter M0003 — Commercial Transport",
       "posture": "Discovery requests outstanding",
       "runway": "18d",
       "status": "discovery"
     },
     {
       "id": "M0004",
-      "label": "Brown v. Wonka Industries",
+      "label": "Matter M0004 — Commercial Transport",
       "posture": "Expert review queue",
       "runway": "21d",
       "status": "discovery"
     },
     {
       "id": "M0005",
-      "label": "Davis v. Aperture Hauling",
+      "label": "Matter M0005 — Commercial Transport",
       "posture": "Witness prep underway",
       "runway": "3d",
       "status": "deposition prep"
     },
     {
       "id": "M0006",
-      "label": "Wilson v. Strickland Propane",
+      "label": "Matter M0006 — Commercial Transport",
       "posture": "Reserve committee review",
       "runway": "14d",
       "status": "monitoring"
     },
     {
       "id": "M0007",
-      "label": "Taylor v. Globex Logistics",
+      "label": "Matter M0007 — Commercial Transport",
       "posture": "Correspondence normalized",
       "runway": "41d",
       "status": "monitoring"
     },
     {
       "id": "M0008",
-      "label": "Anderson v. Soylent Transport",
+      "label": "Matter M0008 — Commercial Transport",
       "posture": "Motion to compel pending",
       "runway": "11d",
       "status": "discovery"
     },
     {
       "id": "M0009",
-      "label": "Thomas v. Tyrell Group",
+      "label": "Matter M0009 — Commercial Transport",
       "posture": "Jury trial demand on file",
       "runway": "62d",
       "status": "trial prep"
     },
     {
       "id": "M0010",
-      "label": "Jackson v. Hooli Transport",
+      "label": "Matter M0010 — Commercial Transport",
       "posture": "Demand package staging",
       "runway": "9d",
       "status": "readying packet"
     },
     {
       "id": "M0011",
-      "label": "White v. Dunder Mifflin",
+      "label": "Matter M0011 — Commercial Transport",
       "posture": "Expert report cutoff approaching",
       "runway": "7d",
       "status": "discovery"
     },
     {
       "id": "M0012",
-      "label": "Harris v. Octan Freight",
+      "label": "Matter M0012 — Commercial Transport",
       "posture": "Discovery cutoff rolling",
       "runway": "30d",
       "status": "discovery"

@@ -1,17 +1,15 @@
 ---
 id: M0006
 type: case
-matter: Wilson v. Strickland Propane
-status: active
-opened: 2025-07-07
+date: 2025-07-07
 ---
 
-# Wilson v. Strickland Propane
+# Matter M0006 — Commercial Transport
 
 ## Posture
 
-Discovery phase. Plaintiff alleges a commercial vehicle incident; defendant
-has answered and demanded jury trial. The matter sits in the active runway
+Discovery phase. Claimant Role A alleges a commercial vehicle event;
+Organization Role B has answered and requested trial. The matter sits in the active runway
 with discovery requests outstanding and the deposition window opening next
 quarter.
 

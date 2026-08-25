@@ -1,14 +1,12 @@
 ---
 id: E0008
 type: email
-matter: Anderson v. Soylent Transport
-direction: outbound
 date: 2025-09-09
 ---
 
-# Email — Discovery Status
+# Communication Record E0008 — Discovery Status
 
-Subject: Anderson v. Soylent Transport — Discovery Update
+Subject: Communication E0008 — Discovery Update
 
 Counsel,
 

@@ -1,16 +1,14 @@
 ---
 id: D0003
 type: deposition
-matter: Roe v. Wayne Logistics
-witness: Witness 003
 date: 2025-04-04
 ---
 
-# Deposition Outline — Roe v. Wayne Logistics
+# Deposition Plan D0003
 
 ## Background
 
-1. Confirm name and current employer.
+1. Confirm the witness role and organizational relationship.
 2. Confirm role at the time of the underlying event.
 3. Walk through training history at a high level.
 

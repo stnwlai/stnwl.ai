@@ -1,16 +1,14 @@
 ---
 id: D0006
 type: deposition
-matter: Wilson v. Strickland Propane
-witness: Witness 006
 date: 2025-07-07
 ---
 
-# Deposition Outline — Wilson v. Strickland Propane
+# Deposition Plan D0006
 
 ## Background
 
-1. Confirm name and current employer.
+1. Confirm the witness role and organizational relationship.
 2. Confirm role at the time of the underlying event.
 3. Walk through training history at a high level.
 

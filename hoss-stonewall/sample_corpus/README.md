@@ -1,38 +1,30 @@
-# Showcase Corpus
+# Coded Reference Corpus
 
-This directory holds 78 working artifacts across eight categories that
-exercise the Stonewall ingest, manifest, classification, and verification
-surfaces end-to-end:
+This directory holds 78 working artifacts across eight categories. Coded matter
+identifiers exercise the Stonewall compiler, retrieval, citation, and
+verification contracts end to end.
 
 | Directory       | Count | What it represents                                            |
 |-----------------|-------|---------------------------------------------------------------|
-| `cases/`        | 12    | Matter postures, key dates, pattern tags                      |
-| `depositions/`  | 10    | Witness outlines                                              |
+| `cases/`        | 12    | Coded matter postures, key dates, pattern tags                |
+| `depositions/`  | 10    | Role-addressed deposition plans                               |
 | `transcripts/`  | 8     | Status-conference transcripts                                 |
 | `emails/`       | 14    | Counsel-to-counsel correspondence                             |
 | `motions/`      | 10    | Motion-to-compel filings                                      |
-| `characters/`   | 10    | Cast cards (adjuster, expert, witness, defense counsel)       |
-| `patterns/`     | 8     | Phenomenology pattern definitions                             |
+| `characters/`   | 10    | Coded role cards                                               |
+| `patterns/`     | 8     | Neutral procedure-signal definitions                          |
 | `billing/`      | 6     | Period billing statements                                     |
 
 ## Verification
 
-Every artifact is exercised by **9 checks** in
-[`tests/test_sample_corpus.py`](../../tests/test_sample_corpus.py):
+The corpus is checked at three levels:
 
-1. `exists`
-2. `non_empty`
-3. `is_utf8`
-4. `has_yaml_front_matter`
-5. `front_matter_has_id`
-6. `front_matter_has_type`
-7. `has_h1_heading`
-8. `ends_with_newline`
-9. `body_has_content`
-
-That produces **702 per-artifact tests + 5 corpus-wide invariants =
-707 tests** in this module alone, contributing to the showcase's 700+
-test verification suite.
+1. Per-file shape checks require UTF-8, strict front matter, headings, and body
+   content.
+2. The evidence compiler rejects duplicate IDs, malformed dates, and structural
+   drift.
+3. Reproducibility tests require independent bundles to be byte-identical and
+   every returned citation to verify against its source lines.
 
 ## Regenerating
 
@@ -40,4 +32,10 @@ The corpus is deterministic. To regenerate after editing the generator:
 
 ```bash
 python3 scripts/generate_sample_corpus.py
+```
+
+To compare the checked-in tree with a fresh generation without changing files:
+
+```bash
+python3 scripts/generate_sample_corpus.py --check
 ```

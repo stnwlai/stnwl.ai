@@ -17,16 +17,20 @@ credentials.*
 .idea/
 __pycache__/
 *.pyc
+.pytest_cache/
+.coverage
+build/
+dist/
+*.egg-info/
 
 # Batch processing output files — contain production data, never commit
 scripts/batches/*.json
 matched_emails.json
 
-# Email export artifacts — untracked to reduce repo weight
-# Raw CSVs/XLSX: re-export from Outlook; consolidated JSON: rebuild via scripts/email_consolidator.mjs
-sources/emails/**/*.csv
-sources/emails/**/*.xlsx
-sources/emails/consolidated_emails.json
+# Connector and extraction output is never a publication source.
+/sources/
+/catalog/
+/tmp/
 
 # Local-only manual overrides (user-specific, never commit)
 *.local.json
@@ -35,9 +39,9 @@ sources/emails/consolidated_emails.json
 .docs-drift/last-run.json
 
 # Generated intake planning/report artifacts
-catalog/intake/*.jsonl
-catalog/intake/*_report_*.md
-catalog/intake/*_report*.json
+reference_data/reports/*.jsonl
+reference_data/reports/*_report_*.md
+reference_data/reports/*_report*.json
 # Generated intake/sync run artifacts (ephemeral, date-stamped)
-catalog/intake/notion_sync_report_*.md
-catalog/intake/onedrive_notion_update_report_*.md
+reference_data/reports/notion_sync_report_*.md
+reference_data/reports/onedrive_notion_update_report_*.md

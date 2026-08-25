@@ -6,7 +6,7 @@ This runbook describes how to keep the Stonewall showcase surfaces aligned acros
 
 1. **Lead with innovation** — every published surface should foreground the platform thesis, not process commentary.
 2. **Keep one narrative** — the showcase, official brief, and portal should feel like one product argument told in different formats.
-3. **Preserve architectural clarity** — the audience should immediately understand the flat-file database, CLI layer, AI recall system, workflow sync, verification gates, and portal stack.
+3. **Preserve architectural clarity** — the audience should immediately understand content-addressed evidence, citations, retrieval explanations, and the publication gate.
 4. **Ship cleanly** — links, counts, and deployment surfaces should stay synchronized so the sendable URL always feels premium.
 
 ## Publication Workflow
@@ -25,15 +25,10 @@ Refresh these files together whenever the product story evolves:
 
 Check that each surface reinforces the same core claims:
 
-- flat-file searchable database
-- stdlib-only CLI intelligence layer
-- AI recall architecture
-- automated ingestion pipeline
-- multi-platform sync with Notion as operator layer
-- verification and QC automation
-- phenomenology registry
-- static portal deployment
-- workflow leverage through DataGavel readiness and live deposition tailoring
+- content-addressed evidence bundles
+- line-verifiable citations
+- explainable retrieval
+- exact-tree publication checks
 
 ### 3. Verify the deploy surfaces
 

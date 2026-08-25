@@ -1,16 +1,14 @@
 ---
 id: D0007
 type: deposition
-matter: Taylor v. Globex Logistics
-witness: Witness 007
 date: 2025-08-08
 ---
 
-# Deposition Outline — Taylor v. Globex Logistics
+# Deposition Plan D0007
 
 ## Background
 
-1. Confirm name and current employer.
+1. Confirm the witness role and organizational relationship.
 2. Confirm role at the time of the underlying event.
 3. Walk through training history at a high level.
 

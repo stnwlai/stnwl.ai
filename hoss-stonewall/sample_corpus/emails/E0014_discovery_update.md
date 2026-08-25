@@ -1,14 +1,12 @@
 ---
 id: E0014
 type: email
-matter: Doe v. Massive Dynamic
-direction: outbound
 date: 2025-03-15
 ---
 
-# Email — Discovery Status
+# Communication Record E0014 — Discovery Status
 
-Subject: Doe v. Massive Dynamic — Discovery Update
+Subject: Communication E0014 — Discovery Update
 
 Counsel,
 

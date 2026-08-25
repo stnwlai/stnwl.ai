@@ -1,14 +1,12 @@
 ---
 id: E0013
 type: email
-matter: Jones v. Umbrella Shipping
-direction: outbound
 date: 2025-02-14
 ---
 
-# Email — Discovery Status
+# Communication Record E0013 — Discovery Status
 
-Subject: Jones v. Umbrella Shipping — Discovery Update
+Subject: Communication E0013 — Discovery Update
 
 Counsel,
 

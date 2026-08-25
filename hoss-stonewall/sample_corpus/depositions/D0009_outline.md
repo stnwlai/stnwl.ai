@@ -1,16 +1,14 @@
 ---
 id: D0009
 type: deposition
-matter: Thomas v. Tyrell Group
-witness: Witness 009
 date: 2025-10-10
 ---
 
-# Deposition Outline — Thomas v. Tyrell Group
+# Deposition Plan D0009
 
 ## Background
 
-1. Confirm name and current employer.
+1. Confirm the witness role and organizational relationship.
 2. Confirm role at the time of the underlying event.
 3. Walk through training history at a high level.
 

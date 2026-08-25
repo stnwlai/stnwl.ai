@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stonewall-evidence"
+version = "0.1.0"
+description = "Citation-first evidence infrastructure for litigation teams"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+authors = [{ name = "Stonewall" }]
+dependencies = []
+
+[project.scripts]
+stonewall = "stonewall.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]

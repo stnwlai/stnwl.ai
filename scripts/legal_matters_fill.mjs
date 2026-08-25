@@ -15,7 +15,7 @@ import { join, dirname } from "path";
 
 const TOKEN = process.env.NOTION_TOKEN || "";
 const LEGAL_DB = process.env.NOTION_LEGAL_MATTERS_DB || "YOUR_LEGAL_MATTERS_DATABASE_ID";
-const EMAILS_JSON = join(dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, "$1")), "..", "sources", "emails", "consolidated_emails.json");
+const EMAILS_JSON = join(dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, "$1")), "..", "reference_data", "mail", "consolidated_emails.json");
 const CASE_INDEX = join(dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, "$1")), "case_index.json");
 const CASE_DATES = join(dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, "$1")), "case_dates.json");
 
@@ -116,7 +116,7 @@ function classifyDollar(context) {
 }
 
 function extractCaseNumber(text) {
-  // Florida case number patterns
+  // regional case number patterns
   const patterns = [
     /(\d{2,4})-?CA-?(\d{4,8})/gi,
     /case\s*(?:no|number|#)[.:]*\s*(\d{2,4}CA\d{4,8}\w*)/gi,

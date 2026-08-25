@@ -174,7 +174,6 @@ class VerifyRepoConsistencyTests(unittest.TestCase):
             repo_root = Path(tmpdir)
             (repo_root / "catalog").mkdir()
             (repo_root / "sources" / "depositions").mkdir(parents=True)
-            (repo_root / "sources" / "emails" / "md").mkdir(parents=True)
 
             manifest_path = repo_root / "catalog" / "manifest.md"
             manifest_path.write_text("# Manifest\n", encoding="utf-8")
@@ -182,10 +181,6 @@ class VerifyRepoConsistencyTests(unittest.TestCase):
             (repo_root / "sources" / "depositions" / "Sample_Deposition_Verbatim.md").write_text(
                 "indexed elsewhere", encoding="utf-8"
             )
-            (repo_root / "sources" / "emails" / "md" / "emails_2026_03.md").write_text(
-                "generated monthly export", encoding="utf-8"
-            )
-
             report = build_report(repo_root=repo_root, manifest_path=manifest_path)
             self.assertEqual(report["tracked_source_file_count"], 0)
             self.assertEqual(report["uncataloged_canonical_sources"], [])

@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Command Portal — Stonewall</title>
-  <meta name="description" content="Static operator dashboard demo: matters, deadlines, artifacts, patterns, cast, billing, and local preferences.">
+  <meta name="description" content="Static operator dashboard demo: coded records, deadlines, artifacts, patterns, roles, billing, and local preferences.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,700&amp;family=Source+Sans+3:wght@400;600;700&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -26,7 +26,7 @@
         <button type="button" data-page="artifacts">Artifacts</button>
         <button type="button" data-page="playbooks">Playbooks</button>
         <button type="button" data-page="patterns">Patterns</button>
-        <button type="button" data-page="characters">Cast</button>
+        <button type="button" data-page="characters">Roles</button>
         <button type="button" data-page="billing">Billing</button>
         <button type="button" data-page="settings">Settings</button>
       </nav>
@@ -115,7 +115,7 @@
             <thead>
               <tr>
                 <th>Date</th>
-                <th>Matter</th>
+                <th>Record</th>
                 <th>Event</th>
                 <th>Band</th>
               </tr>
@@ -140,7 +140,7 @@
               <tr>
                 <th>ID</th>
                 <th>Type</th>
-                <th>Matter</th>
+                <th>Source</th>
                 <th>Summary</th>
                 <th>Date</th>
               </tr>
@@ -158,8 +158,8 @@
           <p class="eyebrow">Innovation transfer</p>
           <h1 class="page-title">Playbooks</h1>
           <p class="lede">
-            This page packages the high-leverage Stonewall innovations into runnable operational modules.
-            Use it as the launchpad for the main pipeline lanes.
+            This page presents four bounded engineering contracts as runnable reference modules.
+            Use it to inspect their compile, retrieve, verify, and publication lanes.
           </p>
         </header>
 
@@ -167,7 +167,7 @@
           <article class="card">
             <div class="card-header">
               <h2 class="card-title">Innovation modules</h2>
-              <span class="card-badge">repo-derived</span>
+              <span class="card-badge">reference implementation</span>
             </div>
             <div id="playbook-modules" class="playbook-grid"></div>
           </article>
@@ -203,9 +203,9 @@
     <div id="page-patterns" class="page">
       <div class="shell">
         <header class="page-header">
-          <p class="eyebrow">Phenomenology registry</p>
-          <h1 class="page-title">Pattern hits</h1>
-          <p class="lede">Named taxonomy entries trace behavior across the corpus.</p>
+          <p class="eyebrow">Pattern reference</p>
+          <h1 class="page-title">Coded pattern records</h1>
+          <p class="lede">Neutral definitions exercise retrieval vocabulary and citation behavior.</p>
         </header>
         <div id="pattern-list" class="pattern-grid"></div>
       </div>
@@ -215,9 +215,9 @@
     <div id="page-characters" class="page">
       <div class="shell">
         <header class="page-header">
-          <p class="eyebrow">Character map</p>
-          <h1 class="page-title">Cast</h1>
-          <p class="lede">Aliases cluster recurring actors across matters.</p>
+          <p class="eyebrow">Role reference</p>
+          <h1 class="page-title">Coded roles</h1>
+          <p class="lede">Coded role records exercise retrieval vocabulary without cross-record links.</p>
         </header>
         <div id="cast-list" class="cast-grid"></div>
       </div>
@@ -250,7 +250,7 @@
               <table class="data" id="billing-table">
                 <thead>
                   <tr>
-                    <th>Matter</th>
+                    <th>Record</th>
                     <th>Phase</th>
                     <th>Hours</th>
                     <th>Extended</th>

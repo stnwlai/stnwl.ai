@@ -1,11 +1,10 @@
 ---
 id: B0001
 type: billing
-matter: Jones v. Umbrella Shipping
-period: 2025-02
+date: 2025-02-01
 ---
 
-# Billing — Jones v. Umbrella Shipping
+# Billing Record B0001
 
 | Date       | Task                          | Hours | Rate  | Amount  |
 |------------|-------------------------------|-------|-------|---------|

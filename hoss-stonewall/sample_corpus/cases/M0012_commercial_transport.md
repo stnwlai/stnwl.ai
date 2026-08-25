@@ -1,17 +1,15 @@
 ---
 id: M0012
 type: case
-matter: Harris v. Octan Freight
-status: active
-opened: 2025-01-13
+date: 2025-01-13
 ---
 
-# Harris v. Octan Freight
+# Matter M0012 — Commercial Transport
 
 ## Posture
 
-Discovery phase. Plaintiff alleges a commercial vehicle incident; defendant
-has answered and demanded jury trial. The matter sits in the active runway
+Discovery phase. Claimant Role A alleges a commercial vehicle event;
+Organization Role B has answered and requested trial. The matter sits in the active runway
 with discovery requests outstanding and the deposition window opening next
 quarter.
 

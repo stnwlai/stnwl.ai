@@ -1,15 +1,15 @@
 ---
 id: C0006
 type: character
-role: Defense Counsel
+date: 2025-07-07
 ---
 
-# Character Card — Defense Counsel 006
+# Actor Card C0006 — Defense Counsel Role
 
 ## Role
 
-Defense Counsel appearing in commercial litigation matters. Tracked across the
-portfolio for cast-codex routing and pattern analysis.
+Defense Counsel vocabulary record used to exercise deterministic retrieval and citation
+verification across the reference corpus.
 
 ## Pattern Tags
 

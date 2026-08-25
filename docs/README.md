@@ -10,7 +10,7 @@ Long-form product and engineering documentation lives in [`overview/`](overview/
 | --- | --- |
 | [`overview/official-brief.md`](overview/official-brief.md) | Canonical product thesis. |
 | [`overview/core-use-cases.md`](overview/core-use-cases.md) | The six operator jobs the platform must execute reliably, with workflows and success criteria. |
-| [`overview/product-architecture.md`](overview/product-architecture.md) | How the corpus, indexes, CLI, AI, workflow, and publication layers fit together. |
+| [`overview/product-architecture.md`](overview/product-architecture.md) | How compilation, retrieval, citations, bundles, and publication checks fit together. |
 | [`overview/workflow-surfaces.md`](overview/workflow-surfaces.md) | Where the archive becomes operator leverage. |
 | [`overview/docs-drift-watcher.md`](overview/docs-drift-watcher.md) | Technical reference for the scheduled drift watcher (workflow, scanner, banners, config). |
 | [`overview/docs-drift-sentinel.md`](overview/docs-drift-sentinel.md) | Design rationale and operating model for the drift-reconciliation routine. |
@@ -38,4 +38,4 @@ The static operator surface lives in [`portal/`](portal/). Data snapshots are un
 
 ## Architecture reference
 
-[`ARCHITECTURE.md`](ARCHITECTURE.md) is the engineering-grade architecture diagram of the full automation platform.
+[`ARCHITECTURE.md`](ARCHITECTURE.md) is the engineering-grade walkthrough of the executable evidence reference.

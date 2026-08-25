@@ -1,14 +1,12 @@
 ---
 id: E0009
 type: email
-matter: Thomas v. Tyrell Group
-direction: outbound
 date: 2025-10-10
 ---
 
-# Email — Discovery Status
+# Communication Record E0009 — Discovery Status
 
-Subject: Thomas v. Tyrell Group — Discovery Update
+Subject: Communication E0009 — Discovery Update
 
 Counsel,
 

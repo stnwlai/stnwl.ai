@@ -15,7 +15,7 @@ const TODAY = new Date();
 const BASE = process.env.STONEWALL_BASE || new URL('..', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1');
 const CASE_INDEX_PATH = resolve(BASE, 'scripts/case_index.json');
 const CASE_DATES_PATH = resolve(BASE, 'scripts/case_dates.json');
-const EMAILS_PATH = resolve(BASE, 'sources/emails/consolidated_emails.json');
+const EMAILS_PATH = resolve(BASE, 'reference_data/mail/consolidated_emails.json');
 
 // ── Load local data ─────────────────────────────────────────────────────────
 const caseIndex = JSON.parse(readFileSync(CASE_INDEX_PATH, 'utf8'));

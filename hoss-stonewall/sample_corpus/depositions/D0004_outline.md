@@ -1,16 +1,14 @@
 ---
 id: D0004
 type: deposition
-matter: Brown v. Wonka Industries
-witness: Witness 004
 date: 2025-05-05
 ---
 
-# Deposition Outline — Brown v. Wonka Industries
+# Deposition Plan D0004
 
 ## Background
 
-1. Confirm name and current employer.
+1. Confirm the witness role and organizational relationship.
 2. Confirm role at the time of the underlying event.
 3. Walk through training history at a high level.
 

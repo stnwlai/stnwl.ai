@@ -1,73 +1,68 @@
 # Stonewall Official Brief
 
-Stonewall is a legal document intelligence platform built as a control plane rather than a dashboard costume. The showcase demonstrates a system that can catalog, search, validate, synchronize, and publish a large litigation corpus with unusual coherence. The official brief is the durable version of that same claim: the long-form reasoning that a GitBook surface or printed PDF can preserve without depending on a live UI.
+Stonewall is citation-first legal document intelligence: a product that helps
+litigation teams find useful evidence while keeping the source and verification
+trail attached to the result.
 
-## Executive Summary
+## Executive summary
 
-Stonewall is a production-grade legal document intelligence platform built by a solo litigation attorney to organize a high-volume litigation corpus without relying on a conventional database backend. The system shows that a version-controlled flat-file archive can do real platform work when it is paired with explicit indexing, repeatable ingestion, operator-facing synchronization, and verification gates.
+Document systems often separate retrieval from proof. A search surface returns a
+passage, while the user must reconstruct where it came from, why it ranked, and
+whether it still matches the source. Stonewall treats those questions as one
+product contract.
 
-The commercial appeal is not generic legal AI. The commercial appeal is that the archive becomes a working control plane. Instead of asking counsel to reassemble context from scattered folders, inboxes, and task systems, Stonewall turns the corpus into something that can answer practical questions at speed: what changed, what matters, what is ready, what is missing, and what should happen next.
+The corpus remains readable on disk. Derived catalogs and search indexes are
+reproducible from that corpus. Retrieval results carry
+line-addressed citations and transparent score components. Verification reopens
+the source and checks both the artifact and cited span.
 
-## Core Product Claim
+## Product claim
 
-Stonewall’s thesis is simple: legal operations do not need to begin with a heavyweight proprietary platform. They can begin with a rigorously structured corpus.
+Evidence intelligence becomes more trustworthy when four properties reinforce
+one another:
 
-Once every artifact is cataloged with durable IDs, dates, types, matter links, entity references, pattern references, and summary metadata, the same archive can serve multiple jobs at once:
+1. Inputs follow a strict and resolvable schema.
+2. Derived surfaces are content-addressed and reproducible.
+3. Retrieval returns explanations and citations together.
+4. Publication requires an exact reviewed candidate tree.
 
-- search layer
-- validation layer
-- operator layer
-- publishing layer
-- AI retrieval layer
+The result is an evidence surface that can answer practical litigation questions
+without turning provenance into a separate cleanup task.
 
-That is why the platform feels coherent. The same source of truth drives the CLI, the showcase, the operator view, and the AI recall system.
+## Engineering reference
 
-## Distinctive Components
+The repository makes those four properties executable:
 
-### Flat-file manifest as database
+- The compiler rejects ambiguous front matter, duplicate IDs, and missing dates.
+- The builder emits canonical catalog, index, and attestation files tied
+  to a deterministic corpus root.
+- The query layer reports BM25, heading, and exact-phrase score components with
+  every cited span.
+- The publication gate applies path, metadata, and content rules before requiring
+  exact agreement with the committed tree manifest.
 
-`catalog/manifest.md` operates as a durable searchable database in plain Markdown. It remains human-readable, Git-trackable, grep-queryable, and structurally inspectable.
+The implementation uses only the Python standard library and runs against the
+checked-in coded corpus.
 
-### CLI intelligence layer
+## Product value
 
-The stdlib-only CLI presents stats, search, case, timeline, pattern, validation, and doctor workflows directly from the corpus. That makes the intelligence layer portable and auditable rather than hidden behind an external service boundary.
+The engineering contract supports a simple operating promise: move from a legal
+question to a source-backed answer without losing the path between them.
 
-### AI brain as routed recall
+That promise matters across recurring work such as chronology review, deposition
+preparation, motion support, communication analysis, and matter handoff. A result
+is more useful when the team can inspect its rank, open its source lines, and
+verify later that the same citation still holds.
 
-Stonewall’s brain is a versioned recall architecture composed of codex files that tell the assistant where to look, then force fresh reading before confident assertion.
+## Publication surfaces
 
-### Automated ingestion and sidecars
+The canonical product narrative lives at [stnwl.ai](https://www.stnwl.ai/). This
+repository's Pages site presents the engineering exhibit, while the operator
+portal shows how structured reference data can drive a static application
+surface. The source repository provides the runnable proof behind both.
 
-PDFs, DOCX files, screenshots, and email exports are converted into searchable derivatives and normalized metadata. The result is an archive that remains alive after ingestion rather than becoming a dead file reservoir.
+## Closing position
 
-### Verification gates
-
-Repo consistency checks, ontology enforcement, sidecar audits, and deployment guards make the system trustworthy by design. Searchable scale only matters if the catalog remains reliable.
-
-## Tactical Workflow Layer
-
-The tactical workflow layer is where Stonewall becomes commercially persuasive.
-
-### Notion as operator layer
-
-The repository keeps the durable truth. Notion becomes the live command surface where deadlines, archive links, and matter posture become legible fast enough to guide the day.
-
-### DataGavel workflow readiness
-
-Stonewall is designed to make structured report workflows easier to feed. Chronology, treatment trail, and damages notes can be staged into a coherent packet before the specialist work begins.
-
-### Live deposition outline tailoring
-
-Because transcripts, emails, filings, and reference notes all live in the same indexed corpus, the archive can sharpen witness preparation while testimony is still unfolding. That is a different class of usefulness than retrospective storage.
-
-## Why It Is Commercially Viable
-
-Stonewall is commercially viable because it reduces friction in expensive recurring workflows. Its best product stories are operational:
-
-- daily dossier generation
-- deadline intelligence
-- report-packet readiness
-- witness-prep leverage
-- durable institutional memory
-
-These are the points where legal time is most expensive and context reconstruction is most painful. Stonewall’s architecture attacks that pain directly.
+Stonewall makes provenance a first-class part of retrieval. The platform does
+not merely return a plausible passage; it gives the passage an address, explains
+its rank, and provides a deterministic way to check it again.

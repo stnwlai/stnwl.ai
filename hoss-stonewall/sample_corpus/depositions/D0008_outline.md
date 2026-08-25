@@ -1,16 +1,14 @@
 ---
 id: D0008
 type: deposition
-matter: Anderson v. Soylent Transport
-witness: Witness 008
 date: 2025-09-09
 ---
 
-# Deposition Outline — Anderson v. Soylent Transport
+# Deposition Plan D0008
 
 ## Background
 
-1. Confirm name and current employer.
+1. Confirm the witness role and organizational relationship.
 2. Confirm role at the time of the underlying event.
 3. Walk through training history at a high level.
 

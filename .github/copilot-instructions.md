@@ -190,7 +190,7 @@ These phrases imply the visible content is a watered-down stand-in for a hidden 
 
 ## Repository Presentation
 
-Keep `origin` trimmed: `main` plus open-PR branches only. Delete merged head branches immediately. Branch names must describe the work — no joke or meme names (`naughty-boy-handling` is the canonical anti-pattern). Full rules: `docs/repository-presentation-policy.md`.
+Keep `origin` trimmed: `main` plus open-PR branches only. Delete merged head branches immediately. Branch names must describe the work — no joke or meme names (`session-0000` is the canonical anti-pattern). Full rules: `docs/repository-presentation-policy.md`.
 
 ---
 

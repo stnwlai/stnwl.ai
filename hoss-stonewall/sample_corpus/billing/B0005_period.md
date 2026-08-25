@@ -1,11 +1,10 @@
 ---
 id: B0005
 type: billing
-matter: Davis v. Aperture Hauling
-period: 2025-06
+date: 2025-06-01
 ---
 
-# Billing — Davis v. Aperture Hauling
+# Billing Record B0005
 
 | Date       | Task                          | Hours | Rate  | Amount  |
 |------------|-------------------------------|-------|-------|---------|

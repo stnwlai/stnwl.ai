@@ -1,15 +1,15 @@
 ---
 id: C0003
 type: character
-role: Expert
+date: 2025-04-04
 ---
 
-# Character Card — Expert 003
+# Actor Card C0003 — Expert Role
 
 ## Role
 
-Expert appearing in commercial litigation matters. Tracked across the
-portfolio for cast-codex routing and pattern analysis.
+Expert vocabulary record used to exercise deterministic retrieval and citation
+verification across the reference corpus.
 
 ## Pattern Tags
 

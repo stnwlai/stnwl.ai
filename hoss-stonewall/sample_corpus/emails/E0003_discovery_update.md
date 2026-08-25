@@ -1,14 +1,12 @@
 ---
 id: E0003
 type: email
-matter: Roe v. Wayne Logistics
-direction: outbound
 date: 2025-04-04
 ---
 
-# Email — Discovery Status
+# Communication Record E0003 — Discovery Status
 
-Subject: Roe v. Wayne Logistics — Discovery Update
+Subject: Communication E0003 — Discovery Update
 
 Counsel,
 
