@@ -82,7 +82,12 @@ def chunk_artifact(artifact: ArtifactRecord) -> list[ChunkRecord]:
             absolute_start = start + paragraph_start
             absolute_end = start + paragraph_end
             text = "\n".join(body_lines[absolute_start : absolute_end + 1])
-            terms = tokenize(f"{active_heading}\n{text}")
+            heading_match = _HEADING_RE.fullmatch(text)
+            is_heading_chunk = (
+                heading_match is not None
+                and heading_match.group(2).strip() == active_heading
+            )
+            terms = tokenize(text if is_heading_chunk else f"{active_heading}\n{text}")
             if not terms:
                 continue
             line_start = artifact.body_start_line + absolute_start

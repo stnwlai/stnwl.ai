@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import PurePosixPath
 from typing import Any
 
@@ -17,8 +17,8 @@ class ArtifactRecord:
     body: str
     body_start_line: int
     total_lines: int
-    event_date: str | None = None
-    metadata: dict[str, Any] = field(default_factory=dict)
+    event_date: str
+    metadata: dict[str, str]
 
     def to_manifest_entry(self) -> dict[str, Any]:
         return {

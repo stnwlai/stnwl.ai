@@ -1,2 +1,0 @@
-# stonewall-brain
-

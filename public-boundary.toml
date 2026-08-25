@@ -1,49 +1,36 @@
 version = 1
 manifest_path = "public-tree-manifest.json"
-reference_root = "hoss-stonewall/sample_corpus"
+reference_root = "examples/corpus"
 
 allowed_exact_paths = [
-  ".env.example",
+  ".github/workflows/verify.yml",
   ".gitignore",
   "AGENTS.md",
-  "CLAUDE.md",
   "LICENSE",
   "README.md",
-  "SKILL.md",
   "public-boundary.toml",
   "public-tree-manifest.json",
   "pyproject.toml",
-  "wrangler.toml",
+  "scripts/check_public_boundary.py",
 ]
 
 allowed_path_prefixes = [
-  ".claude/",
-  ".docs-drift/",
-  ".github/",
-  "agents/",
-  "archive/",
-  "docs/",
-  "hoss-stonewall/",
-  "scripts/",
-  "src/",
+  "examples/corpus/",
+  "src/stonewall/",
   "tests/",
 ]
 
 allowed_email_domains = [
   "example.com",
-  "example.test",
-  "users.noreply.github.com",
 ]
 
 denied_exact_paths = [
   ".env",
   ".env.local",
   ".env.production",
-  ".claude/settings.local.json",
 ]
 
 denied_path_prefixes = [
-  ".stonewall/",
   "build/",
   "catalog/",
   "sources/",

@@ -1,47 +1,12 @@
-# OS files
 .DS_Store
-Thumbs.db
-
-# Environment / secrets
 .env
 .env.*
-!.env.example
-credentials.*
-.claude/settings.local.json
-
-# Editor files
-*.swp
-*.swo
-*~
-.vscode/
-.idea/
-__pycache__/
-*.pyc
+.venv/
 .pytest_cache/
-.coverage
+__pycache__/
+*.py[cod]
+*.egg-info/
 build/
 dist/
-*.egg-info/
-
-# Batch processing output files — contain production data, never commit
-scripts/batches/*.json
-matched_emails.json
-
-# Connector and extraction output is never a publication source.
-/sources/
-/catalog/
-/tmp/
-
-# Local-only manual overrides (user-specific, never commit)
-*.local.json
-
-# Docs drift watcher per-run output (uploaded as a CI artifact, not versioned)
-.docs-drift/last-run.json
-
-# Generated intake planning/report artifacts
-reference_data/reports/*.jsonl
-reference_data/reports/*_report_*.md
-reference_data/reports/*_report*.json
-# Generated intake/sync run artifacts (ephemeral, date-stamped)
-reference_data/reports/notion_sync_report_*.md
-reference_data/reports/onedrive_notion_update_report_*.md
+catalog/
+tmp/

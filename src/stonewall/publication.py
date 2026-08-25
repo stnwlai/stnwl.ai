@@ -189,21 +189,6 @@ def candidate_paths(repo_root: Path) -> tuple[PurePosixPath, ...]:
     return tuple(sorted(set(paths), key=lambda item: item.as_posix()))
 
 
-def _content_class(path: PurePosixPath, config: BoundaryConfig) -> str:
-    value = path.as_posix()
-    if value.startswith(config.reference_root.as_posix().rstrip("/") + "/"):
-        return "coded_reference"
-    if value.startswith("tests/"):
-        return "test"
-    if value.startswith("docs/") or value.endswith(".md"):
-        return "documentation"
-    if value.startswith(".github/workflows/"):
-        return "workflow"
-    if value.startswith(("src/", "scripts/")):
-        return "source_code"
-    return "configuration"
-
-
 def build_manifest(
     repo_root: Path, paths: Iterable[PurePosixPath], config: BoundaryConfig
 ) -> dict[str, Any]:
@@ -219,18 +204,12 @@ def build_manifest(
         except OSError as exc:
             raise PublicationBoundaryError("publication candidate is unreadable") from exc
         value = relative.as_posix()
-        generated_by = None
-        if value.startswith(config.reference_root.as_posix().rstrip("/") + "/"):
-            generated_by = "scripts/generate_sample_corpus.py"
         entries.append(
             {
                 "path": value,
                 "sha256": sha256_bytes(content),
                 "size": len(content),
                 "executable": bool(path.stat().st_mode & 0o111),
-                "content_class": _content_class(relative, config),
-                "generated_by": generated_by,
-                "destination": "public_repository",
             }
         )
     return {"schema_version": 1, "path_count": len(entries), "entries": entries}

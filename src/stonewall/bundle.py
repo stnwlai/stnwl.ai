@@ -1,4 +1,4 @@
-"""Reproducible public bundles with a content-addressed attestation."""
+"""Reproducible evidence bundles with a content-addressed attestation."""
 
 from __future__ import annotations
 
@@ -55,7 +55,7 @@ def _payloads(corpus: CompiledCorpus) -> dict[str, dict[str, Any]]:
 
 
 def build_bundle(corpus_root: Path, output_dir: Path) -> dict[str, Any]:
-    """Compile and publish the three-file reference bundle."""
+    """Compile and write the three-file reference bundle."""
     corpus = compile_corpus(corpus_root)
     payloads = _payloads(corpus)
     output_dir = output_dir.resolve()
