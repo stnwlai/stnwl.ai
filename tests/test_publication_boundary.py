@@ -28,8 +28,8 @@ from stonewall.publication import (
 def config() -> BoundaryConfig:
     return BoundaryConfig(
         manifest_path=PurePosixPath("public-tree-manifest.json"),
-        reference_root=PurePosixPath("hoss-stonewall/sample_corpus"),
-        allowed_email_domains=frozenset({"example.com", "example.test"}),
+        reference_root=PurePosixPath("examples/corpus"),
+        allowed_email_domains=frozenset({"example.com"}),
         allowed_exact_paths=frozenset(),
         allowed_path_prefixes=("",),
         denied_exact_paths=frozenset({".env"}),
@@ -123,10 +123,10 @@ class ScannerTests(unittest.TestCase):
         self.assertNotIn(canary, report)
 
     def test_allows_environment_secret_expression(self) -> None:
-        self.assertEqual(self.scan("NOTION_TOKEN=process.env.NOTION_TOKEN\n"), [])
+        self.assertEqual(self.scan("SERVICE_TOKEN=process.env.SERVICE_TOKEN\n"), [])
 
     def test_allows_placeholder_secret(self) -> None:
-        self.assertEqual(self.scan("NOTION_TOKEN=YOUR_TOKEN_HERE\n"), [])
+        self.assertEqual(self.scan("SERVICE_TOKEN=YOUR_TOKEN_HERE\n"), [])
 
     def test_blocks_denied_prefix_and_file_type(self) -> None:
         findings = self.scan("bytes\n", name="sources/exhibit.pdf")
@@ -158,7 +158,7 @@ class ManifestAndContractTests(unittest.TestCase):
         loaded = load_config(REPO_ROOT / "public-boundary.toml")
         self.assertEqual(loaded.manifest_path.as_posix(), "public-tree-manifest.json")
         self.assertIn("README.md", loaded.allowed_exact_paths)
-        self.assertIn("src/", loaded.allowed_path_prefixes)
+        self.assertIn("src/stonewall/", loaded.allowed_path_prefixes)
         self.assertIn("sources/", loaded.denied_path_prefixes)
 
     def test_rejects_unknown_config_version(self) -> None:
@@ -212,7 +212,7 @@ class ManifestAndContractTests(unittest.TestCase):
             )
         self.assertEqual(left, right)
 
-    def test_manifest_records_digest_size_class_and_destination(self) -> None:
+    def test_manifest_records_digest_size_and_mode(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             (root / "record.txt").write_text("record\n", encoding="utf-8")
@@ -225,9 +225,6 @@ class ManifestAndContractTests(unittest.TestCase):
                 "sha256",
                 "size",
                 "executable",
-                "content_class",
-                "generated_by",
-                "destination",
             },
         )
 
@@ -251,7 +248,7 @@ class ManifestAndContractTests(unittest.TestCase):
         canary = "identity" + "_bearing_value"
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            reference = root / "hoss-stonewall" / "sample_corpus"
+            reference = root / "examples" / "corpus"
             reference.mkdir(parents=True)
             (reference / "record.md").write_text(
                 f"---\nid: {canary}\ntype: case\ndate: 2025-01-01\n---\n\n# Record\n",
@@ -265,7 +262,7 @@ class ManifestAndContractTests(unittest.TestCase):
     def test_check_requires_public_manifest(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            reference = root / "hoss-stonewall" / "sample_corpus"
+            reference = root / "examples" / "corpus"
             reference.mkdir(parents=True)
             (reference / "case.md").write_text(
                 "---\nid: M0001\ntype: case\ndate: 2025-01-01\n---\n\n# Matter M0001\n\nRecord.\n",
@@ -291,7 +288,7 @@ class ManifestAndContractTests(unittest.TestCase):
     def test_manifest_detects_byte_drift_after_write(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            reference = root / "hoss-stonewall" / "sample_corpus"
+            reference = root / "examples" / "corpus"
             reference.mkdir(parents=True)
             artifact_path = reference / "case.md"
             artifact_path.write_text(
@@ -312,7 +309,7 @@ class ManifestAndContractTests(unittest.TestCase):
     def test_manifest_detects_executable_mode_drift(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            reference = root / "hoss-stonewall" / "sample_corpus"
+            reference = root / "examples" / "corpus"
             reference.mkdir(parents=True)
             artifact_path = reference / "case.md"
             artifact_path.write_text(

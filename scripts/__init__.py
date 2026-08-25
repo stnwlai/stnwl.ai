@@ -1,1 +1,0 @@
-"""Stonewall utility scripts package."""

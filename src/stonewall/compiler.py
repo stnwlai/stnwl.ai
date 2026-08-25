@@ -8,7 +8,7 @@ from datetime import date
 from pathlib import Path, PurePosixPath
 
 from .errors import CorpusValidationError
-from .frontmatter import FrontMatterValue, ParsedDocument, parse_document
+from .frontmatter import ParsedDocument, parse_document
 from .hashing import sha256_bytes
 from .models import ArtifactRecord, ChunkRecord
 from .text import chunk_artifact, markdown_headings
@@ -24,25 +24,15 @@ class CompiledCorpus:
     artifacts: tuple[ArtifactRecord, ...]
     chunks: tuple[ChunkRecord, ...]
 
-    @property
-    def by_id(self) -> dict[str, ArtifactRecord]:
-        return {artifact.artifact_id: artifact for artifact in self.artifacts}
-
-
-def _scalar_string(
-    metadata: dict[str, FrontMatterValue],
+def _required_string(
+    metadata: dict[str, str],
     key: str,
     *,
     source: str,
-    required: bool = False,
-) -> str | None:
+) -> str:
     value = metadata.get(key)
     if value is None:
-        if required:
-            raise CorpusValidationError(f"{source}: missing required field {key!r}")
-        return None
-    if not isinstance(value, str):
-        raise CorpusValidationError(f"{source}: field {key!r} must be a string")
+        raise CorpusValidationError(f"{source}: missing required field {key!r}")
     value = value.strip()
     if not value:
         raise CorpusValidationError(f"{source}: field {key!r} cannot be empty")
@@ -81,11 +71,8 @@ def _artifact_from_document(
 ) -> ArtifactRecord:
     relative = _relative_source_path(root, path)
     source = relative.as_posix()
-    artifact_id = _scalar_string(parsed.metadata, "id", source=source, required=True)
-    artifact_type = _scalar_string(
-        parsed.metadata, "type", source=source, required=True
-    )
-    assert artifact_id is not None and artifact_type is not None
+    artifact_id = _required_string(parsed.metadata, "id", source=source)
+    artifact_type = _required_string(parsed.metadata, "type", source=source)
     if not _ID_RE.fullmatch(artifact_id):
         raise CorpusValidationError(f"{source}: invalid artifact id {artifact_id!r}")
     if not _TYPE_RE.fullmatch(artifact_type):
@@ -97,10 +84,7 @@ def _artifact_from_document(
     )
     if len(title_matches) != 1:
         raise CorpusValidationError(f"{source}: artifact requires exactly one H1 title")
-    event_date = _scalar_string(
-        parsed.metadata, "date", source=source, required=True
-    )
-    assert event_date is not None
+    event_date = _required_string(parsed.metadata, "date", source=source)
     if not _DATE_RE.fullmatch(event_date):
         raise CorpusValidationError(f"{source}: date must use YYYY-MM-DD")
     try:

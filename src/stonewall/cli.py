@@ -26,12 +26,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--corpus",
         type=Path,
-        default=Path("hoss-stonewall/sample_corpus"),
+        default=Path("examples/corpus"),
         help="Markdown corpus root (default: %(default)s)",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    build = subparsers.add_parser("build", help="emit a reproducible public bundle")
+    build = subparsers.add_parser("build", help="emit a reproducible evidence bundle")
     build.add_argument("--output", type=Path, default=Path("build/reference"))
 
     verify = subparsers.add_parser("verify", help="verify corpus and bundle parity")

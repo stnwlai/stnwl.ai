@@ -59,7 +59,11 @@ def query_corpus(
                 heading_boost += inverse_frequency * 0.35
         exact_phrase = 0.0
         normalized_query = " ".join(query_terms)
-        if normalized_query and normalized_query in " ".join(chunk.terms):
+        source_terms = " ".join(tokenize(chunk.text))
+        heading_text = " ".join(tokenize(chunk.heading))
+        if normalized_query and (
+            normalized_query in source_terms or normalized_query in heading_text
+        ):
             exact_phrase = 0.75
         score = bm25 + heading_boost + exact_phrase
         if score <= 0:

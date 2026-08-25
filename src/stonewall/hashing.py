@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -29,11 +29,6 @@ def canonical_json_bytes(value: Any) -> bytes:
         json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         + "\n"
     ).encode("utf-8")
-
-
-def hash_mapping(value: Mapping[str, Any]) -> str:
-    """Hash a mapping after canonical JSON serialization."""
-    return sha256_bytes(canonical_json_bytes(value))
 
 
 def merkle_root(leaves: Iterable[tuple[str, str]]) -> str:
