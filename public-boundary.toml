@@ -12,6 +12,7 @@ allowed_exact_paths = [
   "public-tree-manifest.json",
   "pyproject.toml",
   "scripts/check_public_boundary.py",
+  "scripts/setup_web_env.sh",
 ]
 
 allowed_path_prefixes = [
