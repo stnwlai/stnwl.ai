@@ -4,6 +4,16 @@ An executable reference for source-addressed legal evidence.
 
 [![Verify](https://github.com/stnwlai/stnwl.ai/actions/workflows/verify.yml/badge.svg)](https://github.com/stnwlai/stnwl.ai/actions/workflows/verify.yml)
 
+Stonewall is a private working application for finding, reading, and reasoning
+from a complete legal record, with a curated public site at
+[stnwl.ai](https://stnwl.ai). The application, its data plane, and its
+delivery pipeline live in the separate `stnwlai/Stonewall` repository and are
+described in that repository's Wiki. This repository is not the product; it is
+the smallest runnable demonstration of the evidence contracts the product is
+built on, and it carries no operational code, data, or configuration.
+
+Updated September 17, 2026.
+
 This repository is intentionally narrow. It demonstrates four contracts and
 nothing else:
 
