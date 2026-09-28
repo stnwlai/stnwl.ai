@@ -4,52 +4,86 @@ Copyright (c) 2026 Stonewall Legal Enterprises, Inc. All rights reserved.
 
 This repository is published so that people can read it and run it. It is
 source-available, not open source. Being able to see it grants no right to
-use it beyond what this license states.
+use it beyond what this license states. "Stonewall" means Stonewall Legal
+Enterprises, Inc. "The software" means everything in this repository,
+including its code, documentation, data, and history.
 
-1. What you may do. You may view this repository, download or clone it, and
-   run it on your own systems, on its bundled examples or on your own test
-   documents, solely to evaluate it for your own or your organization's
-   internal, non-production use.
+1. Acceptance. By downloading, cloning, running, or otherwise using the
+   software, you accept this license. If you do not accept it, your only
+   rights are those described in section 4.
 
-2. What you may not do. Unless Stonewall Legal Enterprises, Inc. agrees
-   otherwise in a signed writing, you may not:
+2. Evaluation license. Stonewall grants you a limited, revocable,
+   non-exclusive, non-transferable, non-sublicensable license to view,
+   download, and clone the software and run it on your own systems, on its
+   bundled examples or on your own test documents, solely to evaluate it
+   for your own or your organization's internal, non-production use. Any
+   use outside that scope is unlicensed and infringes Stonewall's
+   copyright.
+
+3. Restrictions. Unless Stonewall agrees otherwise in a signed writing, you
+   may not, and may not help or allow anyone else to:
 
    a. use the software, or anything derived from it, in production or to
-      provide a product or service to anyone;
+      provide a product or service to anyone, including as a hosted or
+      managed service;
    b. modify or adapt the software, or create derivative works from it;
    c. copy the software, except for the copies needed to evaluate it under
-      section 1 and a fork on GitHub under section 3;
-   d. distribute, publish, sublicense, sell, rent, or lend the software or
-      any part of it;
-   e. use the software or its contents to train or fine-tune a
-      machine-learning model;
-   f. use the software to develop a competing product or service; or
-   g. remove or alter this license or any copyright or proprietary notice.
+      section 2 and a fork on GitHub under section 4;
+   d. distribute, publish, sublicense, sell, rent, lease, or lend the
+      software or any part of it;
+   e. use the software or its contents to train, fine-tune, or evaluate a
+      machine-learning model, or include them in a dataset;
+   f. use the software, or any part of its code, design, or documentation,
+      to build, improve, or offer a product or service that competes with
+      Stonewall; or
+   g. remove, alter, or obscure this license or any copyright, trademark,
+      or proprietary notice.
 
-3. GitHub. This license does not limit the rights that GitHub's Terms of
+4. GitHub. This license does not limit the rights that GitHub's Terms of
    Service give GitHub and its users, such as viewing and forking this
-   repository on GitHub; sections 2 and 6 do not restrict those rights. A
+   repository on GitHub; sections 3 and 8 do not restrict those rights. A
    fork carries this license and no additional rights.
 
-4. Names. This license grants no right to use the Stonewall name or logos.
+5. Ownership and reserved rights. Stonewall owns the software and every
+   copy of it. This license is not a sale and transfers no ownership.
+   Stonewall reserves every right this license does not expressly grant,
+   including all rights under copyright, patent, trade secret, and
+   trademark law. No license arises by implication, estoppel, or otherwise.
 
-5. Reserved rights. Stonewall Legal Enterprises, Inc. reserves every right
-   this license does not expressly grant. No license arises by implication,
-   estoppel, or otherwise.
+6. Feedback and contributions. If you send Stonewall feedback, issues,
+   suggestions, or pull requests about the software, you grant Stonewall a
+   perpetual, irrevocable, worldwide, royalty-free, sublicensable license to
+   use, copy, modify, and distribute them for any purpose, without
+   obligation to you.
 
-6. Termination. Your rights under this license end automatically if you
-   breach it, and otherwise when Stonewall Legal Enterprises, Inc. gives you
-   notice. When they end, you must stop using the software and delete every
-   copy you control, except a fork on GitHub, which section 3 governs.
+7. Names. The Stonewall name and logos are trademarks of Stonewall. This
+   license grants no right to use them.
 
-7. No warranty; limitation of liability. THE SOFTWARE IS PROVIDED "AS IS",
-   WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-   LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-   PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL STONEWALL LEGAL
-   ENTERPRISES, INC. OR ANY CONTRIBUTOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR
-   OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE,
-   ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-   OTHER DEALINGS IN THE SOFTWARE.
+8. Termination. Your rights under this license end automatically if you
+   breach it, and otherwise when Stonewall gives you notice. When they end,
+   you must stop using the software and delete every copy you control,
+   except a fork on GitHub, which section 4 governs. Sections 3 and 5
+   through 11 survive termination.
 
-For a production or implementation license, contact Stonewall Legal
-Enterprises, Inc. through https://stnwl.ai.
+9. Remedies. Unauthorized use of the software would cause Stonewall
+   irreparable harm that money damages cannot fully remedy. Stonewall may
+   seek injunctive relief in addition to any other remedy, including
+   remedies for copyright infringement.
+
+10. Governing law. Florida law governs this license, and the state and
+    federal courts located in Hillsborough County, Florida have exclusive
+    jurisdiction over any dispute about it. If any part of this license is
+    unenforceable, the rest remains in effect. Stonewall's failure to
+    enforce any part of it is not a waiver.
+
+11. No warranty; limitation of liability. THE SOFTWARE IS PROVIDED "AS IS",
+    WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+    LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+    PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL STONEWALL OR ANY
+    CONTRIBUTOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY,
+    WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT
+    OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+    THE SOFTWARE.
+
+For a production or implementation license, contact Stonewall through
+https://stnwl.ai.
