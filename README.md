@@ -101,6 +101,7 @@ Git. It reports only rule identifiers and locations, never matched values.
 ## License
 
 Source-available for evaluation, not open source. You may read, clone, and
-run this repository to evaluate it. Production use, modification, and
+run this repository to evaluate it, and GitHub's terms let anyone view and
+fork it on GitHub. Production use, modification, and any other
 redistribution require a separate license from Stonewall Legal Enterprises,
 Inc. See [LICENSE](LICENSE).
