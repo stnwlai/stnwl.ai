@@ -1,20 +1,55 @@
-Copyright (c) 2026 Stonewall Legal Intelligence. All rights reserved.
+Stonewall Evidence Reference - Evaluation License
 
-This software is provided for demonstration and evaluation purposes only.
+Copyright (c) 2026 Stonewall Legal Enterprises, Inc. All rights reserved.
 
-Permission is hereby granted to view, evaluate, and discuss this software for the purpose
-of assessing its suitability for implementation at your organization.
+This repository is published so that people can read it and run it. It is
+source-available, not open source. Being able to see it grants no right to
+use it beyond what this license states.
 
-No permission is granted to:
-- Copy, reproduce, or redistribute this software or its components
-- Modify, adapt, or create derivative works
-- Use this software in production without an implementation license
+1. What you may do. You may view this repository, download or clone it, and
+   run it on your own systems, on its bundled examples or on your own test
+   documents, solely to evaluate it for your organization's internal,
+   non-production use.
 
-For implementation licensing and deployment, contact the author.
+2. What you may not do. Unless Stonewall Legal Enterprises, Inc. agrees
+   otherwise in a signed writing, you may not:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
-FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR
-OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
+   a. use the software, or anything derived from it, in production or to
+      provide a product or service to anyone;
+   b. modify or adapt the software, or create derivative works from it;
+   c. copy the software, except for the copies needed to evaluate it under
+      section 1;
+   d. distribute, publish, sublicense, sell, rent, or lend the software or
+      any part of it;
+   e. use the software or its contents to train or fine-tune a
+      machine-learning model;
+   f. use the software to develop a competing product or service; or
+   g. remove or alter this license or any copyright or proprietary notice.
+
+3. GitHub. This license does not limit the rights that GitHub's Terms of
+   Service give GitHub and its users, such as viewing and forking this
+   repository on GitHub. A fork carries this license and no additional
+   rights.
+
+4. Names. This license grants no right to use the Stonewall name or logos.
+
+5. Reserved rights. Stonewall Legal Enterprises, Inc. reserves every right
+   this license does not expressly grant. No license arises by implication,
+   estoppel, or otherwise.
+
+6. Termination. Your rights under this license end automatically if you
+   breach it, and otherwise when Stonewall Legal Enterprises, Inc. gives you
+   notice. When they end, you must stop using the software and delete every
+   copy you control.
+
+7. No warranty; limitation of liability. THE SOFTWARE IS PROVIDED "AS IS",
+   WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+   LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+   PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL STONEWALL LEGAL
+   ENTERPRISES, INC. OR ANY CONTRIBUTOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR
+   OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE,
+   ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+   OTHER DEALINGS IN THE SOFTWARE.
+
+For a production or implementation license, contact Stonewall Legal
+Enterprises, Inc. through https://stnwl.ai.
