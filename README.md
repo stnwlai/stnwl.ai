@@ -104,6 +104,7 @@ Source-available for evaluation, not open source. Downloading, cloning, or
 running this repository means accepting its [LICENSE](LICENSE), which allows
 evaluation for your own or your organization's internal, non-production use.
 GitHub's terms let anyone view and fork it on GitHub. Production use,
-modification, any other redistribution, model training, and building a
-competing product require a separate written license from Stonewall Legal
-Enterprises, Inc. [LICENSE](LICENSE) governs.
+modification, any other redistribution, training or evaluating a
+machine-learning model with the software or its contents, adding them to a
+dataset, and building a competing product require a separate signed
+agreement with Stonewall Legal Enterprises, Inc. [LICENSE](LICENSE) governs.
