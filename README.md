@@ -12,7 +12,7 @@ described in that repository's Wiki. This repository is not the product; it is
 the smallest runnable demonstration of the evidence contracts the product is
 built on, and it carries no operational code, data, or configuration.
 
-Updated September 17, 2026.
+Updated September 28, 2026.
 
 This repository is intentionally narrow. It demonstrates four contracts and
 nothing else:
@@ -97,3 +97,14 @@ digest, reselects the stated lines, and verifies the selected span.
 
 The publication check enumerates tracked and non-ignored files directly from
 Git. It reports only rule identifiers and locations, never matched values.
+
+## License
+
+Source-available for evaluation, not open source. Downloading, cloning, or
+running this repository means accepting its [LICENSE](LICENSE), which allows
+evaluation for your own or your organization's internal, non-production use.
+GitHub's terms let anyone view and fork it on GitHub. Production use,
+modification, any other redistribution, training or evaluating a
+machine-learning model with the software or its contents, adding them to a
+dataset, and building a competing product require a separate signed
+agreement with Stonewall Legal Enterprises, Inc. [LICENSE](LICENSE) governs.
