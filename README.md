@@ -102,6 +102,6 @@ Git. It reports only rule identifiers and locations, never matched values.
 
 Source-available for evaluation, not open source. You may read, clone, and
 run this repository to evaluate it, and GitHub's terms let anyone view and
-fork it on GitHub. Production use, modification, and any other
-redistribution require a separate license from Stonewall Legal Enterprises,
-Inc. See [LICENSE](LICENSE).
+fork it on GitHub. Production use, modification, any other redistribution,
+model training, and building a competing product require a separate license
+from Stonewall Legal Enterprises, Inc. [LICENSE](LICENSE) governs.

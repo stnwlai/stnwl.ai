@@ -18,7 +18,7 @@ use it beyond what this license states.
       provide a product or service to anyone;
    b. modify or adapt the software, or create derivative works from it;
    c. copy the software, except for the copies needed to evaluate it under
-      section 1;
+      section 1 and a fork on GitHub under section 3;
    d. distribute, publish, sublicense, sell, rent, or lend the software or
       any part of it;
    e. use the software or its contents to train or fine-tune a
@@ -28,8 +28,8 @@ use it beyond what this license states.
 
 3. GitHub. This license does not limit the rights that GitHub's Terms of
    Service give GitHub and its users, such as viewing and forking this
-   repository on GitHub. A fork carries this license and no additional
-   rights.
+   repository on GitHub; sections 2 and 6 do not restrict those rights. A
+   fork carries this license and no additional rights.
 
 4. Names. This license grants no right to use the Stonewall name or logos.
 
@@ -40,7 +40,7 @@ use it beyond what this license states.
 6. Termination. Your rights under this license end automatically if you
    breach it, and otherwise when Stonewall Legal Enterprises, Inc. gives you
    notice. When they end, you must stop using the software and delete every
-   copy you control.
+   copy you control, except a fork on GitHub, which section 3 governs.
 
 7. No warranty; limitation of liability. THE SOFTWARE IS PROVIDED "AS IS",
    WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
