@@ -200,6 +200,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -247,7 +248,6 @@ _REFERENCE_RE = re.compile(r"&(?:[A-Za-z][A-Za-z0-9]*|#[0-9]+|#[xX][0-9A-Fa-f]+)
 _FOOTNOTE_RE = re.compile(r"\[\^[^\]\n]*\]")
 _LINK_TARGET_RE = re.compile(r"\(#[A-Za-z0-9_-]*\)")
 _ESCAPE_RE = re.compile(r"\\[!-/:-@\[-`{-~]")
-_WORD_RE = re.compile(r"[^\W\d_]+")
 _MIXED_SCRIPTS = ("CYRILLIC", "GREEK")
 _EMPHASIS_RE = re.compile(r"[*_~]")
 _SENTENCE_MARKS = ".?!\u3002\uff0e"
@@ -803,8 +803,7 @@ def _markup(paragraph: str) -> list[tuple[int, str]]:
     )
     found.extend((match.start(), "") for match in _ESCAPE_RE.finditer(paragraph))
     found.extend(
-        (match.start(), "") for match in _WORD_RE.finditer(paragraph)
-        if _mixed_script(match.group(0))
+        (start, "") for start, word in _words(paragraph) if _mixed_script(word)
     )
     plain = set(layout.brackets)
     for low, _high in (*layout.citations, *layout.brackets):
@@ -829,6 +828,20 @@ def _markup(paragraph: str) -> list[tuple[int, str]]:
             found.append((offset + len(line) - len(line.lstrip()), "item"))
         offset += len(line) + 1
     return found
+
+
+def _words(text: str) -> Iterator[tuple[int, str]]:
+    """Runs of letters in *text*, with any combining mark kept inside its word."""
+    start: int | None = None
+    for index, character in enumerate(f"{text} "):
+        inside = character.isalpha() or (
+            start is not None and unicodedata.category(character).startswith("M")
+        )
+        if inside and start is None:
+            start = index
+        elif not inside and start is not None:
+            yield start, text[start:index]
+            start = None
 
 
 def _mixed_script(word: str) -> bool:

@@ -922,7 +922,7 @@ class MarkupTests(unittest.TestCase):
 
     def test_words_mixing_latin_with_cyrillic_or_greek_are_refused(self) -> None:
         quoted = '"So the original never left the records room?" [S1].'
-        for word in ("s\u0430id", "s\u03b1id"):
+        for word in ("s\u0430id", "s\u03b1id", "s\u034f\u0430\u034fid"):
             with self.subTest(word=word):
                 self.assertEqual(self.found(f"The witness {word} {quoted}"),
                                  [(8, 13, 1, "unsupported_markup", "")])
