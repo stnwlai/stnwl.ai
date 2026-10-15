@@ -213,11 +213,25 @@ class ParsingTests(unittest.TestCase):
         tail = "The witness signed it out on March 3 [S1]."
         for lead in ("**The binder burned.**", "_The binder burned._",
                      "(The binder burned.)", "The binder burned.[^1]",
-                     "He wrote 'the binder burned.'", "The binder burned.)**"):
+                     "He wrote 'the binder burned.'", "The binder burned.)**",
+                     "~~The binder burned.~~", "`The binder burned.`",
+                     "<b>The binder burned.</b>", "[The binder burned.]",
+                     "The binder burned\u3002", "The binder burned\uff0e"):
             with self.subTest(lead=lead):
                 claims = split_claims(f"{lead} {tail}")
                 self.assertEqual([c.text for c in claims], [lead, tail])
                 self.assertEqual(rules(f"{lead} {tail}"), ("uncited_claim",))
+
+    def test_mark_run_together_with_the_next_word_does_not_end_a_sentence(self) -> None:
+        self.assertEqual(len(split_claims("The binder burned.The witness signed it [S1].")), 1)
+
+    def test_numbered_line_inside_a_paragraph_is_text(self) -> None:
+        body = ("The witness signed it out on March 3 [S1].\n"
+                "99) pages were missing when the binder came back [S2].")
+        self.assertEqual([c.text for c in split_claims(body)][1],
+                         "99) pages were missing when the binder came back [S2].")
+        self.assertEqual(pairs(audit(body)), {(2, "unsupported_figure")})
+        self.assertEqual(len(split_claims("- First [S1].\n2) Second [S2].")), 2)
 
     def test_ref_grammar(self) -> None:
         self.assertEqual(self.refs("A [S1]. B [S1, S3]. C [D0001:12-13]. D [D0001:12]."),
@@ -247,6 +261,22 @@ class ParsingTests(unittest.TestCase):
         self.assertEqual([(f.claim, f.rule, f.ref) for f in result.findings],
                          [(1, "designation_exceeds_channel", "S2")])
 
+    def test_link_target_with_spaces_or_quotes_is_audited_text(self) -> None:
+        for body in (
+            (
+                "The witness signed it out on March 3 [S1](and destroyed it on March 13,"
+                ' saying "I burned it").'
+            ),
+            (
+                "The witness signed it out on March 3 [S1](. The witness then destroyed the"
+                ' binder on March 13 and said "I burned it") and returned it on March 5 [S1].'
+            ),
+        ):
+            with self.subTest(body=body):
+                result = audit(body)
+                self.assertFalse(result.grounded)
+                self.assertEqual(result.rules(), ("unsupported_figure", "unsupported_quote"))
+
     def test_quotation_inside_plain_bracket_is_checked(self) -> None:
         body = 'The witness testified [that "I never let the original leave"] [S1].'
         self.assertEqual(rules(body), ("unsupported_quote",))
@@ -260,6 +290,17 @@ class ParsingTests(unittest.TestCase):
             with self.subTest(bracket=bracket):
                 body = f"The copy is the weak link [S1] {bracket}."
                 self.assertEqual(rules(body), ("malformed_citation",))
+
+    def test_long_footnote_label_is_audited_text(self) -> None:
+        body = "The witness signed it out on March 3 [S1][^destroyed_on_March_13]."
+        self.assertEqual(rules(body), ("unsupported_figure",))
+        self.assertEqual(rules("The witness signed it out on March 3 [S1][^n13]."), ())
+
+    def test_miscased_ref_is_malformed(self) -> None:
+        for bracket in ("[s9]", "[s1]", "[t0002:14-14]"):
+            with self.subTest(bracket=bracket):
+                body = f"The binder was destroyed in a fire {bracket}."
+                self.assertEqual(rules(body), ("malformed_citation", "uncited_claim"))
 
     def test_nested_citation_bracket_is_malformed(self) -> None:
         self.assertEqual(self.refs("The records room [S1 [S2]]."), [[]])
@@ -361,6 +402,15 @@ class AuditTests(unittest.TestCase):
         for body in ("It returned on April 5 [S1].", "It cost $5 million [S1]."):
             self.assertEqual(rules(body), ("unsupported_figure",), body)
 
+    def test_month_forms_are_compared(self) -> None:
+        # 'Sept. 5' ends a sentence at its period; text-level tests cover it.
+        for figure in ("5 April", "april 5", "Sept 5", "April **5**", "April&nbsp;5"):
+            with self.subTest(figure=figure):
+                self.assertEqual(rules(f"It returned on {figure} [S1]."), ("unsupported_figure",))
+        for figure in ("5 March", "March 5th", "the 5th of march"):
+            with self.subTest(figure=figure):
+                self.assertEqual(rules(f"It returned on {figure} [S1]."), ())
+
     def test_figures_inside_quotations_and_refs_are_not_figures(self) -> None:
         claim = split_claims('The record "has 99 pages" here [T0002:19-21].')[0]
         self.assertEqual(claim.figures, ())
@@ -414,13 +464,31 @@ class AuditTests(unittest.TestCase):
                 '"So the original never left the records room?" [S1].')
         self.assertEqual(outcomes(body), [("quote_wrong_speaker", "speaker not identified")])
 
-    def test_quote_after_a_non_speech_verb_is_not_speaker_checked(self) -> None:
-        # 'read' is not a speech verb and 'answered' is not adjacent to the
-        # quotation, so no speech-verb phrase introduces it.
+    def test_last_speech_verb_binds_across_a_non_speech_verb(self) -> None:
+        # 'read' is not a speech verb, so 'answered' is the last one and binds
+        # the witness, although the exhibit is what was read.
         body = ('The witness answered earlier, then the exhibit was read: '
                 '"So the original never left the records room?" [S1]')
-        self.assertEqual(outcomes(body), [])
-        self.assertEqual(audit(body).claims[0].speakers, ())
+        self.assertEqual(outcomes(body), [("quote_wrong_speaker", "said by EXAMINING COUNSEL")])
+
+    def test_speech_verb_lead_ins_bind_the_named_speaker(self) -> None:
+        quote = '"So the original never left the records room?" [S1].'
+        for lead in ("The witness testified as follows:", "The witness said, in substance,",
+                     "The witness testified under oath that", "The witness answered \u2014",
+                     "**The witness testified:**", "The witness *testified*",
+                     "The witness testified [in part]", "The witness testified (in part)",
+                     "The witness answered: **"):
+            with self.subTest(lead=lead):
+                self.assertEqual(outcomes(f"{lead} {quote}"),
+                                 [("quote_wrong_speaker", "said by EXAMINING COUNSEL")])
+        self.assertEqual(outcomes(f"The witness testified that\u2014{quote}"),
+                         [("quote_wrong_speaker", "said by EXAMINING COUNSEL")])
+
+    def test_lead_in_without_a_speech_verb_is_not_speaker_checked(self) -> None:
+        for lead in ("According to the witness,", "The witness put it this way:"):
+            with self.subTest(lead=lead):
+                body = f'{lead} "So the original never left the records room?" [S1].'
+                self.assertEqual(outcomes(body), [])
 
     def test_unregistered_or_possessive_speaker_on_a_transcript_fails(self) -> None:
         possessive = (
@@ -458,9 +526,23 @@ class AuditTests(unittest.TestCase):
     def test_unpaired_quotation_punctuation_is_unbalanced(self) -> None:
         for body in ("The witness testified that \u201dit burned\u201d [S1].",
                      "The witness testified that \u00bbit burned [S1].",
-                     "The witness testified that it burned\u2019 here [S1]."):
+                     "The witness testified that \u2019it burned [S1].",
+                     "The witness testified that \u300cit burned\u300d [S1].",
+                     "The witness testified that \u300eit burned\u300f [S1].",
+                     "The witness testified that \u275dit burned\u275e [S1].",
+                     "The witness testified that &quot;it burned&quot; [S1]."):
             with self.subTest(body=body):
                 self.assertEqual(rules(body), ("unbalanced_quotation",))
+
+    def test_closing_single_mark_after_a_letter_or_before_a_digit_is_an_apostrophe(
+        self,
+    ) -> None:
+        for body in ("The witnesses\u2019 binder was kept in the records room [S1].",
+                     "The binder dates from the \u201990s [S1]."):
+            with self.subTest(body=body):
+                self.assertIsNone(split_claims(body)[0].unbalanced)
+        self.assertEqual(rules("The witnesses\u2019 binder was kept in the records room [S1]."),
+                         ())
 
     def test_ascii_single_quotes_are_not_quotation_marks(self) -> None:
         result = audit("The witness testified that 'it burned' [S1].")
@@ -476,10 +558,22 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(result.claims[0].kind, "quotation")
         self.assertEqual(rules("> It left once."), ("uncited_claim",))
 
-    def test_block_quote_has_no_speaker_check(self) -> None:
-        result = audit("> So the original never left the records room? [S1]")
-        self.assertEqual(result.findings, ())
-        self.assertEqual(result.claims[0].speakers, ())
+    def test_block_quote_without_a_colon_lead_in_has_no_speaker_check(self) -> None:
+        quote = "> So the original never left the records room? [S1]"
+        for body in (quote, f"The witness answered [S1].\n\n{quote}"):
+            with self.subTest(body=body):
+                result = audit(body)
+                self.assertEqual(result.findings, ())
+                self.assertEqual(result.claims[-1].speakers, ())
+
+    def test_block_quote_takes_a_colon_lead_in(self) -> None:
+        body = ("The witness answered [S1]:\n\n"
+                "> So the original never left the records room?\n> [S1]")
+        self.assertEqual(pairs(audit(body)), {(2, "quote_wrong_speaker")})
+        self.assertEqual(outcomes(body), [("quote_wrong_speaker", "said by EXAMINING COUNSEL")])
+        proven = audit("The witness answered: [S1]\n\n> It left once. [S1]")
+        self.assertEqual(proven.findings, ())
+        self.assertEqual(proven.claims[1].speakers, ("THE WITNESS",))
 
     def test_release_follows_the_declared_packet(self) -> None:
         body = "The binder stayed in the records room [S1]."

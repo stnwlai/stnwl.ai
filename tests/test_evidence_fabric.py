@@ -408,6 +408,21 @@ class VerbatimMatchingTests(unittest.TestCase):
         self.assertTrue(figure_in("5", "on March 5"))
         self.assertTrue(figure_in("5", "paid 5 million"))
 
+    def test_month_names_read_in_any_case_and_order(self) -> None:
+        self.assertEqual(
+            figure_tokens("5 April, april 5, Sept. 5, 3rd of mar, MAY 1 and Marching 7"),
+            ("April 5", "April 5", "September 5", "March 3", "May 1", "7"),
+        )
+        for figure in ("5 April", "april 5", "Sept. 5", "April **5**", "April&nbsp;5",
+                       "April\u00a05"):
+            with self.subTest(figure=figure):
+                (token,) = figure_tokens(figure)
+                self.assertFalse(figure_in(token, "on March 5"))
+        for figure in ("5 March", "March 5th", "March _5_"):
+            with self.subTest(figure=figure):
+                (token,) = figure_tokens(figure)
+                self.assertTrue(figure_in(token, "on March&nbsp;**5**"))
+
     def test_rule_errors_and_findings_render_without_values(self) -> None:
         self.assertEqual(str(RuleError("unknown_channel", "x")), "unknown_channel: x")
         self.assertEqual(str(RuleError("unknown_channel")), "unknown_channel")

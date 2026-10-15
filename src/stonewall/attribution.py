@@ -1,11 +1,12 @@
 """Speaker-bound quotations over role-labelled transcript turns.
 
 A transcript line ``LABEL: text`` opens a turn by that speaker; following
-non-blank, non-heading lines continue it. A registered name directly followed
-by a speech verb, an optional 'that', and nothing else up to the opening mark
-binds the quotation to that speaker, so it must lie inside one turn by them. A
-name after a possessive never binds. Names resolve on word boundaries, longest
-alias first. Registry failures carry rule ids and counts, never alias text.
+non-blank, non-heading lines continue it. The last speech verb in a
+quotation's lead-in binds the registered name directly before it, separated
+only by whitespace, so the quotation must lie inside one turn by that speaker.
+A name after a possessive never binds. Names resolve on word boundaries,
+longest alias first. Registry failures carry rule ids and counts, never alias
+text.
 """
 
 from __future__ import annotations
@@ -31,11 +32,9 @@ LABEL_LINE_RE = re.compile(r"^(?P<label>[A-Z]+(?: [A-Z]+)*): (?P<text>\S.*)$")
 _LABEL_RE = re.compile(r"^[A-Z]+(?: [A-Z]+)*$")
 _ALIAS_RE = re.compile(r"^[a-z]+(?: [a-z]+)*$")
 _HEADING_RE = re.compile(r"^#{1,6}\s+\S")
-_VERBS = "(?:" + "|".join(ATTRIBUTION_VERBS) + ")"
-_VERB_RE = re.compile(r"(?i)\s+" + _VERBS + r"\b")
-_PHRASE_RE = re.compile(r"(?i)(?<!\w)" + _VERBS + r"(?:\s+that)?[\s,:]*\Z")
-_REST_RE = re.compile(r"(?i)(?:\s+that)?[\s,:]*")
-_POSSESSIVE_RE = re.compile(r"['\u2019]s\s+\Z")
+_VERB_RE = re.compile(r"(?i)(?<!\w)(?:" + "|".join(ATTRIBUTION_VERBS) + r")(?!\w)")
+_GAP_RE = re.compile(r"\s+")
+_POSSESSIVE_RE = re.compile(r"(?:['\u2019]s|s['\u2019])\s+\Z")
 _REGISTRY_KEYS = frozenset({"speakers", "version"})
 _SPEAKER_KEYS = frozenset({"aliases", "label"})
 
@@ -99,30 +98,27 @@ class SpeakerRegistry:
             found.append(Mention(match.start(), match.end(), label, alias))
         return tuple(found)
 
-    def attribution_phrase(self, text: str) -> tuple[bool, Mention | None]:
-        """Whether *text* ends in a speech-verb phrase, and the mention it binds.
+    def attribution(self, lead: str) -> tuple[bool, Mention | None]:
+        """Whether *lead* holds a speech verb, and the mention bound to its last one.
 
-        Callers pass the claim text before the opening quotation mark, with
-        citation brackets and earlier quotations blanked so offsets hold. A
-        mention binds only when a verb follows it directly and nothing but an
-        optional 'that', commas, colons and whitespace follows the verb, and
-        no possessive precedes it.
+        Callers pass a quotation's lead-in: the claim text before the opening
+        mark, with citation brackets, earlier quotations, bracket and
+        parenthetical contents and emphasis markers blanked so offsets hold.
+        The last speech verb binds the mention directly before it, separated
+        only by whitespace and not after a possessive. Any word between them,
+        or punctuation, leaves the verb unbound.
         """
-        if _PHRASE_RE.search(text) is None:
+        verbs = list(_VERB_RE.finditer(lead))
+        if not verbs:
             return False, None
-        for mention in self.mentions(text):
-            verb = _VERB_RE.match(text, mention.end)
+        verb = verbs[-1].start()
+        for mention in self.mentions(lead[:verb]):
             if (
-                verb is not None
-                and _REST_RE.fullmatch(text, verb.end()) is not None
-                and _POSSESSIVE_RE.search(text, 0, mention.start) is None
+                _GAP_RE.fullmatch(lead, mention.end, verb) is not None
+                and _POSSESSIVE_RE.search(lead, 0, mention.start) is None
             ):
                 return True, mention
         return True, None
-
-    def attribution(self, text: str) -> Mention | None:
-        """The mention bound by the speech-verb phrase ending *text*, if any."""
-        return self.attribution_phrase(text)[1]
 
 
 def _invalid(detail: str) -> SpeakerRegistryError:

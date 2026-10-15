@@ -17,18 +17,25 @@ Claims
   spaces, one to six '#', then whitespace or the line end; any other line
   starting with '#' is text. A heading holding a digit or a quotation
   mark is audited as a claim of its own, without its '#' markers; other
-  headings are structure. A leading '- ', '* ', '<n>. ' or '<n>) ' (n of one to
-  three digits) starts a paragraph and is excluded.
+  headings are structure. A leading '- ' or '* ' starts a paragraph and is
+  excluded. So is a leading '<n>. ' or '<n>) ' (n of one to three digits), but
+  only on a paragraph's first line or inside a paragraph that opened as a list
+  item; elsewhere the line is text and n a figure.
 - A paragraph whose every line starts with '>' is a block quote: one claim
   whose quotation is its lines with '>' and one optional space stripped, minus
-  trailing citation brackets. Only refs inside it back it, and it has no
-  speaker check.
-- A sentence ends at '.', '?' or '!' outside quotations and outside brackets.
-  After the mark, a run of '*', '_', ')', U+2019, "'" and footnote markers
-  '[^...]' is skipped; whitespace or the end of the paragraph must follow. A
-  closing quotation mark directly after one of those marks ends the sentence
-  after the mark. A '.' between digits never ends a sentence. There is no
-  abbreviation list.
+  trailing citation brackets. Only refs inside it back it. When it directly
+  follows a paragraph whose last claim ends in ':', ignoring trailing citation
+  brackets and whitespace, that claim is its lead-in; otherwise it has none.
+- A sentence ends at '.', '?', '!', U+3002 or U+FF0E outside quotations and
+  outside citation brackets; a mark inside an ordinary bracket ends one too.
+  After the mark, a run of '*', '_', '~', '`', ')', ']', U+2019, "'", closing
+  HTML tags '</tag>' and footnote markers is skipped; whitespace or the end of
+  the paragraph must follow, so 'fire.The' stays one sentence. A closing
+  quotation mark directly after one of those marks ends the sentence after the
+  mark. A '.' between digits never ends a sentence. There is no abbreviation
+  list.
+- A footnote marker is '[^label]', the label one to eight ASCII letters or
+  digits. Any longer label is ordinary bracket text.
 - Citation brackets that follow the end, after whitespace, belong to the
   sentence that just ended.
 
@@ -38,16 +45,20 @@ Quotations
   not followed by a letter. Quotations count only outside citation brackets,
   and brackets inside a quotation are quoted text.
 - An opening mark not closed in its paragraph is unbalanced_quotation, and that
-  segment is not checked. So is any other quotation punctuation (Unicode Pi or
-  Pf, or U+FF02) outside a pair, except U+2019 between two letters.
+  segment is not checked. So is any other quotation punctuation outside a
+  pair: Unicode Pi or Pf, U+FF02, corner brackets U+300C-U+300F, ornaments
+  U+275D/U+275E, or the literal '&quot;'. With no U+2018 open, a U+2019 after
+  a letter or before a digit is an apostrophe.
 - The ASCII single quote is never a quotation mark.
 
 Citation brackets
 - A closed bracket is citation-shaped when its content holds a handle or an
-  address token, or starts with an uppercase letter, holds no bracket, and
-  contains a digit. A following '(...)' link target is part of it and is not
-  text. Other brackets ([sic], [emphasis added]) are ordinary text, and the
-  quotations and figures inside them are checked.
+  address token, starts with an uppercase letter, holds no bracket, and
+  contains a digit, or case-folds to a valid item list ('[s9]'). A directly
+  following '(...)' with no whitespace, quotes, '<', '>' or nested
+  parentheses is a link target, part of it and not text; any other '(' starts
+  ordinary text. Other brackets ([sic], [emphasis added]) are ordinary text,
+  and the quotations and figures inside them are checked.
 - Items are separated by ',' with optional spaces. Each item is a handle S<n>,
   n from 1 to MAX_PACKET_LIMIT with no leading zero, or an address
   <ID>:<start>[-<end>] in the retrieval grammar, without a pin, with start <=
@@ -82,10 +93,14 @@ Quotation check, for each balanced quotation
 - Else unsupported_quote.
 
 Speaker check
-- The attribution is speakers.attribution_phrase over the claim text before
-  the opening mark, with citation brackets and earlier quotations blanked so
-  offsets hold. Without a speech-verb phrase ending that text there is no
-  speaker check.
+- The lead-in is the claim text before the opening mark, or a block quote's
+  lead-in claim, with citation brackets, footnote markers and earlier
+  quotations blanked, the contents of ordinary brackets and parentheses
+  blanked, and '*', '_' and '~' read as spaces. The attribution is
+  speakers.attribution over it: the last speech verb binds the registered
+  mention directly before it, separated only by whitespace and not after a
+  possessive. With no speech verb there is no speaker check. A verb after the
+  speech verb that is not one ('the exhibit was read') does not unbind it.
 - Turns are computed over the full entry text; a narrowed address keeps the
   turns that intersect its range.
 - With a bound mention, some span the quotation is found in must have one turn
@@ -98,9 +113,12 @@ Speaker check
 Figure check
 - Figures are text.FIGURE_RE tokens outside quotations, citation brackets and
   footnote markers: an optionally signed number with an optional month before
-  it and scale word after it. Each must satisfy text.figure_in for at least one
-  contributed span, else unsupported_figure. Spelled-out numbers are not
-  figures.
+  it and scale word after it, or a day before its month, read as month and
+  day. Month names match in any case, as full names, three-letter forms or
+  'Sept', each with an optional period. In claim and cited text alike,
+  '&nbsp;', U+00A0, '*', '_' and '~' read as spaces first. Each figure must
+  satisfy text.figure_in for at least one contributed span, else
+  unsupported_figure. Spelled-out numbers are not figures.
 
 Packet check
 - The packet is rebuilt for the declared question, channel and limit. A digest
@@ -161,9 +179,14 @@ _CITATION_TOKEN_RE = re.compile(r"(?<![A-Za-z0-9])(?:S\d+|[A-Z][A-Z0-9_-]*\d{4}:
 _ITEM_SEPARATOR_RE = re.compile(r"\s*,\s*")
 _HEADING_RE = re.compile(r" {0,3}#{1,6}(?:\s+|$)(?P<text>.*?)(?:\s+#+)?\s*$")
 _ITEM_RE = re.compile(r"(?:[-*]|\d{1,3}[.)])\s")
-_FOOTNOTE_RE = re.compile(r"\[\^[^\[\]\s]*\]")
-_SENTENCE_MARKS = ".?!"
-_AFTER_MARK = "*_)\u2019'"
+_FOOTNOTE_RE = re.compile(r"\[\^[A-Za-z0-9]{1,8}\]")
+_LINK_TARGET_RE = re.compile(r"\([^\s()<>\"]*\)")
+_CLOSING_TAG_RE = re.compile(r"</[a-z]+>")
+_EMPHASIS_RE = re.compile(r"[*_~]")
+_SENTENCE_MARKS = ".?!\u3002\uff0e"
+_AFTER_MARK = "*_~`)]\u2019'"
+_STRAY_MARKS = "\u300c\u300d\u300e\u300f\u275d\u275e"
+_ASIDES = {"]": "[", ")": "("}
 _CLOSERS = {
     '"': '"', "\u201c": "\u201d", "\u00ab": "\u00bb", "\uff02": "\uff02", "\u2018": "\u2019",
 }
@@ -196,6 +219,7 @@ class CitationRef:
 class Quotation:
     text: str
     offset: int
+    lead: str  # the lead-in, blanked for speaker binding
 
 
 @dataclass(frozen=True, slots=True)
@@ -410,17 +434,20 @@ class _Layout:
 
 
 def _quote_mark(text: str, index: int) -> bool:
-    """Whether ``text[index]`` is quotation punctuation, not an in-word apostrophe."""
+    """Whether ``text[index]`` is quotation punctuation, not an apostrophe.
+
+    Callers ask only outside quotations, so no U+2018 is open.
+    """
     character = text[index]
-    if character in ('"', "\uff02"):
+    if character in ('"', "\uff02") or character in _STRAY_MARKS:
+        return True
+    if text.startswith("&quot;", index):
         return True
     if unicodedata.category(character) not in ("Pi", "Pf"):
         return False
     return not (
         character == "\u2019"
-        and 0 < index < len(text) - 1
-        and text[index - 1].isalpha()
-        and text[index + 1].isalpha()
+        and ((index and text[index - 1].isalpha()) or text[index + 1 : index + 2].isdecimal())
     )
 
 
@@ -445,9 +472,13 @@ def _matching(text: str, start: int) -> int | None:
 
 
 def _citation_shaped(content: str) -> bool:
-    return _CITATION_TOKEN_RE.search(content) is not None or (
-        _BRACKET_RE.fullmatch(content) is not None
-        and any(character.isdigit() for character in content)
+    return (
+        _CITATION_TOKEN_RE.search(content) is not None
+        or (
+            _BRACKET_RE.fullmatch(content) is not None
+            and any(character.isdigit() for character in content)
+        )
+        or not _parse_items(content.upper(), 0)[1]  # '[s9]' is a miscased ref
     )
 
 
@@ -467,8 +498,8 @@ def _layout(text: str) -> _Layout:
         elif character == "[" and (close := _matching(text, index)) is not None:
             if _citation_shaped(text[index + 1 : close]):
                 end = close + 1
-                if text.startswith("(", end) and (target := text.find(")", end)) != -1:
-                    end = target + 1  # a Markdown link target is not text
+                if (target := _LINK_TARGET_RE.match(text, end)) is not None:
+                    end = target.end()  # a Markdown link target is not text
                 citations.append((index, end))
                 index = end
                 continue
@@ -529,15 +560,19 @@ def _paragraphs(body: str) -> list[tuple[int, int, bool]]:
     """Paragraph spans, flagged True for a heading audited as its own claim."""
     spans: list[tuple[int, int, bool]] = []
     start: int | None = None
+    listed = False  # the open paragraph's first line was a list item
     end = 0
     offset = 0
     for line in body.split("\n"):
         heading = _HEADING_RE.match(line)
         item = None if heading else _ITEM_RE.match(line)
+        if item and line[0].isdigit() and start is not None and not listed:
+            item = None  # inside a paragraph, '<n>) ' is text and n a figure
         if not line.strip() or heading or item:
             if start is not None:
                 spans.append((start, end, False))
             start = offset + item.end() if item else None
+            listed = item is not None
             if heading and _audited_heading(heading.group("text")):
                 spans.append((offset + heading.start("text"), offset + heading.end("text"), True))
         elif start is None:
@@ -556,7 +591,7 @@ def _sentences(text: str) -> list[tuple[int, int]]:
     for low, high in _hidden_spans(text, layout):
         hidden[low:high] = [True] * (high - low)
     bracketed = [False] * len(text)
-    for low, high in (*layout.citations, *layout.brackets):
+    for low, high in layout.citations:
         bracketed[low:high] = [True] * (high - low)
     closing = {high - 1 for _low, high in layout.quotations}
     trailing = dict(layout.citations)
@@ -574,8 +609,8 @@ def _sentences(text: str) -> list[tuple[int, int]]:
         while end < len(text):
             if text[end] in _AFTER_MARK:
                 end += 1
-            elif footnote := _FOOTNOTE_RE.match(text, end):
-                end = footnote.end()
+            elif skipped := _FOOTNOTE_RE.match(text, end) or _CLOSING_TAG_RE.match(text, end):
+                end = skipped.end()
             else:
                 break
         # Whitespace or the paragraph end must follow, so a '.' between digits
@@ -629,14 +664,37 @@ def _block_quotation(paragraph: str) -> str:
             return quoted[:end]
 
 
+def _lead_in(prefix: str) -> str:
+    """*prefix*, already masked, with aside contents and emphasis blanked."""
+    characters = list(_EMPHASIS_RE.sub(" ", prefix))
+    openers: list[int] = []
+    for index, character in enumerate(characters):
+        if character in "[(":
+            openers.append(index)
+        elif openers and characters[openers[-1]] == _ASIDES.get(character):
+            low = openers.pop()
+            characters[low + 1 : index] = " " * (index - low - 1)
+    return "".join(characters)
+
+
+def _block_lead(prior: str) -> str:
+    """A block quote's lead-in from the claim just before it, if that ends in ':'."""
+    masked = _masked(prior).rstrip()  # trailing citation brackets read as spaces
+    return _lead_in(masked) if masked.endswith(":") else ""
+
+
 def split_claims(body: str) -> tuple[Claim, ...]:
     """Split an answer body into claims with their refs, quotations and figures."""
     claims: list[Claim] = []
+    previous_end = 0
     for paragraph_start, paragraph_end, heading in _paragraphs(body):
         paragraph = body[paragraph_start:paragraph_end]
+        adjacent = bool(claims) and not body[previous_end:paragraph_start].strip()
+        previous_end = paragraph_end
         if not heading and all(line.startswith(">") for line in paragraph.split("\n")):
             refs, malformed = _refs(paragraph, _layout(paragraph), paragraph_start)
             quoted = _block_quotation(paragraph)
+            lead = _block_lead(claims[-1].text) if adjacent else ""
             claims.append(
                 Claim(
                     index=len(claims) + 1,
@@ -644,7 +702,9 @@ def split_claims(body: str) -> tuple[Claim, ...]:
                     text=paragraph,
                     refs=tuple(refs),
                     malformed=tuple(malformed),
-                    quotations=(Quotation(quoted, paragraph_start),) if quoted.strip() else (),
+                    quotations=(
+                        (Quotation(quoted, paragraph_start, lead),) if quoted.strip() else ()
+                    ),
                     figures=(),
                     unbalanced=None,
                 )
@@ -655,6 +715,7 @@ def split_claims(body: str) -> tuple[Claim, ...]:
             layout = _layout(text)
             base = paragraph_start + start
             refs, malformed = _refs(text, layout, base)
+            masked = _masked(text)
             claims.append(
                 Claim(
                     index=len(claims) + 1,
@@ -663,10 +724,11 @@ def split_claims(body: str) -> tuple[Claim, ...]:
                     refs=tuple(refs),
                     malformed=tuple(malformed),
                     quotations=tuple(
-                        Quotation(text[open_ + 1 : close - 1], base + open_)
+                        Quotation(text[open_ + 1 : close - 1], base + open_,
+                                  _lead_in(masked[:open_]))
                         for open_, close in layout.quotations
                     ),
-                    figures=figure_tokens(_masked(text)),
+                    figures=figure_tokens(masked),
                     unbalanced=None if layout.unbalanced is None else base + layout.unbalanced,
                 )
             )
@@ -764,7 +826,6 @@ def _audit_claim(
     else:
         if claim.unbalanced is not None:
             report("unbalanced_quotation")
-        masked = _masked(claim.text)
         for quotation in claim.quotations:
             gathered = [entry for entry in spans if quotation_in(quotation.text, entry.text)]
             found = [span for span in gathered if _in_one_turn(quotation.text, span.turns)]
@@ -787,10 +848,8 @@ def _audit_claim(
                     report("quote_wrong_source", detail=f"found in {elsewhere.handle}")
                 continue
             proven_quotations += 1
-            phrase, mention = speakers.attribution_phrase(
-                masked[: quotation.offset - claim.offset]
-            )
-            if not phrase:
+            verb, mention = speakers.attribution(quotation.lead)
+            if not verb:
                 continue
             if mention is None:
                 if any(span.turns for span in found):
