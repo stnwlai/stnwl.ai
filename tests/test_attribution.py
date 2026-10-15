@@ -154,6 +154,16 @@ class AttributionTests(unittest.TestCase):
         self.assertIsNone(speaker_of("records room? It left once.", turns))
         self.assertIsNone(speaker_of("Trailing prose.", turns))
 
+    def test_label_only_line_opens_a_turn(self) -> None:
+        span = "EXAMINING COUNSEL: Did it leave?\nTHE WITNESS:\nIt left once.\nOnly once."
+        turns = speaker_turns(span, 10)
+        self.assertEqual(
+            [(t.label, t.line_start, t.line_end, t.text) for t in turns],
+            [("EXAMINING COUNSEL", 10, 10, "Did it leave?"),
+             ("THE WITNESS", 11, 13, "It left once.\nOnly once.")],
+        )
+        self.assertEqual(speaker_of("It left once. Only once.", turns), "THE WITNESS")
+
     def test_unregistered_transcript_label_is_reported(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -161,11 +171,11 @@ class AttributionTests(unittest.TestCase):
                 (root / f"{name}.md").write_text(
                     f"---\nid: {name}\ntype: {kind}\ndate: 2025-01-01\n"
                     "designation: public\n---\n\n# Record\n\n"
-                    "THE WITNESS: Yes.\nTHE REPORTER: Noted.\n",
+                    "THE WITNESS: Yes.\nTHE REPORTER: Noted.\n\nTHE CLERK:\nNoted.\n",
                     encoding="utf-8",
                 )
             found = unregistered_labels(compile_corpus(root), REGISTRY)
-        self.assertEqual(found, (("T0009", 11),))
+        self.assertEqual(found, (("T0009", 11), ("T0009", 13)))
 
     def test_reference_corpus_labels_are_registered(self) -> None:
         self.assertEqual(unregistered_labels(compile_corpus(CORPUS_ROOT), REGISTRY), ())

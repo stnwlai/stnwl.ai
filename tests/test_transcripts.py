@@ -67,6 +67,14 @@ class TranscriptTests(unittest.TestCase):
         self.assertEqual(block.body, "$ cat note.txt\nx\n")
         self.assertEqual(text[block.start : block.end], block.body)
 
+    def test_fence_closes_only_on_its_own_character_and_length(self) -> None:
+        text = ("````text\n```\n$ cat hidden.txt\n```\n````\n\n~~~\n```console\n~~~\n\n"
+                + console("cat note.txt", "x\n"))
+        (block,) = parse_transcripts(text)
+        self.assertEqual((block.line, block.command), (11, "cat note.txt"))
+        self.assertEqual(parse_transcripts("````console\n$ cat note.txt\n````\n"), ())
+        self.assert_rule("transcript_unterminated", parse_transcripts, "````text\n```\n")
+
     def test_unsupported_commands(self) -> None:
         for command in (
             "ls",

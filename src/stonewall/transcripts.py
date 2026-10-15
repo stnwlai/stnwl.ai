@@ -1,7 +1,9 @@
 """README transcripts: console blocks regenerated from the commands they show.
 
 A transcript block opens with a line that is exactly '```console', closes with
-a line that is exactly '```', and starts with '$ <command>'. Only a few
+a line that is exactly '```', and starts with '$ <command>'. Any other fence
+of three or more backticks or tildes closes only on a line of the same
+character, at least as long, and nothing else. Only a few
 read-only commands may appear, and they run in-process from the repository
 root, so the output is deterministic and independent of the hash seed. A file
 a command reads must be in the publishable candidate set.
@@ -34,7 +36,7 @@ from .publication import candidate_paths
 from .text import collapse_whitespace
 
 ALLOWED_SUBCOMMANDS = frozenset({"audit-answer", "cite", "packet"})
-_FENCE = "```"
+_FENCE_RE = re.compile(r"(`{3,}|~{3,})")
 _OPEN = "```console"
 _SHELL_CHARACTERS = frozenset("|&;<>`$\n")
 # Subcommand -> argument destinations that name a file the command reads.
@@ -66,10 +68,16 @@ def parse_transcripts(text: str) -> tuple[TranscriptBlock, ...]:
     while index < len(lines):
         fence = lines[index].rstrip("\n")
         index += 1
-        if not fence.startswith(_FENCE):
+        if (marker := _FENCE_RE.match(fence)) is None:
             continue
+        character, length = marker.group(1)[0], len(marker.group(1))
         close = next(
-            (i for i in range(index, len(lines)) if lines[i].rstrip("\n") == _FENCE), None
+            (
+                i for i in range(index, len(lines))
+                if len(closing := lines[i].rstrip("\n")) >= length
+                and closing == character * len(closing)
+            ),
+            None,
         )
         if close is None:
             raise TranscriptError("transcript_unterminated", line=index)

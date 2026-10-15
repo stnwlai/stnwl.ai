@@ -221,8 +221,8 @@ defect is rejected for its named rule. The defects include filtering after
 scoring, a set-ordered index that only cross-seed builds catch, a disabled
 quote check, a swapped speaker, an edited record under an answer, and drifted
 README output. Measured with `time` on the machine that generated these
-transcripts, `stonewall checks` finished in under 6 seconds and steps 1 to 8
-together in under 9 seconds.
+transcripts, `stonewall checks` finished in under 9 seconds and steps 1 to 8
+together in under 11 seconds.
 
 ## What each finding means
 
@@ -251,7 +251,7 @@ together in under 9 seconds.
 | Line-verifiable citations | Every citation carries a path, a line range, and artifact and span digests that are re-checked against the record on disk. | `tests/test_evidence_fabric.py` |
 | Explainable BM25 retrieval | Every result exposes its BM25, exact-phrase and heading contributions. | `tests/test_evidence_fabric.py` |
 | Fail-closed publication boundary | A path allowlist, content checks and an exact-tree manifest reject unreviewed files and byte drift. | `tests/test_publication_boundary.py` |
-| Grounded answers | Every sentence must cite, and every bracketed citation, quotation and figure must resolve to the evidence packet the answer declares; a handle or address written outside brackets is malformed. | `tests/test_grounding.py` |
+| Grounded answers | Every sentence must cite, and every bracketed citation, quotation and figure must resolve to the evidence packet the answer declares; a handle, address or artifact ID written outside brackets is malformed. | `tests/test_grounding.py` |
 | Speaker-bound quotations | A quotation attributed to a speaker must lie inside one turn by that speaker. | `tests/test_attribution.py` |
 | Designation flow control | Records above a channel's ceiling are removed before scoring, and an answer is releasable only where its declared packet and every cited source may go. | `tests/test_disclosure.py` |
 | Checks that can fail | Every check passes on an unmodified copy, writes nothing, and rejects seeded defects for a named reason. | `tests/test_checks.py`, `tests/test_transcripts.py` |
@@ -280,10 +280,12 @@ and compared byte for byte.
 - Headings are audited as claims, so an uncited heading fails.
 - An answer may use plain paragraphs, `-`/`*`/numbered list items at the start
   of a line, ATX headings, `>` block quotes, standalone thematic breaks
-  (`---`) and citation brackets. HTML, character references, images, other
-  links, `+` bullets, nested lists and lazy block-quote lines are refused as
-  `unsupported_markup`.
-- Items in a citation bracket are separated by `,` or `;`.
+  (`---`) and citation brackets. HTML, character references, footnotes,
+  invisible format characters, images, other links, `+` bullets, nested lists
+  and lazy block-quote lines are refused as `unsupported_markup`. A list
+  item's number is not audited.
+- Items in a citation bracket are separated by `,` or `;`. A handle, address
+  or artifact ID written outside a citation bracket is malformed.
 - Quotations are compared after collapsing whitespace only. Ellipses are
   allowed; bracketed alterations are not. From a transcript, a quotation must
   lie within one turn; an ellipsis cannot join two turns. An ellipsis may join
@@ -310,7 +312,9 @@ and compared byte for byte.
   compared. Units written as separate words are not compared; letters attached
   to a number (`42kg`, `650K`) are part of the figure, and so is an attached
   `%` or `‰`. Which event a figure belongs to is not compared, so two dates
-  swapped within the cited lines still pass.
+  swapped within the cited lines still pass. A month is read when written
+  directly before or after its day, or as `the 3rd day of April` or
+  `April the 3rd`; other phrasings (`April, 3`, `3 in April`) are not.
 - A number glued to letters before it (`B13`, `April5`) is not a figure, and a
   range such as `3-5` is one figure. Superscript and fullwidth digits read as
   ordinary digits, and a no-break space as a space.
@@ -320,9 +324,9 @@ and compared byte for byte.
 - Confidential-text detection in transcripts compares whole lines of 20 or
   more characters, so partial-line excerpts are not detected.
 - Answer prose is screened for whole lines of 20 or more characters copied
-  from records above the release channel, after normalizing emphasis,
-  quotation marks and citation brackets; shorter or partial excerpts are not
-  detected.
+  from records above the release channel, after normalizing case, dashes,
+  emphasis, quotation marks and citation brackets; shorter or partial excerpts
+  are not detected.
 - No model is called. The answers are fixtures standing in for model output.
 - Designations here are synthetic labels on fictional records.
 

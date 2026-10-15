@@ -24,8 +24,10 @@ _MONTH_NAMES = {month[:3].casefold(): month for month in MONTHS}
 _MONTH = "(?i:(?:" + "|".join((*MONTHS, "Sept", *(m[:3] for m in MONTHS))) + r")\.?)"
 _START = r"(?<![0-9A-Za-z])(?<!\d[.,:/-])"
 FIGURE_RE = re.compile(
-    _START + r"(?P<day>\d{1,2})(?i:st|nd|rd|th)?\s+(?:(?i:of)\s+)?(?P<dmonth>" + _MONTH
-    + r")(?![0-9A-Za-z])"
+    _START + r"(?P<day>\d{1,2})(?i:st|nd|rd|th)?\s+(?:(?i:day\s+of|of)\s+)?(?P<dmonth>"
+    + _MONTH + r")(?![0-9A-Za-z])"
+    r"|(?<![0-9A-Za-z])(?P<tmonth>" + _MONTH + r")\s+(?i:the)\s+(?P<tday>\d{1,2})"
+    r"(?i:st|nd|rd|th)?(?![0-9A-Za-z])"
     r"|(?:(?<![0-9A-Za-z])(?P<month>" + _MONTH + r")\s+)?"
     + _START + r"(?P<number>(?:[-+\u2212](?=\d))?\d+(?:[.,:/-]\d+)*[A-Za-z]*[%\u2030]?)"
     r"(?:\s+(?P<scale>(?i:thousand|million|billion|trillion))(?![0-9A-Za-z]))?"
@@ -90,8 +92,9 @@ def quotation_in(quotation: str, text: str) -> bool:
 
 def _figure_key(match: re.Match[str]) -> tuple[str, str, str]:
     """Month, signed number, and scale of one figure match, normalized."""
-    if match.group("day"):
-        return _MONTH_NAMES[match.group("dmonth")[:3].casefold()], match.group("day"), ""
+    for day, month in (("day", "dmonth"), ("tday", "tmonth")):
+        if match.group(day):
+            return _MONTH_NAMES[match.group(month)[:3].casefold()], match.group(day), ""
     month = _MONTH_NAMES.get((match.group("month") or "")[:3].casefold(), "")
     number = match.group("number").replace("\u2212", "-")
     ordinal = _ORDINAL_RE.fullmatch(number)
@@ -101,8 +104,10 @@ def _figure_key(match: re.Match[str]) -> tuple[str, str, str]:
 
 def _figure_text(text: str) -> str:
     """*text* NFKC-folded, so superscript and fullwidth digits read as digits and
-    non-breaking spaces as spaces, with emphasis markers read as spaces."""
-    return collapse_whitespace(_FIGURE_SPACE_RE.sub(" ", unicodedata.normalize("NFKC", text)))
+    non-breaking spaces as spaces, with a literal '&nbsp;' and emphasis markers
+    read as spaces."""
+    folded = unicodedata.normalize("NFKC", text).replace("&nbsp;", " ")
+    return collapse_whitespace(_FIGURE_SPACE_RE.sub(" ", folded))
 
 
 def figure_tokens(text: str) -> tuple[str, ...]:
@@ -117,7 +122,8 @@ def figure_in(figure: str, text: str) -> bool:
     """Whether the figure token *figure* appears in *text*.
 
     Numbers compare as whole signed tokens with any ordinal suffix dropped, and
-    a day before its month reads as the month before its day. A figure without
+    a day before its month ('3rd day of March') or after 'the' ('March the 3rd')
+    reads as the month before its day. A figure without
     a month or scale matches the same number under any qualifiers; a qualified
     figure needs the same month and scale too.
     """

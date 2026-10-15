@@ -120,7 +120,7 @@ class HarnessTests(unittest.TestCase):
         staged = self.base / "staged"
         stage_tree(self.repo, staged)
         snapshot = snapshot_tree(staged)
-        self.assertEqual(sorted(snapshot), [".gitignore", "data/value.txt", "tool.sh"])
+        self.assertEqual(sorted(snapshot), [".", ".gitignore", "data", "data/value.txt", "tool.sh"])
         self.assertTrue(snapshot["tool.sh"].endswith(":0755"))
         self.assertTrue(snapshot["data/value.txt"].endswith(":0644"))
         self.assertTrue((staged / ".git").is_dir())
@@ -144,6 +144,7 @@ class HarnessTests(unittest.TestCase):
             ("data/value.txt", lambda root: (root / "data" / "value.txt").chmod(0o755)),
             ("data/value.txt", lambda root: (root / "data" / "value.txt").chmod(0o600)),
             ("empty", lambda root: (root / "empty").mkdir()),
+            ("data", lambda root: (root / "data").chmod(0o700)),
         )
         for expected, action in actions:
             with self.subTest(expected=expected):
@@ -243,11 +244,16 @@ class HarnessTests(unittest.TestCase):
 
     def test_load_defects_rejects_noncanonical_paths(self) -> None:
         checks = (Check("value", value_check),)
-        for path in ("../x", "/x", "a\\\\b", "./a", "a//b", "", "a\\u0000b", "a\\tb",
-                     "a\\u001fb", "a\\u007fb"):
-            entry = VALUE_DEFECT.replace('"data/value.txt"', f'"{path}"')
-            with self.subTest(path=path), self.assertRaises(CheckHarnessError):
-                load_defects(self.defects_file(entry), checks=checks)
+        for path in ("../x", "/x", "a\\b", "./a", "a//b", "", "a\x00b", "a\tb", "a\x1fb",
+                     "a\x7fb"):
+            # TOML escapes, so the loaded path holds the real character.
+            quoted = "".join(
+                c if c.isprintable() and c not in '"\\' else f"\\u{ord(c):04x}" for c in path
+            )
+            entry = VALUE_DEFECT.replace('"data/value.txt"', f'"{quoted}"')
+            with self.subTest(path=path):
+                with self.assertRaisesRegex(CheckHarnessError, "path is not canonical"):
+                    load_defects(self.defects_file(entry), checks=checks)
 
     def test_load_defects_rejects_bad_shapes(self) -> None:
         checks = (Check("value", value_check), Check("unit", blind_check))
@@ -320,6 +326,16 @@ class HarnessTests(unittest.TestCase):
         self.assertEqual(check_answers(tree, self.base), unavailable)
         (tree / "examples/answers").rmdir()
         self.assertEqual(check_answers(tree, self.base), unavailable)
+
+    def test_nested_answer_is_audited(self) -> None:
+        tree = self.base / "tree"
+        shutil.copytree(REPO_ROOT / "examples", tree / "examples")
+        nested = tree / "examples/answers/more/extra.md"
+        nested.parent.mkdir()
+        grounded = (tree / "examples/answers/grounded.md").read_text(encoding="utf-8")
+        nested.write_text(grounded + "\nThe binder burned.\n", encoding="utf-8")
+        self.assertEqual({(f.path, f.rule) for f in check_answers(tree, self.base)},
+                         {("examples/answers/more/extra.md", "uncited_claim")})
 
     def test_reference_defects_file_is_consistent(self) -> None:
         defects = load_defects(REPO_ROOT / DEFECTS_FILE)

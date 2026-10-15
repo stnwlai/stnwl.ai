@@ -32,14 +32,12 @@ Claims
 - A sentence ends at '.', '?', '!', U+3002 or U+FF0E outside quotations and
   outside citation brackets; a mark inside an ordinary bracket ends one too.
   After the mark, a run of '*', '_', '~', '`', ')', ']', U+2019, "'" and
-  footnote markers is skipped; whitespace or the end of the paragraph must
-  follow, so 'fire.The' stays one sentence. A closing quotation mark directly
+  footnote markers '[^...]' is skipped; whitespace or the end of the
+  paragraph must follow, so 'fire.The' stays one sentence. A closing quotation mark directly
   after one of those marks ends the sentence after the closing mark only when
   whitespace and then an uppercase letter, a citation bracket or the
   paragraph end follows. A '.' between digits never ends a sentence. There is
   no abbreviation list.
-- A footnote marker is '[^label]', the label one to eight ASCII letters or
-  digits. Any longer label is ordinary bracket text.
 - Citation brackets that follow the end, after whitespace, belong to the
   sentence that just ended.
 
@@ -50,12 +48,15 @@ Answer grammar
 - Anything else is unsupported_markup at its own position, in the claim that
   holds it: an HTML tag '<' plus a letter, '/', '!' or '?' up to the next '>';
   a character reference '&name', '&#digits' or '&#xhex', with or without ';';
-  an image '![...](...)'; a link '[...](...)' whose bracket is not
+  a footnote marker '[^...]', which also starts a footnote definition; any
+  Unicode format character (category Cf), never stripped before matching; an
+  image '![...](...)'; a link '[...](...)' whose bracket is not
   citation-shaped; a thematic break inside a paragraph. Citation brackets and
-  their link targets are not scanned for tags or references. A paragraph that
-  mixes '>' lines with other lines is reported once at its start. A '+' bullet, or any list marker
-  after leading whitespace, is reported once per paragraph at its first such
-  line, detail 'item'. The claim's other checks still run.
+  their link targets are not scanned for tags, references or footnotes. A
+  paragraph that mixes '>' lines with other lines is reported once at its
+  start. A '+' bullet, or any list marker after leading whitespace, is
+  reported once per paragraph at its first such line, detail 'item'. The
+  claim's other checks still run. A list item's number is not audited.
 
 Quotations
 - The pairs are straight double quotes, U+201C/U+201D, guillemets, fullwidth
@@ -85,10 +86,10 @@ Citation brackets
 - Any other citation-shaped bracket, including one holding a nested bracket,
   is malformed_citation and counts as no ref. Its finding names only the
   position of the first bad item.
-- A handle token 'S<n>' or an address token '<ID>:<digit>' outside
-  quotations, citation brackets, link targets and footnote markers is
-  malformed_citation at its own position, detail 'item 1'. Block quotes are
-  quotations throughout.
+- A handle token 'S<n>', an address token '<ID>:<digit>' or a bare artifact
+  ID ('<ID>' ending in four digits, not followed by ':') outside quotations,
+  citation brackets and link targets is malformed_citation at its own
+  position, detail 'item 1'. Block quotes are quotations throughout.
 
 Resolution
 - Refs resolve against the view of the declared channel, never the full
@@ -117,7 +118,7 @@ Quotation check, for each balanced quotation
 
 Speaker check
 - The lead-in is the claim text before the opening mark, or a block quote's
-  lead-in claim, with citation brackets and footnote markers blanked, earlier
+  lead-in claim, with citation brackets blanked, earlier
   quotations replaced by a placeholder that is neither a word nor whitespace,
   the contents of ordinary brackets and parentheses blanked, and '*', '_' and
   '~' read as spaces. So a mention before an earlier quotation never binds a
@@ -137,11 +138,12 @@ Speaker check
   when any span the quotation is found in has speaker turns.
 
 Figure check
-- Figures are text.FIGURE_RE tokens outside quotations, citation brackets and
-  footnote markers: an optionally signed number with an optional month before
-  it and scale word after it, or a day before its month, read as month and
-  day. Letters and a '%' or U+2030 attached to a number are part of it. Month
-  names and the 'of' in '5th of March' match in any case; months are full
+- Figures are text.FIGURE_RE tokens outside quotations and citation brackets:
+  an optionally signed number with an optional month before it and scale word
+  after it, or a day before its month ('5th of March', '3rd day of March') or
+  after 'the' ('March the 3rd'), read as month and day. Letters and a '%' or
+  U+2030 attached to a number are part of it. Month names and the words 'of',
+  'day of' and 'the' in those forms match in any case; months are full
   names, three-letter forms or 'Sept', each with an optional period; ordinal
   suffixes drop in any case. Claim and cited text alike are NFKC-folded
   first, so superscript and fullwidth digits are digits and U+00A0 a space,
@@ -161,9 +163,10 @@ Release check
   whose designation is not releasable on release_to is
   designation_exceeds_channel, detail '<designation> exceeds <release_to>'.
 - Restricted prose: the whole body, with citation brackets, their link
-  targets and footnote markers blanked, and each of disclosure.restricted_lines
-  for release_to are NFKC-folded, with '*', '_' and '~' read as spaces, curly
-  quotation marks folded to ASCII and whitespace collapsed; each line also
+  targets and heading markers blanked, and each of disclosure.restricted_lines
+  for release_to are NFKC-folded and case-folded, with '*', '_', '~', '-',
+  U+2010 to U+2015 and U+2212 read as spaces, curly quotation marks folded to
+  ASCII and whitespace collapsed; each line also
   drops trailing '.?!;:,' and whitespace and counts only at 20 or more
   characters. Each occurrence is designation_exceeds_channel at the claim
   holding its start, or at its own position for the answer when no claim
@@ -180,10 +183,10 @@ Verdict
   grounded and releasable. No claims is empty_answer.
 
 Findings sit at the line and column of the claim's first character, or claim 0
-for answer-level findings; unsupported_markup and a loose handle or address
-sit at their construct. They
-carry rule ids, refs as written, handles, designations, channels and speaker
-labels, never quoted words, figures or source text.
+for answer-level findings; unsupported_markup and a loose handle, address or
+artifact ID sit at their construct. They carry rule ids, refs as written,
+handles, designations, channels and speaker labels, never quoted words,
+figures or source text.
 """
 
 from __future__ import annotations
@@ -223,7 +226,10 @@ _HANDLE_RE = re.compile(r"^S([1-9][0-9]*)$")
 _BRACKET_RE = re.compile(r"^[A-Z][^\[\]]*$")
 _CITATION_TOKEN_RE = re.compile(r"(?<![A-Za-z0-9])(?:S\d+|[A-Z][A-Z0-9_-]*\d{4}:\d)")
 _ITEM_SEPARATOR_RE = re.compile(r"\s*[,;]\s*")
-_LOOSE_REF_RE = re.compile(r"(?<![A-Za-z0-9])S[1-9]\d*(?![A-Za-z0-9])|[A-Z][A-Z0-9_-]*\d{4}:\d")
+_LOOSE_REF_RE = re.compile(
+    r"(?<![A-Za-z0-9])S[1-9]\d*(?![A-Za-z0-9])|[A-Z][A-Z0-9_-]*\d{4}:\d"
+    r"|(?<![A-Za-z0-9])[A-Z][A-Z0-9_-]*\d{4}(?![A-Za-z0-9:])"
+)
 _HEADING_RE = re.compile(r" {0,3}#{1,6}(?:\s+|$)(?P<text>.*?)(?:\s+#+)?\s*$")
 _ITEM_RE = re.compile(r"(?:[-*]|\d{1,3}[.)])\s")
 _BREAK_RE = re.compile(r" {0,3}([-*_])(?: *\1){2,} *")
@@ -231,12 +237,15 @@ _QUOTE_LINE_RE = re.compile(r" {0,3}>")
 _NESTED_ITEM_RE = re.compile(r"(?:\s+(?:[-*+]|\d{1,3}[.)])|\+)(?:\s|$)")
 _TAG_RE = re.compile(r"<[A-Za-z/!?][^>]*>")
 _REFERENCE_RE = re.compile(r"&(?:[A-Za-z][A-Za-z0-9]*|#[0-9]+|#[xX][0-9A-Fa-f]+);?")
-_FOOTNOTE_RE = re.compile(r"\[\^[A-Za-z0-9]{1,8}\]")
+_FOOTNOTE_RE = re.compile(r"\[\^[^\]\n]*\]")
 _LINK_TARGET_RE = re.compile(r"\([^\s()<>\"']*\)")
 _EMPHASIS_RE = re.compile(r"[*_~]")
 _SENTENCE_MARKS = ".?!\u3002\uff0e"
 _AFTER_MARK = "*_~`)]\u2019'"
-_PROSE_FOLD = str.maketrans({"\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"'})
+_PROSE_FOLD = str.maketrans(
+    {"\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"',
+     **dict.fromkeys("-\u2010\u2011\u2012\u2013\u2014\u2015\u2212", " ")}
+)
 _PROSE_END = ".?!;:, "
 _MIN_PROSE_CHARS = 20
 _PLACEHOLDER = "\x00"  # an earlier quotation in a lead-in: no word, no gap
@@ -571,12 +580,9 @@ def _layout(text: str) -> _Layout:
 
 
 def _hidden_spans(text: str, layout: _Layout) -> list[tuple[int, int]]:
-    """Citations, footnote markers, quotations, and an unclosed quotation's tail."""
-    footnotes = [
-        (low, high) for low, high in layout.brackets if _FOOTNOTE_RE.fullmatch(text, low, high)
-    ]
+    """Citations, quotations, and an unclosed quotation's tail."""
     tail = [(layout.opened, len(text))] if layout.opened is not None else []
-    return [*layout.citations, *footnotes, *layout.quotations, *tail]
+    return [*layout.citations, *layout.quotations, *tail]
 
 
 def _masked(text: str, quoted: str = " ") -> str:
@@ -769,9 +775,13 @@ def _markup(paragraph: str) -> list[tuple[int, str]]:
         scanned[low:high] = " " * (high - low)
     found = [
         (match.start(), "")
-        for pattern in (_TAG_RE, _REFERENCE_RE)
+        for pattern in (_TAG_RE, _REFERENCE_RE, _FOOTNOTE_RE)
         for match in pattern.finditer("".join(scanned))
     ]
+    found.extend(
+        (index, "") for index, character in enumerate(paragraph)
+        if unicodedata.category(character) == "Cf"
+    )
     plain = set(layout.brackets)
     for low, _high in (*layout.citations, *layout.brackets):
         close = _matching(paragraph, low)
@@ -911,9 +921,9 @@ def _contribution(entry: PacketEntry, ref: CitationRef, view: CompiledCorpus) ->
 def _prose(text: str) -> tuple[str, tuple[int, ...]]:
     """*text* folded for restricted-line matching, with each character's offset.
 
-    Each character and its combining marks are NFKC-folded, '*', '_' and '~'
-    read as spaces, curly quotation marks fold to ASCII, and whitespace runs
-    collapse to one space.
+    Each character and its combining marks are NFKC-folded and case-folded,
+    '*', '_', '~' and dashes read as spaces, curly quotation marks fold to
+    ASCII, and whitespace runs collapse to one space.
     """
     folded: list[str] = []
     origins: list[int] = []
@@ -922,7 +932,7 @@ def _prose(text: str) -> tuple[str, tuple[int, ...]]:
         end = index + 1
         while end < len(text) and unicodedata.combining(text[end]):
             end += 1
-        piece = unicodedata.normalize("NFKC", text[index:end]).translate(_PROSE_FOLD)
+        piece = unicodedata.normalize("NFKC", text[index:end]).translate(_PROSE_FOLD).casefold()
         for character in _EMPHASIS_RE.sub(" ", piece):
             if character.isspace():
                 if not folded or folded[-1] == " ":
@@ -943,17 +953,20 @@ def _copied(
     """Claim index (0 when none holds it), body offset and designation of each
     restricted line the answer body copies.
 
-    Citation brackets, their link targets and footnote markers are blanked
-    first, so a match may cross them and the claims they end.
+    Citation brackets and their link targets are blanked first, so a match may
+    cross them and the claims they end, and so are heading markers, so a copied
+    heading is found once, in its claim.
     """
     characters = list(body)
     for claim in claims:
-        layout = _layout(claim.text)
-        footnotes = [
-            span for span in layout.brackets if _FOOTNOTE_RE.fullmatch(claim.text, *span)
-        ]
-        for low, high in (*layout.citations, *footnotes):
+        for low, high in _layout(claim.text).citations:
             characters[claim.offset + low : claim.offset + high] = " " * (high - low)
+    offset = 0
+    for line in body.split("\n"):
+        if heading := _HEADING_RE.match(line):
+            for low, high in ((0, heading.start("text")), (heading.end("text"), len(line))):
+                characters[offset + low : offset + high] = " " * (high - low)
+        offset += len(line) + 1
     haystack, origins = _prose("".join(characters))
     found: list[tuple[int, int, str]] = []
     for designation, line in restricted:

@@ -1,7 +1,8 @@
 """Speaker-bound quotations over role-labelled transcript turns.
 
-A transcript line ``LABEL: text`` opens a turn by that speaker; following
-non-blank, non-heading lines continue it. The last speech verb in a
+A transcript line ``LABEL: text`` opens a turn by that speaker, and a line
+``LABEL:`` alone opens one with no text yet; following non-blank, non-heading
+lines continue it. The last speech verb in a
 quotation's lead-in binds the registered name directly before it, separated
 only by whitespace, so the quotation must lie inside one turn by that speaker.
 A name after a possessive never binds. Names resolve on word boundaries,
@@ -28,7 +29,7 @@ ATTRIBUTION_VERBS: tuple[str, ...] = (
     "explains", "recalled", "recalls", "replied", "replies", "responded", "responds",
     "said", "says", "stated", "states", "testified", "testifies",
 )
-LABEL_LINE_RE = re.compile(r"^(?P<label>[A-Z]+(?: [A-Z]+)*): (?P<text>\S.*)$")
+LABEL_LINE_RE = re.compile(r"^(?P<label>[A-Z]+(?: [A-Z]+)*):(?: (?P<text>\S.*)|\s*)$")
 _LABEL_RE = re.compile(r"^[A-Z]+(?: [A-Z]+)*$")
 _ALIAS_RE = re.compile(r"^[a-z]+(?: [a-z]+)*$")
 _HEADING_RE = re.compile(r"^#{1,6}\s+\S")
@@ -178,9 +179,10 @@ def speaker_turns(span: str, first_line: int) -> tuple[Turn, ...]:
         if match:
             if current is not None:
                 turns.append(current)
-            current = Turn(match.group("label"), number, number, match.group("text"))
+            current = Turn(match.group("label"), number, number, match.group("text") or "")
         elif current is not None and line.strip() and not _HEADING_RE.match(line):
-            current = Turn(current.label, current.line_start, number, f"{current.text}\n{line}")
+            text = f"{current.text}\n{line}" if current.text else line
+            current = Turn(current.label, current.line_start, number, text)
         elif current is not None:
             turns.append(current)
             current = None

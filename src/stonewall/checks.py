@@ -186,14 +186,14 @@ def check_answers(root: Path, scratch: Path) -> list[Finding]:
         corpus = compile_corpus(root / CORPUS_DIR)
         policy = load_policy(root / POLICY_FILE)
         speakers = load_speakers(root / SPEAKERS_FILE)
-        answers = sorted((root / ANSWERS_DIR).glob("*.md"))
+        answers = sorted((root / ANSWERS_DIR).rglob("*.md"))
     except (OSError, StonewallError):
         answers = []
     if not answers:
         return [Finding(ANSWERS_DIR.as_posix(), 0, "answers_unavailable")]
     findings: list[Finding] = []
     for path in answers:
-        source = (ANSWERS_DIR / path.name).as_posix()
+        source = (ANSWERS_DIR / path.relative_to(root / ANSWERS_DIR).as_posix()).as_posix()
         try:
             document = load_answer(path, source=source)
             audit = audit_answer(document, corpus, policy, speakers)
@@ -397,7 +397,8 @@ def load_defects(
 
 
 def snapshot_tree(root: Path) -> dict[str, str]:
-    """Map each path to '<sha256>:<mode>' (files) or 'dir' (empty directories).
+    """Map each file to '<sha256>:<mode>' and each directory, the root as '.',
+    to 'dir:<mode>'.
 
     The mode is every permission bit in octal, so any chmod is a write.
     """
@@ -408,8 +409,8 @@ def snapshot_tree(root: Path) -> dict[str, str]:
             dirnames.remove(".git")
         dirnames.sort()
         names = sorted(dirnames + filenames)
-        if not names and base != root:
-            snapshot[base.relative_to(root).as_posix()] = "dir"
+        bits = f"{stat.S_IMODE(base.lstat().st_mode):04o}"
+        snapshot[base.relative_to(root).as_posix()] = f"dir:{bits}"
         for name in names:
             path = base / name
             mode = path.lstat().st_mode
