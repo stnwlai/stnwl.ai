@@ -130,7 +130,8 @@ claim 5  12:42  ok  statement  S4
 ```
 
 Change one word inside a quotation in `examples/answers/grounded.md` and rerun
-step 4, then undo that one-word edit before continuing.
+step 4: that claim reports `unsupported_quote` and the command exits 1. Undo
+the edit before continuing.
 
 **5. Grounded is not the same as releasable.** Claim 5 rests on a confidential
 preparation outline, so the same answer may not go to the `publish` channel.
@@ -168,8 +169,8 @@ S3  T0002:19-21@c85b86f76176  public
 S4  P0001:17-17@221e9e2a306b  privileged
 ```
 
-**7. The seeded defects.** Each row is a defect the named check must reject
-for the named rule.
+**7. The seeded defects.** Each row is a defect the named check must reject,
+for the named rule or, for `unit` rows, the named test.
 
 ```console
 $ stonewall checks --list
@@ -217,12 +218,12 @@ stonewall checks
 ```
 
 Every check passes on an unmodified copy and writes nothing, and every seeded
-defect is rejected for its named rule. The defects include filtering after
-scoring, a set-ordered index that only cross-seed builds catch, a disabled
-quote check, a swapped speaker, an edited record under an answer, and drifted
-README output. Measured with `time` on the machine that generated these
-transcripts, `stonewall checks` finished in under 9 seconds and steps 1 to 8
-together in under 11 seconds.
+defect is rejected for its named rule or test. The defects include filtering
+after scoring, a set-ordered index that only cross-seed builds catch, a
+disabled quote check, a swapped speaker, an edited record under an answer, and
+drifted README output. Measured with `time` on the machine that generated these
+transcripts, `stonewall checks` finished in under 6 seconds and steps 1 to 8
+together in under 8 seconds.
 
 ## What each finding means
 
@@ -248,7 +249,7 @@ together in under 11 seconds.
 | Contract | Guarantee | Proof |
 | --- | --- | --- |
 | Content-addressed evidence | Canonical JSON, SHA-256 digests and a Merkle root bind every derived file to its sources, byte for byte across hash seeds. | `tests/test_evidence_fabric.py` |
-| Line-verifiable citations | Every citation carries a path, a line range, and artifact and span digests that are re-checked against the record on disk. | `tests/test_evidence_fabric.py` |
+| Line-verifiable citations | Every retrieval citation (`stonewall cite`, the evidence packet) carries a path, a line range, and artifact and span digests that are re-checked against the record on disk. | `tests/test_evidence_fabric.py` |
 | Explainable BM25 retrieval | Every result exposes its BM25, exact-phrase and heading contributions. | `tests/test_evidence_fabric.py` |
 | Fail-closed publication boundary | A path allowlist, content checks and an exact-tree manifest reject unreviewed files and byte drift. | `tests/test_publication_boundary.py` |
 | Grounded answers | Every sentence must cite, and every bracketed citation, quotation and figure must resolve to the evidence packet the answer declares; a handle, address or artifact ID written outside brackets is malformed. | `tests/test_grounding.py` |
@@ -259,12 +260,12 @@ together in under 11 seconds.
 ## Every check can fail
 
 The `checks --list` transcript above is the full registry. Each check runs on
-a staged copy of exactly the publishable tree, and a check that changes any
-file in that copy fails. Each seeded defect is applied to a fresh copy and
-must be rejected for its named rule, including seeded defects in the source of
-retrieval, packet construction, quote checking and the fixed policy decisions,
-each caught by a named test, while the bundle is rebuilt under two hash seeds
-and compared byte for byte.
+a staged copy of exactly the publishable tree. A check that changes any file
+in that copy fails. Each seeded defect is applied to a fresh copy and must be
+rejected for its named rule or, for `unit` rows, its named test. Seeded
+defects in the source of retrieval, packet construction, quote checking and
+the fixed policy decisions are each caught by a named test. The bundle is
+rebuilt under two hash seeds and compared byte for byte.
 
 ## Limits, stated plainly
 
@@ -280,10 +281,13 @@ and compared byte for byte.
 - Headings are audited as claims, so an uncited heading fails.
 - An answer may use plain paragraphs, `-`/`*`/numbered list items at the start
   of a line, ATX headings, `>` block quotes, standalone thematic breaks
-  (`---`) and citation brackets. HTML, character references, footnotes,
-  invisible format characters, images, other links, `+` bullets, nested lists
-  and lazy block-quote lines are refused as `unsupported_markup`. A list
-  item's number is not audited.
+  (`---`), inline emphasis (`*`, `_`, `~`), inline code spans (audited as
+  ordinary text), citation brackets, and `#anchor` link targets directly
+  after a citation bracket. HTML, character references, backslash escapes,
+  footnotes, invisible format characters, words mixing Latin with Cyrillic or
+  Greek letters, images, other links, `+` bullets, nested lists and lazy
+  block-quote lines are refused as `unsupported_markup`. A list item's number
+  is not audited.
 - Items in a citation bracket are separated by `,` or `;`. A handle, address
   or artifact ID written outside a citation bracket is malformed.
 - Quotations are compared after collapsing whitespace only. Ellipses are
@@ -300,10 +304,10 @@ and compared byte for byte.
   speech verbs are those in `attribution.ATTRIBUTION_VERBS`, for example said,
   stated, testified, answered and asked; any other verb is not read. The
   speaker is the registered alias directly before the last such verb:
-  `Counsel for the witness said` binds THE WITNESS, the alias directly before
-  the verb. If no registered alias is there and the quoted words come from a
-  transcript, the quotation fails as `speaker not identified`. A quotation
-  with no speech verb before it is not speaker-checked.
+  `Counsel for the witness said` binds THE WITNESS. If no registered alias is
+  there and the quoted words come from a transcript, the quotation fails as
+  `speaker not identified`. A quotation with no speech verb before it is not
+  speaker-checked.
 - A speaker is named by a registered alias read as written. A qualifier before
   it is not read (`opposing counsel` is read as `counsel`), and a possessive
   before it (`the defendant's counsel`) leaves the speaker unidentified.
@@ -313,8 +317,9 @@ and compared byte for byte.
   to a number (`42kg`, `650K`) are part of the figure, and so is an attached
   `%` or `‰`. Which event a figure belongs to is not compared, so two dates
   swapped within the cited lines still pass. A month is read when written
-  directly before or after its day, or as `the 3rd day of April` or
-  `April the 3rd`; other phrasings (`April, 3`, `3 in April`) are not.
+  directly before or after its day, or as `5th of April`, `the 3rd day of
+  April` or `April the 3rd`; other phrasings (`April, 3`, `3 in April`) are
+  not.
 - A number glued to letters before it (`B13`, `April5`) is not a figure, and a
   range such as `3-5` is one figure. Superscript and fullwidth digits read as
   ordinary digits, and a no-break space as a space.
@@ -323,10 +328,10 @@ and compared byte for byte.
   record instead.
 - Confidential-text detection in transcripts compares whole lines of 20 or
   more characters, so partial-line excerpts are not detected.
-- Answer prose is screened for whole lines of 20 or more characters copied
-  from records above the release channel, after normalizing case, dashes,
-  emphasis, quotation marks and citation brackets; shorter or partial excerpts
-  are not detected.
+- Answer prose and the `question:` line are screened for whole lines of 20 or
+  more characters copied from records above the release channel, after
+  normalizing case, dashes, emphasis, quotation marks and citation brackets;
+  shorter or partial excerpts are not detected.
 - No model is called. The answers are fixtures standing in for model output.
 - Designations here are synthetic labels on fictional records.
 
@@ -364,6 +369,7 @@ byte-for-byte parity with the bundle on disk.
 
 ```text
 .
+├── build/                       # generated by `stonewall build`; ignored by git
 ├── examples/
 │   ├── corpus/                  # synthetic coded records with designations
 │   ├── answers/                 # a grounded answer and a fabricated one
@@ -374,8 +380,10 @@ byte-for-byte parity with the bundle on disk.
 │   └── check_public_boundary.py # publication boundary command
 ├── src/stonewall/               # compiler, retrieval, packets, audit, checks
 ├── tests/                       # contract tests
+├── AGENTS.md                    # contributor rules and commands
 ├── public-boundary.toml         # publication rules
-└── public-tree-manifest.json    # exact reviewed tree
+├── public-tree-manifest.json    # exact reviewed tree
+└── pyproject.toml               # package metadata and entry point
 ```
 
 ## Publication boundary

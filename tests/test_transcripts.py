@@ -148,7 +148,7 @@ class TranscriptTests(unittest.TestCase):
                                  [Finding("README.md", 1, "transcript_unpublishable")])
 
     def test_backslash_before_restricted_text_is_unpublishable(self) -> None:
-        line = "the memo was kept in the vault drawer overnight"
+        line = "the memo was kept in the locked drawer overnight"
         memo = self.root / "examples/corpus/privileged/P0002_sentinel.md"
         template = memo.read_text(encoding="utf-8")
         for recorded in (line, "\\" + line):

@@ -44,14 +44,18 @@ Claims
 Answer grammar
 - An answer may use plain paragraphs, '- ' and '* ' bullets and '<n>. ' or
   '<n>) ' items at the start of a line, headings, block quotes, standalone
-  thematic breaks, and citation brackets with an optional link target.
+  thematic breaks, inline emphasis ('*', '_', '~'), inline code spans (audited
+  as ordinary text), and citation brackets with an optional link target.
 - Anything else is unsupported_markup at its own position, in the claim that
   holds it: an HTML tag '<' plus a letter, '/', '!' or '?' up to the next '>';
   a character reference '&name', '&#digits' or '&#xhex', with or without ';';
   a footnote marker '[^...]', which also starts a footnote definition; any
-  Unicode format character (category Cf), never stripped before matching; an
-  image '![...](...)'; a link '[...](...)' whose bracket is not
-  citation-shaped; a thematic break inside a paragraph. Citation brackets and
+  Unicode format character (category Cf), never stripped before matching; a
+  backslash before ASCII punctuation, anywhere in the paragraph; a run of
+  letters mixing ASCII letters with letters whose Unicode name starts with
+  CYRILLIC or GREEK, at the run's start; an image '![...](...)'; a link
+  '[...](...)' whose bracket is not citation-shaped; a thematic break inside
+  a paragraph. Citation brackets and
   their link targets are not scanned for tags, references or footnotes. A
   paragraph that mixes '>' lines with other lines is reported once at its
   start. A '+' bullet, or any list marker after leading whitespace, is
@@ -74,9 +78,9 @@ Citation brackets
 - A closed bracket is citation-shaped when its content holds a handle or an
   address token, starts with an uppercase letter, holds no bracket, and
   contains a digit, or case-folds to a valid item list ('[s9]'). A directly
-  following '(...)' with no whitespace, '"', "'", '<', '>' or nested
-  parentheses is a link target, part of it and not text; any other '(' starts
-  ordinary text. Other brackets ([sic], [emphasis added]) are ordinary text,
+  following fragment anchor, '(#' then only ASCII letters, digits, '_' and '-'
+  then ')', is a link target, part of it and not text; any other '(', a URL
+  included, starts ordinary text. Other brackets ([sic], [emphasis added]) are ordinary text,
   and the quotations and figures inside them are checked.
 - Items are separated by ',' or ';' with optional spaces. Each item is a
   handle S<n>, n from 1 to MAX_PACKET_LIMIT with no leading zero and no more
@@ -141,13 +145,14 @@ Figure check
 - Figures are text.FIGURE_RE tokens outside quotations and citation brackets:
   an optionally signed number with an optional month before it and scale word
   after it, or a day before its month ('5th of March', '3rd day of March') or
-  after 'the' ('March the 3rd'), read as month and day. Letters and a '%' or
-  U+2030 attached to a number are part of it. Month names and the words 'of',
+  after 'the' ('March the 3rd'), read as month and day. Letters attached to a
+  number are part of it, before and after an attached '%' or U+2030. Month names and the words 'of',
   'day of' and 'the' in those forms match in any case; months are full
   names, three-letter forms or 'Sept', each with an optional period; ordinal
   suffixes drop in any case. Claim and cited text alike are NFKC-folded
-  first, so superscript and fullwidth digits are digits and U+00A0 a space,
-  and '*', '_' and '~' read as spaces. Each figure must satisfy
+  first, so superscript and fullwidth digits are digits and U+00A0 a space;
+  '*', '_' and '~' between a sign and a digit or between two digits are
+  deleted, and elsewhere read as spaces. Each figure must satisfy
   text.figure_in for at least one contributed span, else unsupported_figure.
   Spelled-out numbers are not figures.
 
@@ -164,14 +169,16 @@ Release check
   designation_exceeds_channel, detail '<designation> exceeds <release_to>'.
 - Restricted prose: the whole body, with citation brackets, their link
   targets and heading markers blanked, and each of disclosure.restricted_lines
-  for release_to are NFKC-folded and case-folded, with '*', '_', '~', '-',
-  U+2010 to U+2015 and U+2212 read as spaces, curly quotation marks folded to
-  ASCII and whitespace collapsed; each line also
-  drops trailing '.?!;:,' and whitespace and counts only at 20 or more
-  characters. Each occurrence is designation_exceeds_channel at the claim
-  holding its start, or at its own position for the answer when no claim
-  does, detail '<designation> text exceeds <release_to>', the join of those
-  records' designations, which counts as cited.
+  for release_to are NFKC-folded and case-folded (each character together with
+  the combining marks and Hangul conjoining jamo after it), with '*', '_',
+  '~', '-', U+2010 to U+2015 and U+2212 read as spaces, curly quotation marks
+  folded to ASCII and whitespace collapsed; each line also drops trailing
+  '.?!;:,' and whitespace and counts only at 20 or more characters. Each
+  occurrence is designation_exceeds_channel at the claim holding its start,
+  or at its own position for the answer when no claim does, detail '<designation> text exceeds <release_to>', the join of those
+  records' designations, which counts as cited. The question value is
+  screened the same way; its occurrences are one answer-level finding at the
+  question line and the column of the first, and their join counts as cited.
 - The answer is releasable when disclosure.decide allows, on release_to, the
   join of every packet entry's designation and every cited designation.
   When that join exceeds release_to and no ref reported it, the answer gets
@@ -238,7 +245,10 @@ _NESTED_ITEM_RE = re.compile(r"(?:\s+(?:[-*+]|\d{1,3}[.)])|\+)(?:\s|$)")
 _TAG_RE = re.compile(r"<[A-Za-z/!?][^>]*>")
 _REFERENCE_RE = re.compile(r"&(?:[A-Za-z][A-Za-z0-9]*|#[0-9]+|#[xX][0-9A-Fa-f]+);?")
 _FOOTNOTE_RE = re.compile(r"\[\^[^\]\n]*\]")
-_LINK_TARGET_RE = re.compile(r"\([^\s()<>\"']*\)")
+_LINK_TARGET_RE = re.compile(r"\(#[A-Za-z0-9_-]*\)")
+_ESCAPE_RE = re.compile(r"\\[!-/:-@\[-`{-~]")
+_WORD_RE = re.compile(r"[^\W\d_]+")
+_MIXED_SCRIPTS = ("CYRILLIC", "GREEK")
 _EMPHASIS_RE = re.compile(r"[*_~]")
 _SENTENCE_MARKS = ".?!\u3002\uff0e"
 _AFTER_MARK = "*_~`)]\u2019'"
@@ -248,6 +258,7 @@ _PROSE_FOLD = str.maketrans(
 )
 _PROSE_END = ".?!;:, "
 _MIN_PROSE_CHARS = 20
+_JAMO = (("\u1160", "\u11ff"), ("\ud7b0", "\ud7ff"))  # conjoining vowels and finals
 _PLACEHOLDER = "\x00"  # an earlier quotation in a lead-in: no word, no gap
 _STRAY_MARKS = "\u300c\u300d\u300e\u300f\u275d\u275e"
 _ASIDES = {"]": "[", ")": "("}
@@ -260,6 +271,8 @@ _CLOSERS = {
 class AnswerDocument:
     path: str
     question: str
+    question_line: int
+    question_column: int  # of the question value's first character
     channel: str
     limit: int
     packet: str
@@ -456,14 +469,20 @@ def parse_answer(text: str, *, source: str) -> AnswerDocument:
         if items != sorted(set(items)) or not set(items) <= set(RULES):
             raise AnswerError(f"{source}: expect must be sorted, unique, known rule ids")
         expect = tuple(items)
-    packet_line = next(
-        number
-        for number, line in enumerate(parsed.lines, start=1)
-        if line.split(":", 1)[0].strip() == "packet"
+    packet_line, question_line = (
+        next(
+            number
+            for number, line in enumerate(parsed.lines, start=1)
+            if line.split(":", 1)[0].strip() == key
+        )
+        for key in ("packet", "question")
     )
+    asked = parsed.lines[question_line - 1]
     return AnswerDocument(
         path=source,
         question=metadata["question"],
+        question_line=question_line,
+        question_column=asked.index(metadata["question"], asked.index(":") + 1) + 1,
         channel=metadata["channel"],
         limit=int(metadata["limit"]),
         packet=metadata["packet"],
@@ -782,6 +801,11 @@ def _markup(paragraph: str) -> list[tuple[int, str]]:
         (index, "") for index, character in enumerate(paragraph)
         if unicodedata.category(character) == "Cf"
     )
+    found.extend((match.start(), "") for match in _ESCAPE_RE.finditer(paragraph))
+    found.extend(
+        (match.start(), "") for match in _WORD_RE.finditer(paragraph)
+        if _mixed_script(match.group(0))
+    )
     plain = set(layout.brackets)
     for low, _high in (*layout.citations, *layout.brackets):
         close = _matching(paragraph, low)
@@ -805,6 +829,13 @@ def _markup(paragraph: str) -> list[tuple[int, str]]:
             found.append((offset + len(line) - len(line.lstrip()), "item"))
         offset += len(line) + 1
     return found
+
+
+def _mixed_script(word: str) -> bool:
+    """Whether *word*, all letters, mixes ASCII with Cyrillic or Greek letters."""
+    return any(character.isascii() for character in word) and any(
+        unicodedata.name(character, "").startswith(_MIXED_SCRIPTS) for character in word
+    )
 
 
 def _within(
@@ -918,19 +949,27 @@ def _contribution(entry: PacketEntry, ref: CitationRef, view: CompiledCorpus) ->
     )
 
 
+def _joins(character: str) -> bool:
+    """Whether *character* normalizes together with the character before it."""
+    return bool(unicodedata.combining(character)) or any(
+        low <= character <= high for low, high in _JAMO
+    )
+
+
 def _prose(text: str) -> tuple[str, tuple[int, ...]]:
     """*text* folded for restricted-line matching, with each character's offset.
 
-    Each character and its combining marks are NFKC-folded and case-folded,
-    '*', '_', '~' and dashes read as spaces, curly quotation marks fold to
-    ASCII, and whitespace runs collapse to one space.
+    Each character, with the combining marks and Hangul conjoining jamo after
+    it, is NFKC-folded and case-folded, '*', '_', '~' and dashes read as spaces,
+    curly quotation marks fold to ASCII, and whitespace runs collapse to one
+    space.
     """
     folded: list[str] = []
     origins: list[int] = []
     index = 0
     while index < len(text):
         end = index + 1
-        while end < len(text) and unicodedata.combining(text[end]):
+        while end < len(text) and _joins(text[end]):
             end += 1
         piece = unicodedata.normalize("NFKC", text[index:end]).translate(_PROSE_FOLD).casefold()
         for character in _EMPHASIS_RE.sub(" ", piece):
@@ -967,19 +1006,25 @@ def _copied(
             for low, high in ((0, heading.start("text")), (heading.end("text"), len(line))):
                 characters[offset + low : offset + high] = " " * (high - low)
         offset += len(line) + 1
-    haystack, origins = _prose("".join(characters))
-    found: list[tuple[int, int, str]] = []
+    return [
+        (next((c.index for c in claims if c.offset <= at < c.offset + len(c.text)), 0), at, d)
+        for at, d in _occurrences("".join(characters), restricted)
+    ]
+
+
+def _occurrences(
+    text: str, restricted: tuple[tuple[str, str], ...]
+) -> list[tuple[int, str]]:
+    """Offset in *text* and designation of each restricted line it copies."""
+    haystack, origins = _prose(text)
+    found: list[tuple[int, str]] = []
     for designation, line in restricted:
         needle = _prose(line)[0].rstrip(_PROSE_END)
         if len(needle) < _MIN_PROSE_CHARS:
             continue
         start = haystack.find(needle)
         while start != -1:
-            offset = origins[start]
-            index = next(
-                (c.index for c in claims if c.offset <= offset < c.offset + len(c.text)), 0
-            )
-            found.append((index, offset, designation))
+            found.append((origins[start], designation))
             start = haystack.find(needle, start + 1)
     return found
 
@@ -1142,6 +1187,15 @@ def audit_answer(
         )
         proofs.append(proof)
         findings.extend(claim_findings)
+    asked = _occurrences(document.question, restricted)
+    if (joined := policy.join(d for _offset, d in asked)) is not None:
+        cited.append(joined)
+        column = document.question_column + min(offset for offset, _d in asked)
+        detail = f"{joined} text exceeds {release_channel}"
+        findings.append(
+            AuditFinding(document.question_line, column, 0, "designation_exceeds_channel", "",
+                         detail)
+        )
     for offset, designation in sorted({(o, d) for index, o, d in copies if not index}):
         line, column = _position(document, offset)
         cited.append(designation)

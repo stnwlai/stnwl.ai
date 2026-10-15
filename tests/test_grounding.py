@@ -4,6 +4,7 @@ import json
 import shutil
 import sys
 import tempfile
+import unicodedata
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -277,8 +278,16 @@ class ParsingTests(unittest.TestCase):
         self.assertEqual(result.findings, ())
 
     def test_markdown_link_to_handle_is_a_citation(self) -> None:
-        self.assertEqual(self.refs("The records room [S1](x-5)."), [["S1"]])
-        self.assertEqual(rules("The records room [S1](x-5)."), ())
+        self.assertEqual(self.refs("The records room [S1](#x-5)."), [["S1"]])
+        self.assertEqual(split_claims("The records room [S1](#x-5).")[0].figures, ())
+        self.assertEqual(rules("The records room [S1](#x-5)."), ())
+
+    def test_only_a_fragment_anchor_is_a_link_target(self) -> None:
+        for target in ("(13)", "(https://example.com/13)", "(x-13)"):
+            with self.subTest(target=target):
+                body = f"The witness signed it out on March 3 [S1]{target}."
+                self.assertEqual(rules(body), ("unsupported_figure",))
+        self.assertEqual(rules("The copy is the weak link [S1] [S2](#s2)."), ())
 
     def test_link_target_with_an_apostrophe_is_audited_text(self) -> None:
         claim = split_claims("The records room [S1](x'5).")[0]
@@ -493,6 +502,10 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(rules("The witness compared 42% of the pages [S2]."),
                          ("unsupported_figure",))
         self.assertEqual(rules("The witness compared 42 pages [S2]."), ())
+        for figure in ("42%ile", "-*42*"):
+            with self.subTest(figure=figure):
+                self.assertEqual(rules(f"The witness compared {figure} pages [S2]."),
+                                 ("unsupported_figure",))
 
     def test_superscript_and_fullwidth_digits_are_figures(self) -> None:
         for figure in ("\u2079\u2079", "\uff19\uff19"):
@@ -631,7 +644,7 @@ class AuditTests(unittest.TestCase):
                 "---\nid: T0003\ntype: transcript\ndate: 2025-03-07\n"
                 "designation: public\n---\n\n# Binder Hearing\n\n"
                 "EXAMINING COUNSEL: Where was the original binder kept?\nTHE WITNESS:\n"
-                "The original binder was kept in the vault and never left.\n",
+                "The original binder was kept in the safe and never left.\n",
                 encoding="utf-8",
             )
             corpus = compile_corpus(root)
@@ -639,7 +652,7 @@ class AuditTests(unittest.TestCase):
             handle = next(e.handle for e in packet.entries if e.hit.citation.artifact_id == "T0003")
             results = []
             for speaker in ("The witness", "Counsel"):
-                body = f'{speaker} said "kept in the vault and never left" [{handle}].'
+                body = f'{speaker} said "kept in the safe and never left" [{handle}].'
                 document = parse_answer(answer_text(body, digest=packet.digest), source="a.md")
                 results.append(audit_answer(document, corpus, POLICY, SPEAKERS))
         self.assertEqual(results[0].findings, ())
@@ -782,6 +795,38 @@ class AuditTests(unittest.TestCase):
         self.assertEqual([(f.claim, f.column, f.rule) for f in result.findings],
                          [(1, 4, "designation_exceeds_channel")])
 
+    def test_question_copying_a_restricted_line_is_not_releasable(self) -> None:
+        question = "Prepare the witness to explain why the copy was kept outside the records room."
+        digest = build_packet(CORPUS, POLICY, question, channel="publish", limit=4).digest
+        text = (f"---\nquestion: {question}\nchannel: publish\nlimit: 4\npacket: {digest}\n"
+                "---\n\nThe binder stayed in the records room [S1].\n")
+        result = audit_answer(parse_answer(text, source="a.md"), CORPUS, POLICY, SPEAKERS)
+        self.assertFalse(result.releasable)
+        self.assertEqual(
+            [(f.line, f.column, f.claim, f.rule, f.detail) for f in result.findings],
+            [(2, 11, 0, "designation_exceeds_channel", "privileged text exceeds publish")],
+        )
+        self.assertIn("NOT RELEASABLE to publish", result.render_text())
+
+    def test_decomposed_hangul_matches_a_precomposed_restricted_line(self) -> None:
+        line = "The custodian marked \ud55c\uad6d on the cover of the working copy."
+        with tempfile.TemporaryDirectory() as raw:
+            root = corpus_copy(raw)
+            (root / "privileged" / "P0003_spine.md").write_text(
+                record("P0003", "privileged", f"# Cover Note\n\n{line}"), encoding="utf-8"
+            )
+            corpus = compile_corpus(root)
+            digest = build_packet(corpus, POLICY, QUESTION, channel="publish", limit=4).digest
+            decomposed = unicodedata.normalize("NFD", line)
+            self.assertNotEqual(decomposed, line)
+            for body, releasable in ((decomposed[:-1] + " [S1].", False),
+                                     ("The custodian marked the cover [S1].", True)):
+                text = answer_text(body, channel="publish", digest=digest)
+                result = audit_answer(parse_answer(text, source="a.md"), corpus, POLICY,
+                                      SPEAKERS)
+                with self.subTest(releasable=releasable):
+                    self.assertEqual(result.releasable, releasable)
+
 
 class MarkupTests(unittest.TestCase):
     """Constructs outside the answer grammar are refused where they sit."""
@@ -863,7 +908,26 @@ class MarkupTests(unittest.TestCase):
                          [(8, 1, 1, "uncited_claim", ""), (8, 1, 1, "unsupported_markup", "")])
 
     def test_markup_inside_citations_is_not_read(self) -> None:
-        self.assertEqual(rules("The binder stayed in the records room [S1](#a&b)."), ())
+        self.assertEqual(rules("The binder stayed in the records room [S1, &amp;]."),
+                         ("malformed_citation", "uncited_claim"))
+        self.assertEqual(rules("The binder stayed in the records room [S1](#a&b)."),
+                         ("unsupported_markup",))
+
+    def test_backslash_escapes_are_refused(self) -> None:
+        body = "The working copy stayed at the custodian\\'s desk [S1]."
+        self.assertEqual(self.found(body), [(8, 41, 1, "unsupported_markup", "")])
+        self.assertEqual(rules('The witness said \\"I destroyed the binder\\" [S1].'),
+                         ("unsupported_markup", "unsupported_quote"))
+        self.assertEqual(rules("The binder stayed in the records room \\ [S1]."), ())
+
+    def test_words_mixing_latin_with_cyrillic_or_greek_are_refused(self) -> None:
+        quoted = '"So the original never left the records room?" [S1].'
+        for word in ("s\u0430id", "s\u03b1id"):
+            with self.subTest(word=word):
+                self.assertEqual(self.found(f"The witness {word} {quoted}"),
+                                 [(8, 13, 1, "unsupported_markup", "")])
+        # Spelled in ASCII, the same verb binds the speaker and the check fails.
+        self.assertEqual(rules(f"The witness said {quoted}"), ("quote_wrong_speaker",))
 
 
 class NonInterferenceTests(unittest.TestCase):

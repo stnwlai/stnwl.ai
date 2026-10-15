@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -144,7 +145,8 @@ class HarnessTests(unittest.TestCase):
             ("data/value.txt", lambda root: (root / "data" / "value.txt").chmod(0o755)),
             ("data/value.txt", lambda root: (root / "data" / "value.txt").chmod(0o600)),
             ("empty", lambda root: (root / "empty").mkdir()),
-            ("data", lambda root: (root / "data").chmod(0o700)),
+            ("data", lambda root: (root / "data").chmod(
+                stat.S_IMODE((root / "data").stat().st_mode) ^ 0o200)),
         )
         for expected, action in actions:
             with self.subTest(expected=expected):

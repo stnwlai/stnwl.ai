@@ -432,6 +432,15 @@ class VerbatimMatchingTests(unittest.TestCase):
         self.assertTrue(figure_in("42%", "about 42% of pages"))
         self.assertFalse(figure_in("42%", "all 42 pages"))
         self.assertFalse(figure_in("42", "about 42% of pages"))
+        self.assertEqual(figure_tokens("the 42%ile mark"), ("42%ile",))
+        self.assertFalse(figure_in("42%", "the 42%ile mark"))
+        self.assertFalse(figure_in("42%ile", "about 42% of pages"))
+
+    def test_emphasis_inside_a_number_joins_it(self) -> None:
+        self.assertEqual(figure_tokens("-*42* and 4**2** and 3 *5*"), ("-42", "42", "3", "5"))
+        self.assertFalse(figure_in("42", "-*42*"))
+        self.assertTrue(figure_in("-42", "\u2212_42_"))
+        self.assertTrue(figure_in("42", "all **42** pages"))
 
     def test_compatibility_digits_fold_to_figures(self) -> None:
         self.assertEqual(figure_tokens("all \u2079\u2079 pages, \uff11\uff12 items"),

@@ -29,10 +29,12 @@ FIGURE_RE = re.compile(
     r"|(?<![0-9A-Za-z])(?P<tmonth>" + _MONTH + r")\s+(?i:the)\s+(?P<tday>\d{1,2})"
     r"(?i:st|nd|rd|th)?(?![0-9A-Za-z])"
     r"|(?:(?<![0-9A-Za-z])(?P<month>" + _MONTH + r")\s+)?"
-    + _START + r"(?P<number>(?:[-+\u2212](?=\d))?\d+(?:[.,:/-]\d+)*[A-Za-z]*[%\u2030]?)"
+    + _START
+    + r"(?P<number>(?:[-+\u2212](?=\d))?\d+(?:[.,:/-]\d+)*[A-Za-z]*[%\u2030]?[A-Za-z]*)"
     r"(?:\s+(?P<scale>(?i:thousand|million|billion|trillion))(?![0-9A-Za-z]))?"
 )
 _FIGURE_SPACE_RE = re.compile(r"[*_~]")
+_FIGURE_JOIN_RE = re.compile(r"(?<=[\d+\u2212-])[*_~]+(?=\d)")
 _ORDINAL_RE = re.compile(r"(.*\d)(?i:st|nd|rd|th)")
 
 
@@ -104,10 +106,14 @@ def _figure_key(match: re.Match[str]) -> tuple[str, str, str]:
 
 def _figure_text(text: str) -> str:
     """*text* NFKC-folded, so superscript and fullwidth digits read as digits and
-    non-breaking spaces as spaces, with a literal '&nbsp;' and emphasis markers
-    read as spaces."""
+    non-breaking spaces as spaces, with a literal '&nbsp;' read as a space.
+
+    Emphasis markers between a sign and a digit, or between two digits, are
+    deleted; elsewhere they read as spaces.
+    """
     folded = unicodedata.normalize("NFKC", text).replace("&nbsp;", " ")
-    return collapse_whitespace(_FIGURE_SPACE_RE.sub(" ", folded))
+    joined = _FIGURE_JOIN_RE.sub("", folded)
+    return collapse_whitespace(_FIGURE_SPACE_RE.sub(" ", joined))
 
 
 def figure_tokens(text: str) -> tuple[str, ...]:
