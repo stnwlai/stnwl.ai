@@ -423,6 +423,15 @@ class VerbatimMatchingTests(unittest.TestCase):
                 self.assertTrue(figure_in(token, "on March\u00a0**5**"))
         (lowercase,) = figure_tokens("april 3")
         self.assertFalse(figure_in(lowercase, "on March 3"))
+        (day_first,) = figure_tokens("3rd OF March")
+        self.assertEqual(day_first, "March 3")
+        self.assertFalse(figure_in(day_first, "on April 3"))
+
+    def test_attached_percent_is_part_of_the_figure(self) -> None:
+        self.assertEqual(figure_tokens("42% and 7\u2030"), ("42%", "7\u2030"))
+        self.assertTrue(figure_in("42%", "about 42% of pages"))
+        self.assertFalse(figure_in("42%", "all 42 pages"))
+        self.assertFalse(figure_in("42", "about 42% of pages"))
 
     def test_compatibility_digits_fold_to_figures(self) -> None:
         self.assertEqual(figure_tokens("all \u2079\u2079 pages, \uff11\uff12 items"),

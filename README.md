@@ -187,6 +187,7 @@ answers      answer-speaker-lead-in           quote_wrong_speaker
 answers      answer-month-swap                unsupported_figure
 answers      answer-html-entity-quote         unsupported_markup
 answers      answer-restricted-prose          designation_exceeds_channel
+answers      answer-parenthetical-authority   malformed_citation
 answers      record-edited-under-answer       packet_mismatch
 answers      fabricated-answer-repaired       expectation_unmet
 boundary     boundary-unapproved-path         unapproved_path
@@ -220,7 +221,7 @@ defect is rejected for its named rule. The defects include filtering after
 scoring, a set-ordered index that only cross-seed builds catch, a disabled
 quote check, a swapped speaker, an edited record under an answer, and drifted
 README output. Measured with `time` on the machine that generated these
-transcripts, `stonewall checks` finished in under 7 seconds and steps 1 to 8
+transcripts, `stonewall checks` finished in under 6 seconds and steps 1 to 8
 together in under 9 seconds.
 
 ## What each finding means
@@ -250,7 +251,7 @@ together in under 9 seconds.
 | Line-verifiable citations | Every citation carries a path, a line range, and artifact and span digests that are re-checked against the record on disk. | `tests/test_evidence_fabric.py` |
 | Explainable BM25 retrieval | Every result exposes its BM25, exact-phrase and heading contributions. | `tests/test_evidence_fabric.py` |
 | Fail-closed publication boundary | A path allowlist, content checks and an exact-tree manifest reject unreviewed files and byte drift. | `tests/test_publication_boundary.py` |
-| Grounded answers | Every sentence must cite, and every citation, quotation and figure must resolve to the evidence packet the answer declares. | `tests/test_grounding.py` |
+| Grounded answers | Every sentence must cite, and every bracketed citation, quotation and figure must resolve to the evidence packet the answer declares; a handle or address written outside brackets is malformed. | `tests/test_grounding.py` |
 | Speaker-bound quotations | A quotation attributed to a speaker must lie inside one turn by that speaker. | `tests/test_attribution.py` |
 | Designation flow control | Records above a channel's ceiling are removed before scoring, and an answer is releasable only where its declared packet and every cited source may go. | `tests/test_disclosure.py` |
 | Checks that can fail | Every check passes on an unmodified copy, writes nothing, and rejects seeded defects for a named reason. | `tests/test_checks.py`, `tests/test_transcripts.py` |
@@ -278,21 +279,27 @@ and compared byte for byte.
   a capital letter, a citation bracket or the paragraph end follows.
 - Headings are audited as claims, so an uncited heading fails.
 - An answer may use plain paragraphs, `-`/`*`/numbered list items at the start
-  of a line, ATX headings, `>` block quotes and citation brackets. HTML,
-  character references, images, other links, `+` bullets, nested lists and
-  lazy block-quote lines are refused as `unsupported_markup`.
+  of a line, ATX headings, `>` block quotes, standalone thematic breaks
+  (`---`) and citation brackets. HTML, character references, images, other
+  links, `+` bullets, nested lists and lazy block-quote lines are refused as
+  `unsupported_markup`.
 - Items in a citation bracket are separated by `,` or `;`.
 - Quotations are compared after collapsing whitespace only. Ellipses are
   allowed; bracketed alterations are not. From a transcript, a quotation must
-  lie within one turn; an ellipsis cannot join two turns.
+  lie within one turn; an ellipsis cannot join two turns. An ellipsis may join
+  in-order fragments of one turn; an elided quotation proves those words
+  appear in that order, not what they mean together.
 - Only double quotation marks (straight, curly, guillemets, fullwidth), single
   curly quotation marks and block quotes mark a quotation. The ASCII single
   quote is treated as an apostrophe, so words inside it are audited as an
   ordinary statement.
-- A quotation is speaker-checked when a speech verb from a fixed list comes
-  before it in the same sentence (or in a lead-in ending with a colon, for a
-  block quote). The speaker is the registered alias directly before the last
-  such verb. If no registered alias is there and the quoted words come from a
+- A quotation is speaker-checked when a speech verb comes before it in the
+  same sentence (or in a lead-in ending with a colon, for a block quote). The
+  speech verbs are those in `attribution.ATTRIBUTION_VERBS`, for example said,
+  stated, testified, answered and asked; any other verb is not read. The
+  speaker is the registered alias directly before the last such verb:
+  `Counsel for the witness said` binds THE WITNESS, the alias directly before
+  the verb. If no registered alias is there and the quoted words come from a
   transcript, the quotation fails as `speaker not identified`. A quotation
   with no speech verb before it is not speaker-checked.
 - A speaker is named by a registered alias read as written. A qualifier before
@@ -301,9 +308,9 @@ and compared byte for byte.
 - A figure is a number, optionally signed, with an optional month name before
   or after it and an optional scale word after it. Currency symbols are not
   compared. Units written as separate words are not compared; letters attached
-  to a number (`42kg`, `650K`) are part of the figure. Which event a figure
-  belongs to is not compared, so two dates swapped within the cited lines
-  still pass.
+  to a number (`42kg`, `650K`) are part of the figure, and so is an attached
+  `%` or `‰`. Which event a figure belongs to is not compared, so two dates
+  swapped within the cited lines still pass.
 - A number glued to letters before it (`B13`, `April5`) is not a figure, and a
   range such as `3-5` is one figure. Superscript and fullwidth digits read as
   ordinary digits, and a no-break space as a space.
@@ -313,7 +320,8 @@ and compared byte for byte.
 - Confidential-text detection in transcripts compares whole lines of 20 or
   more characters, so partial-line excerpts are not detected.
 - Answer prose is screened for whole lines of 20 or more characters copied
-  from records above the release channel; shorter or partial excerpts are not
+  from records above the release channel, after normalizing emphasis,
+  quotation marks and citation brackets; shorter or partial excerpts are not
   detected.
 - No model is called. The answers are fixtures standing in for model output.
 - Designations here are synthetic labels on fictional records.

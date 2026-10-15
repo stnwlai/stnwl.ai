@@ -131,6 +131,15 @@ parts = [
 ]
 
 [[defects]]
+name = "answer-parenthetical-authority"
+check = "answers"
+expect = "malformed_citation"
+op = "replace"
+path = "examples/answers/grounded.md"
+old = "[S4]"
+new = "(Z0042:3-4) [S4]"
+
+[[defects]]
 name = "record-edited-under-answer"
 check = "answers"
 expect = "packet_mismatch"

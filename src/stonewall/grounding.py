@@ -73,7 +73,7 @@ Citation brackets
 - A closed bracket is citation-shaped when its content holds a handle or an
   address token, starts with an uppercase letter, holds no bracket, and
   contains a digit, or case-folds to a valid item list ('[s9]'). A directly
-  following '(...)' with no whitespace, quotes, '<', '>' or nested
+  following '(...)' with no whitespace, '"', "'", '<', '>' or nested
   parentheses is a link target, part of it and not text; any other '(' starts
   ordinary text. Other brackets ([sic], [emphasis added]) are ordinary text,
   and the quotations and figures inside them are checked.
@@ -85,6 +85,10 @@ Citation brackets
 - Any other citation-shaped bracket, including one holding a nested bracket,
   is malformed_citation and counts as no ref. Its finding names only the
   position of the first bad item.
+- A handle token 'S<n>' or an address token '<ID>:<digit>' outside
+  quotations, citation brackets, link targets and footnote markers is
+  malformed_citation at its own position, detail 'item 1'. Block quotes are
+  quotations throughout.
 
 Resolution
 - Refs resolve against the view of the declared channel, never the full
@@ -122,8 +126,9 @@ Speaker check
   mention directly before it, separated only by whitespace and not after a
   possessive. With no speech verb there is no speaker check. A verb after the
   speech verb that is not one ('the exhibit was read') does not unbind it.
-- Turns are computed over the full entry text; a narrowed address keeps the
-  turns that intersect its range.
+- Only a transcript record has turns, computed over the full entry text; a
+  narrowed address keeps the turns that intersect its range. Any other record
+  has none, whatever its lines look like.
 - With a bound mention, some span the quotation is found in must have one turn
   by the mention's label holding it; otherwise quote_wrong_speaker, detail
   'said by <LABEL>' from the first such span's single speaker, or 'no recorded
@@ -135,13 +140,14 @@ Figure check
 - Figures are text.FIGURE_RE tokens outside quotations, citation brackets and
   footnote markers: an optionally signed number with an optional month before
   it and scale word after it, or a day before its month, read as month and
-  day. Month names match in any case, as full names, three-letter forms or
-  'Sept', each with an optional period; ordinal suffixes drop in any case.
-  Claim and cited text alike are NFKC-folded first, so superscript and
-  fullwidth digits are digits and U+00A0 a space, and '*', '_' and '~' read
-  as spaces. Each figure must
-  satisfy text.figure_in for at least one contributed span, else
-  unsupported_figure. Spelled-out numbers are not figures.
+  day. Letters and a '%' or U+2030 attached to a number are part of it. Month
+  names and the 'of' in '5th of March' match in any case; months are full
+  names, three-letter forms or 'Sept', each with an optional period; ordinal
+  suffixes drop in any case. Claim and cited text alike are NFKC-folded
+  first, so superscript and fullwidth digits are digits and U+00A0 a space,
+  and '*', '_' and '~' read as spaces. Each figure must satisfy
+  text.figure_in for at least one contributed span, else unsupported_figure.
+  Spelled-out numbers are not figures.
 
 Packet check
 - The packet is rebuilt for the declared question, channel and limit. A digest
@@ -154,10 +160,15 @@ Release check
 - Every ref that resolved to a record in the view, backed or not_retrieved,
   whose designation is not releasable on release_to is
   designation_exceeds_channel, detail '<designation> exceeds <release_to>'.
-- A claim whose collapsed text holds any of disclosure.restricted_lines for
-  release_to is designation_exceeds_channel at the claim, detail
-  '<designation> text exceeds <release_to>', the join of those records'
-  designations, which counts as cited.
+- Restricted prose: the whole body, with citation brackets, their link
+  targets and footnote markers blanked, and each of disclosure.restricted_lines
+  for release_to are NFKC-folded, with '*', '_' and '~' read as spaces, curly
+  quotation marks folded to ASCII and whitespace collapsed; each line also
+  drops trailing '.?!;:,' and whitespace and counts only at 20 or more
+  characters. Each occurrence is designation_exceeds_channel at the claim
+  holding its start, or at its own position for the answer when no claim
+  does, detail '<designation> text exceeds <release_to>', the join of those
+  records' designations, which counts as cited.
 - The answer is releasable when disclosure.decide allows, on release_to, the
   join of every packet entry's designation and every cited designation.
   When that join exceeds release_to and no ref reported it, the answer gets
@@ -169,7 +180,8 @@ Verdict
   grounded and releasable. No claims is empty_answer.
 
 Findings sit at the line and column of the claim's first character, or claim 0
-for answer-level findings; unsupported_markup sits at its construct. They
+for answer-level findings; unsupported_markup and a loose handle or address
+sit at their construct. They
 carry rule ids, refs as written, handles, designations, channels and speaker
 labels, never quoted words, figures or source text.
 """
@@ -195,7 +207,7 @@ from .errors import AnswerError, DisclosureError, FrontMatterError
 from .frontmatter import parse_document
 from .packet import MAX_PACKET_LIMIT, EvidencePacket, PacketEntry, build_packet
 from .retrieval import ADDRESS_RE
-from .text import collapse_whitespace, figure_in, figure_tokens, quotation_in
+from .text import figure_in, figure_tokens, quotation_in
 
 RULES: tuple[str, ...] = (
     "uncited_claim", "malformed_citation", "unknown_handle", "unknown_artifact", "not_retrieved",
@@ -211,6 +223,7 @@ _HANDLE_RE = re.compile(r"^S([1-9][0-9]*)$")
 _BRACKET_RE = re.compile(r"^[A-Z][^\[\]]*$")
 _CITATION_TOKEN_RE = re.compile(r"(?<![A-Za-z0-9])(?:S\d+|[A-Z][A-Z0-9_-]*\d{4}:\d)")
 _ITEM_SEPARATOR_RE = re.compile(r"\s*[,;]\s*")
+_LOOSE_REF_RE = re.compile(r"(?<![A-Za-z0-9])S[1-9]\d*(?![A-Za-z0-9])|[A-Z][A-Z0-9_-]*\d{4}:\d")
 _HEADING_RE = re.compile(r" {0,3}#{1,6}(?:\s+|$)(?P<text>.*?)(?:\s+#+)?\s*$")
 _ITEM_RE = re.compile(r"(?:[-*]|\d{1,3}[.)])\s")
 _BREAK_RE = re.compile(r" {0,3}([-*_])(?: *\1){2,} *")
@@ -219,10 +232,13 @@ _NESTED_ITEM_RE = re.compile(r"(?:\s+(?:[-*+]|\d{1,3}[.)])|\+)(?:\s|$)")
 _TAG_RE = re.compile(r"<[A-Za-z/!?][^>]*>")
 _REFERENCE_RE = re.compile(r"&(?:[A-Za-z][A-Za-z0-9]*|#[0-9]+|#[xX][0-9A-Fa-f]+);?")
 _FOOTNOTE_RE = re.compile(r"\[\^[A-Za-z0-9]{1,8}\]")
-_LINK_TARGET_RE = re.compile(r"\([^\s()<>\"]*\)")
+_LINK_TARGET_RE = re.compile(r"\([^\s()<>\"']*\)")
 _EMPHASIS_RE = re.compile(r"[*_~]")
 _SENTENCE_MARKS = ".?!\u3002\uff0e"
 _AFTER_MARK = "*_~`)]\u2019'"
+_PROSE_FOLD = str.maketrans({"\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"'})
+_PROSE_END = ".?!;:, "
+_MIN_PROSE_CHARS = 20
 _PLACEHOLDER = "\x00"  # an earlier quotation in a lead-in: no word, no gap
 _STRAY_MARKS = "\u300c\u300d\u300e\u300f\u275d\u275e"
 _ASIDES = {"]": "[", ")": "("}
@@ -272,6 +288,7 @@ class Claim:
     figures: tuple[str, ...]
     unbalanced: int | None
     markup: tuple[tuple[int, str], ...]  # body offset and detail of each refused construct
+    loose: tuple[int, ...]  # body offset of each handle or address outside brackets
 
     @property
     def kind(self) -> str:
@@ -516,7 +533,10 @@ def _citation_shaped(content: str) -> bool:
             _BRACKET_RE.fullmatch(content) is not None
             and any(character.isdigit() for character in content)
         )
-        or not _parse_items(content.upper(), 0)[1]  # '[s9]' is a miscased ref
+        or all(  # '[s9]' is a miscased ref
+            _HANDLE_RE.fullmatch(item) or ADDRESS_RE.fullmatch(item)
+            for item in _ITEM_SEPARATOR_RE.split(content.upper())
+        )
     )
 
 
@@ -813,6 +833,7 @@ def split_claims(body: str) -> tuple[Claim, ...]:
                     figures=(),
                     unbalanced=None,
                     markup=_within(found, 0, len(paragraph), paragraph_start),
+                    loose=(),
                 )
             )
             continue
@@ -841,6 +862,7 @@ def split_claims(body: str) -> tuple[Claim, ...]:
                     figures=figure_tokens(masked),
                     unbalanced=None if layout.unbalanced is None else base + layout.unbalanced,
                     markup=_within(found, start if number else 0, next_start, paragraph_start),
+                    loose=tuple(base + m.start() for m in _LOOSE_REF_RE.finditer(masked)),
                 )
             )
     return tuple(claims)
@@ -855,7 +877,11 @@ class _Span:
     turns: tuple[Turn, ...]
 
 
-def _entry_turns(entry: PacketEntry) -> tuple[Turn, ...]:
+def _entry_turns(entry: PacketEntry, view: CompiledCorpus) -> tuple[Turn, ...]:
+    """Speaker turns of a transcript entry; any other record has none."""
+    artifact = view.artifact(entry.hit.citation.artifact_id)
+    if artifact is None or artifact.artifact_type != "transcript":
+        return ()
     return speaker_turns(entry.text, entry.hit.citation.line_start)
 
 
@@ -869,9 +895,9 @@ def _in_one_turn(quotation: str, turns: tuple[Turn, ...]) -> bool:
     return not turns or bool(_labels(quotation, turns))
 
 
-def _contribution(entry: PacketEntry, ref: CitationRef) -> _Span:
+def _contribution(entry: PacketEntry, ref: CitationRef, view: CompiledCorpus) -> _Span:
     first = entry.hit.citation.line_start
-    turns = _entry_turns(entry)
+    turns = _entry_turns(entry, view)
     if ref.line_start is None or ref.line_end is None:
         return _Span(entry.handle, entry.text, turns)
     lines = entry.text.split("\n")[ref.line_start - first : ref.line_end - first + 1]
@@ -880,6 +906,69 @@ def _contribution(entry: PacketEntry, ref: CitationRef) -> _Span:
         "\n".join(lines),
         tuple(t for t in turns if t.line_start <= ref.line_end and t.line_end >= ref.line_start),
     )
+
+
+def _prose(text: str) -> tuple[str, tuple[int, ...]]:
+    """*text* folded for restricted-line matching, with each character's offset.
+
+    Each character and its combining marks are NFKC-folded, '*', '_' and '~'
+    read as spaces, curly quotation marks fold to ASCII, and whitespace runs
+    collapse to one space.
+    """
+    folded: list[str] = []
+    origins: list[int] = []
+    index = 0
+    while index < len(text):
+        end = index + 1
+        while end < len(text) and unicodedata.combining(text[end]):
+            end += 1
+        piece = unicodedata.normalize("NFKC", text[index:end]).translate(_PROSE_FOLD)
+        for character in _EMPHASIS_RE.sub(" ", piece):
+            if character.isspace():
+                if not folded or folded[-1] == " ":
+                    continue
+                character = " "
+            folded.append(character)
+            origins.append(index)
+        index = end
+    if folded and folded[-1] == " ":
+        folded.pop()
+        origins.pop()
+    return "".join(folded), tuple(origins)
+
+
+def _copied(
+    body: str, claims: tuple[Claim, ...], restricted: tuple[tuple[str, str], ...]
+) -> list[tuple[int, int, str]]:
+    """Claim index (0 when none holds it), body offset and designation of each
+    restricted line the answer body copies.
+
+    Citation brackets, their link targets and footnote markers are blanked
+    first, so a match may cross them and the claims they end.
+    """
+    characters = list(body)
+    for claim in claims:
+        layout = _layout(claim.text)
+        footnotes = [
+            span for span in layout.brackets if _FOOTNOTE_RE.fullmatch(claim.text, *span)
+        ]
+        for low, high in (*layout.citations, *footnotes):
+            characters[claim.offset + low : claim.offset + high] = " " * (high - low)
+    haystack, origins = _prose("".join(characters))
+    found: list[tuple[int, int, str]] = []
+    for designation, line in restricted:
+        needle = _prose(line)[0].rstrip(_PROSE_END)
+        if len(needle) < _MIN_PROSE_CHARS:
+            continue
+        start = haystack.find(needle)
+        while start != -1:
+            offset = origins[start]
+            index = next(
+                (c.index for c in claims if c.offset <= offset < c.offset + len(c.text)), 0
+            )
+            found.append((index, offset, designation))
+            start = haystack.find(needle, start + 1)
+    return found
 
 
 def _position(document: AnswerDocument, offset: int) -> tuple[int, int]:
@@ -895,7 +984,7 @@ def _audit_claim(
     policy: DisclosurePolicy,
     speakers: SpeakerRegistry,
     release_to: str,
-    restricted: tuple[tuple[str, str], ...],
+    copied: str | None,
     cited: list[str],
 ) -> tuple[ClaimProof, list[AuditFinding]]:
     line, column = _position(document, claim.offset)
@@ -911,8 +1000,11 @@ def _audit_claim(
         )
     for item in claim.malformed:
         report("malformed_citation", detail=f"item {item}")
-    collapsed = collapse_whitespace(claim.text)
-    copied = policy.join(d for d, text in restricted if text in collapsed)
+    for offset in claim.loose:
+        at_line, at_column = _position(document, offset)
+        findings.append(
+            AuditFinding(at_line, at_column, claim.index, "malformed_citation", "", "item 1")
+        )
     if copied is not None:
         cited.append(copied)
         report("designation_exceeds_channel", detail=f"{copied} text exceeds {release_to}")
@@ -924,7 +1016,7 @@ def _audit_claim(
                 report("unknown_handle", ref.written)
                 continue
             designation = entry.designation
-            spans.append(_contribution(entry, ref))
+            spans.append(_contribution(entry, ref, view))
         else:
             artifact = view.artifact(str(ref.artifact_id))
             if artifact is None:
@@ -936,7 +1028,7 @@ def _audit_claim(
             if covering is None:
                 report("not_retrieved", ref.written)
             else:
-                spans.append(_contribution(covering, ref))
+                spans.append(_contribution(covering, ref, view))
         cited.append(designation)
         if not policy.permits(designation, release_to):
             detail = f"{designation} exceeds {release_to}"
@@ -960,7 +1052,7 @@ def _audit_claim(
                         e
                         for e in packet.entries
                         if quotation_in(quotation.text, e.text)
-                        and _in_one_turn(quotation.text, _entry_turns(e))
+                        and _in_one_turn(quotation.text, _entry_turns(e, view))
                     ),
                     None,
                 )
@@ -1029,12 +1121,21 @@ def audit_answer(
         (designations[artifact_id], text)
         for artifact_id, text in restricted_lines(corpus, policy, release_channel)
     )
+    copies = _copied(document.body, claims, restricted)
     for claim in claims:
+        copied = policy.join(d for index, _offset, d in copies if index == claim.index)
         proof, claim_findings = _audit_claim(
-            claim, document, packet, view, policy, speakers, release_channel, restricted, cited
+            claim, document, packet, view, policy, speakers, release_channel, copied, cited
         )
         proofs.append(proof)
         findings.extend(claim_findings)
+    for offset, designation in sorted({(o, d) for index, o, d in copies if not index}):
+        line, column = _position(document, offset)
+        cited.append(designation)
+        detail = f"{designation} text exceeds {release_channel}"
+        findings.append(
+            AuditFinding(line, column, 0, "designation_exceeds_channel", "", detail)
+        )
     # The answer was written from the whole packet, so release joins every
     # entry's designation, not only the ones it cites.
     release = decide(policy, [e.designation for e in packet.entries] + cited, release_channel)

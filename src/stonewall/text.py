@@ -24,10 +24,10 @@ _MONTH_NAMES = {month[:3].casefold(): month for month in MONTHS}
 _MONTH = "(?i:(?:" + "|".join((*MONTHS, "Sept", *(m[:3] for m in MONTHS))) + r")\.?)"
 _START = r"(?<![0-9A-Za-z])(?<!\d[.,:/-])"
 FIGURE_RE = re.compile(
-    _START + r"(?P<day>\d{1,2})(?i:st|nd|rd|th)?\s+(?:of\s+)?(?P<dmonth>" + _MONTH
+    _START + r"(?P<day>\d{1,2})(?i:st|nd|rd|th)?\s+(?:(?i:of)\s+)?(?P<dmonth>" + _MONTH
     + r")(?![0-9A-Za-z])"
     r"|(?:(?<![0-9A-Za-z])(?P<month>" + _MONTH + r")\s+)?"
-    + _START + r"(?P<number>(?:[-+\u2212](?=\d))?\d+(?:[.,:/-]\d+)*[A-Za-z]*)"
+    + _START + r"(?P<number>(?:[-+\u2212](?=\d))?\d+(?:[.,:/-]\d+)*[A-Za-z]*[%\u2030]?)"
     r"(?:\s+(?P<scale>(?i:thousand|million|billion|trillion))(?![0-9A-Za-z]))?"
 )
 _FIGURE_SPACE_RE = re.compile(r"[*_~]")

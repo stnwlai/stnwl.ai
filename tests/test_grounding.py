@@ -278,6 +278,11 @@ class ParsingTests(unittest.TestCase):
         self.assertEqual(self.refs("The records room [S1](x-5)."), [["S1"]])
         self.assertEqual(rules("The records room [S1](x-5)."), ())
 
+    def test_link_target_with_an_apostrophe_is_audited_text(self) -> None:
+        claim = split_claims("The records room [S1](x'5).")[0]
+        self.assertEqual([ref.written for ref in claim.refs], ["S1"])
+        self.assertEqual(claim.figures, ("5",))
+
     def test_link_to_privileged_handle_reaches_the_release_check(self) -> None:
         result = audit("The copy is the weak link [S1] [S2](#s2).", channel="review",
                        release_to="publish")
@@ -320,10 +325,26 @@ class ParsingTests(unittest.TestCase):
         self.assertEqual(rules("The witness signed it out on March 3 [S1][^n13]."), ())
 
     def test_miscased_ref_is_malformed(self) -> None:
-        for bracket in ("[s9]", "[s1]", "[t0002:14-14]"):
+        for bracket in ("[s9]", "[s1]", "[t0002:14-14]", "[s" + "1" * 5000 + "]"):
             with self.subTest(bracket=bracket):
                 body = f"The binder was destroyed in a fire {bracket}."
                 self.assertEqual(rules(body), ("malformed_citation", "uncited_claim"))
+
+    def test_handle_or_address_outside_brackets_is_malformed(self) -> None:
+        for body, column in (
+            ("A standing order required daily custody logs (Z0042:3-4) [S1].", 47),
+            ("Counsel proposed two deposition dates (D0001:12-13) [S1].", 40),
+            ("The witness kept a working copy at the desk, see S2 [S1].", 50),
+        ):
+            with self.subTest(body=body):
+                result = audit(body)
+                self.assertFalse(result.grounded)
+                self.assertEqual([(f.column, f.rule, f.ref, f.detail) for f in result.findings],
+                                 [(column, "malformed_citation", "", "item 1")])
+        for body in ("The records room S1x and AS1 [S1].", 'He wrote "see S1 here" [S1].',
+                     "The records room [S1](#S2)."):
+            with self.subTest(body=body):
+                self.assertEqual(split_claims(body)[0].loose, ())
 
     def test_nested_citation_bracket_is_malformed(self) -> None:
         self.assertEqual(self.refs("The records room [S1 [S2]]."), [[]])
@@ -427,12 +448,18 @@ class AuditTests(unittest.TestCase):
 
     def test_month_forms_are_compared(self) -> None:
         # 'Sept. 5' ends a sentence at its period; text-level tests cover it.
-        for figure in ("5 April", "april 5", "Sept 5", "April **5**", "april 3"):
+        for figure in ("5 April", "april 5", "Sept 5", "April **5**", "april 3",
+                       "5th OF April"):
             with self.subTest(figure=figure):
                 self.assertEqual(rules(f"It returned on {figure} [S1]."), ("unsupported_figure",))
-        for figure in ("5 March", "March 5th", "March 5TH", "the 5th of march"):
+        for figure in ("5 March", "March 5th", "March 5TH", "the 5th of march", "5th OF March"):
             with self.subTest(figure=figure):
                 self.assertEqual(rules(f"It returned on {figure} [S1]."), ())
+
+    def test_attached_percent_is_part_of_the_figure(self) -> None:
+        self.assertEqual(rules("The witness compared 42% of the pages [S2]."),
+                         ("unsupported_figure",))
+        self.assertEqual(rules("The witness compared 42 pages [S2]."), ())
 
     def test_superscript_and_fullwidth_digits_are_figures(self) -> None:
         for figure in ("\u2079\u2079", "\uff19\uff19"):
@@ -547,6 +574,23 @@ class AuditTests(unittest.TestCase):
         body = 'The order stated "Confirm how the witness received" [S4].'
         self.assertEqual(outcomes(body), [])
 
+    def test_only_transcripts_have_speaker_turns(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = corpus_copy(raw)
+            (root / "correspondence" / "E0003_binder.md").write_text(
+                "---\nid: E0003\ntype: correspondence\ndate: 2025-03-07\n"
+                "designation: public\n---\n\n# Binder Note\n\n"
+                "SUBJECT: binder update\nThe original binder was kept and never left.\n",
+                encoding="utf-8",
+            )
+            corpus = compile_corpus(root)
+            packet = build_packet(corpus, POLICY, QUESTION, channel="model", limit=4)
+            handle = next(e.handle for e in packet.entries if e.hit.citation.artifact_id == "E0003")
+            body = f'The report stated "SUBJECT: binder update" [{handle}].'
+            document = parse_answer(answer_text(body, digest=packet.digest), source="answer.md")
+            result = audit_answer(document, corpus, POLICY, SPEAKERS)
+        self.assertEqual(result.findings, ())
+
     def test_any_cited_span_with_the_speaker_proves_the_quotation(self) -> None:
         body = 'The witness said "the records room" [T0002:14-14, T0002:13-13].'
         self.assertEqual(outcomes(body), [])
@@ -652,6 +696,27 @@ class AuditTests(unittest.TestCase):
         self.assertIn("NOT RELEASABLE to publish", result.render_text())
         self.assertTrue(audit(body, channel="review").ok)
 
+    def test_restricted_prose_is_matched_after_normalizing(self) -> None:
+        advice = "Prepare the witness to explain why the copy was kept outside the records room"
+        outline = "Confirm how the witness received, stored, and identified the document."
+        asked = "Ask whether the copy reflects the record as it appeared on the relevant date"
+        weakest = "The working copy kept at the {} desk is the weakest link in the custody chain"
+        cases = [
+            (f"{advice} [S1].", [1]),
+            (f"{advice}. [S1]", [1]),
+            (advice.replace("outside", "**outside**") + ". [S1]", [1]),
+            (f"{outline} Ask whether it changed [S1].", [1]),
+            (f"{outline} [S1] {asked} [S1].", [1, 2]),
+        ]
+        for custodian in ("*custodian's*", "custodian\u2019s", "custodian's"):
+            cases.append((weakest.format(custodian) + " [S1].", [1]))
+        for body, claims in cases:
+            with self.subTest(body=body):
+                result = audit(body, channel="publish")
+                self.assertFalse(result.releasable)
+                found = {f.claim for f in result.findings if f.rule == "designation_exceeds_channel"}
+                self.assertEqual(sorted(found), claims)
+
 
 class MarkupTests(unittest.TestCase):
     """Constructs outside the answer grammar are refused where they sit."""
@@ -679,6 +744,7 @@ class MarkupTests(unittest.TestCase):
         self.assertEqual(len(split_claims(body)), 1)
         self.assertEqual(rules(body), ("unsupported_markup",))
         self.assertEqual(rules("It returned on March&nbsp;5 [S1]."), ("unsupported_markup",))
+        self.assertEqual(rules("The binder burned</B> on March 3 [S1]."), ("unsupported_markup",))
 
     def test_links_and_images_that_are_not_citations_are_refused(self) -> None:
         body = 'The witness [said](#x) "So the original never left the records room?" [S1].'
