@@ -400,7 +400,9 @@ def snapshot_tree(root: Path) -> dict[str, str]:
     """Map each file to '<sha256>:<mode>' and each directory, the root as '.',
     to 'dir:<mode>'.
 
-    The mode is every permission bit in octal, so any chmod is a write.
+    The mode is every permission bit in octal, so any chmod is a write. A
+    symlink, a special file or an unreadable file raises CheckHarnessError
+    naming its path.
     """
     snapshot: dict[str, str] = {}
     for current, dirnames, filenames in os.walk(root):
@@ -413,14 +415,19 @@ def snapshot_tree(root: Path) -> dict[str, str]:
         snapshot[base.relative_to(root).as_posix()] = f"dir:{bits}"
         for name in names:
             path = base / name
+            relative = path.relative_to(root).as_posix()
             mode = path.lstat().st_mode
             if stat.S_ISLNK(mode):
-                raise CheckHarnessError("tree contains a symlink")
+                raise CheckHarnessError("tree contains a symlink", path=relative)
             if name in filenames:
                 if not stat.S_ISREG(mode):
-                    raise CheckHarnessError("tree contains a non-regular file")
-                bits = f"{stat.S_IMODE(mode):04o}"
-                snapshot[path.relative_to(root).as_posix()] = f"{sha256_file(path)}:{bits}"
+                    raise CheckHarnessError("tree contains a non-regular file", path=relative)
+                try:
+                    digest = sha256_file(path)
+                except OSError as exc:
+                    raise CheckHarnessError("tree contains an unreadable file",
+                                            path=relative) from exc
+                snapshot[relative] = f"{digest}:{stat.S_IMODE(mode):04o}"
     return dict(sorted(snapshot.items()))
 
 
@@ -494,7 +501,11 @@ def _changed(before: dict[str, str], after: dict[str, str]) -> tuple[str, ...]:
 def _run_once(
     check: Check, staged: Path, work: Path, defect: SeededDefect | None
 ) -> tuple[tuple[Finding, ...], tuple[str, ...], bool]:
-    """Run *check* on a fresh copy; return (findings, wrote, crashed)."""
+    """Run *check* on a fresh copy; return (findings, wrote, crashed).
+
+    An entry the check leaves that cannot be snapshotted, such as a symlink,
+    is a write at its path.
+    """
     tree, scratch = work / "tree", work / "scratch"
     shutil.copytree(staged, tree, symlinks=True)
     scratch.mkdir()
@@ -507,7 +518,11 @@ def _run_once(
             crashed = False
         except Exception:  # noqa: BLE001 -- a crash is a result, never a pass
             findings, crashed = (Finding(check.name, 0, "check_crashed"),), True
-        return findings, _changed(before, snapshot_tree(tree)), crashed
+        try:
+            after = snapshot_tree(tree)
+        except CheckHarnessError as exc:
+            return findings, (exc.path or ".",), crashed
+        return findings, _changed(before, after), crashed
     finally:
         shutil.rmtree(work, ignore_errors=True)
 

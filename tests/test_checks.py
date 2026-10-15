@@ -147,6 +147,8 @@ class HarnessTests(unittest.TestCase):
             ("empty", lambda root: (root / "empty").mkdir()),
             ("data", lambda root: (root / "data").chmod(
                 stat.S_IMODE((root / "data").stat().st_mode) ^ 0o200)),
+            ("data/link", lambda root: (root / "data" / "link").symlink_to("value.txt")),
+            ("data/pipe", lambda root: os.mkfifo(root / "data" / "pipe")),
         )
         for expected, action in actions:
             with self.subTest(expected=expected):
@@ -155,6 +157,14 @@ class HarnessTests(unittest.TestCase):
                 self.assertEqual(report.defects[0].status, "wrote_tree")
                 self.assertFalse(report.passed)
                 self.assertIn("WROTE", report.render_text())
+
+    def test_snapshot_names_the_entry_it_cannot_record(self) -> None:
+        root = self.base / "tree"
+        (root / "data").mkdir(parents=True)
+        (root / "data" / "link").symlink_to("missing")
+        with self.assertRaises(CheckHarnessError) as caught:
+            snapshot_tree(root)
+        self.assertEqual(caught.exception.path, "data/link")
 
     def test_check_failing_unmodified_copy_fails_report(self) -> None:
         (self.repo / "data" / "value.txt").write_text("ok?\n", encoding="utf-8")

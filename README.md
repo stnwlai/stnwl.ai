@@ -285,16 +285,19 @@ rebuilt under two hash seeds and compared byte for byte.
   ordinary text), citation brackets, and `#anchor` link targets directly
   after a citation bracket. HTML, character references, backslash escapes,
   footnotes, invisible format characters, words mixing Latin with Cyrillic or
-  Greek letters, images, other links, `+` bullets, nested lists and lazy
-  block-quote lines are refused as `unsupported_markup`. A list item's number
-  is not audited.
+  Greek letters, images, other links, reference-style links and their
+  definitions, `+` bullets, nested lists and lazy block-quote lines are
+  refused as `unsupported_markup`. A list item's number is not audited.
+- Answer front matter takes no `#` comment lines, so the question is the only
+  free text it can carry.
 - Items in a citation bracket are separated by `,` or `;`. A handle, address
   or artifact ID written outside a citation bracket is malformed.
 - Quotations are compared after collapsing whitespace only. Ellipses are
   allowed; bracketed alterations are not. From a transcript, a quotation must
-  lie within one turn; an ellipsis cannot join two turns. An ellipsis may join
-  in-order fragments of one turn; an elided quotation proves those words
-  appear in that order, not what they mean together.
+  lie within one turn, so a transcript heading cannot be quoted; an ellipsis
+  cannot join two turns. An ellipsis may join in-order fragments of one turn;
+  an elided quotation proves those words appear in that order, not what they
+  mean together.
 - Only double quotation marks (straight, curly, guillemets, fullwidth), single
   curly quotation marks and block quotes mark a quotation. The ASCII single
   quote is treated as an apostrophe, so words inside it are audited as an
@@ -330,8 +333,9 @@ rebuilt under two hash seeds and compared byte for byte.
   more characters, so partial-line excerpts are not detected.
 - Answer prose and the `question:` line are screened for whole lines of 20 or
   more characters copied from records above the release channel, after
-  normalizing case, dashes, emphasis, quotation marks and citation brackets;
-  shorter or partial excerpts are not detected.
+  normalizing case, dashes, emphasis, quotation marks and citation brackets
+  (emphasis and code markers inside a word are deleted, as Markdown renders
+  the word whole); shorter or partial excerpts are not detected.
 - No model is called. The answers are fixtures standing in for model output.
 - Designations here are synthetic labels on fictional records.
 

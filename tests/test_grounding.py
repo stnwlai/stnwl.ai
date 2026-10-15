@@ -155,6 +155,14 @@ class ParsingTests(unittest.TestCase):
         self.assert_refused(answer_text("A [S1].").replace(f"packet: {DIGEST}\n", ""))
         self.assert_refused(answer_text("A [S1].", header="author: someone\n"))
 
+    def test_front_matter_comments_are_refused(self) -> None:
+        advice = "Prepare the witness to explain why the copy was kept outside the records room."
+        for comment in ("# a note\n", f"  # {advice}\n"):
+            with self.subTest(comment=comment), self.assertRaisesRegex(
+                AnswerError, r"^answer\.md:6: answer front matter takes no comments$"
+            ):
+                parse_answer(answer_text("A [S1].", header=comment), source="answer.md")
+
     def test_noncanonical_digest_rejected(self) -> None:
         for digest in (DIGEST.upper(), DIGEST[:63], "g" + DIGEST[1:]):
             self.assert_refused(answer_text("A [S1].").replace(DIGEST, digest))
@@ -456,6 +464,18 @@ class AuditTests(unittest.TestCase):
     def test_ellipsis_splice_across_turns_is_unsupported(self) -> None:
         body = 'The record reads "In the records room ... the original never left" [S1].'
         self.assertEqual(outcomes(body), [("unsupported_quote", "spans turns")])
+
+    def test_quotation_from_a_transcript_heading_is_outside_turns(self) -> None:
+        heading = '"Custody of the Binder"'
+        for ref in ("[S3]", "[T0002:10-10]"):
+            with self.subTest(ref=ref):
+                self.assertEqual(outcomes(f"The excerpt is titled {heading} {ref}."),
+                                 [("unsupported_quote", "outside turns")])
+        self.assertEqual(outcomes(f"The excerpt is titled {heading} [S1]."),
+                         [("unsupported_quote", "")])
+        # A record that is not a transcript has no turns to require.
+        self.assertEqual(outcomes('The outline lists "how the witness received, stored, and'
+                                  ' identified the document" [S4].'), [])
 
     def test_figure_matching_is_word_bounded(self) -> None:
         self.assertEqual(rules("It went out on March 3 [S1]."), ())
@@ -795,6 +815,23 @@ class AuditTests(unittest.TestCase):
         self.assertEqual([(f.claim, f.column, f.rule) for f in result.findings],
                          [(1, 4, "designation_exceeds_channel")])
 
+    def test_markers_inside_a_word_do_not_hide_restricted_prose(self) -> None:
+        advice = "Prepare the witness to explain why the copy was kept outside the records room"
+        for old, new in (("explain", "ex*plain*"), ("explain", "ex_plain_"),
+                         ("explain", "ex~~plain~~"), ("explain", "ex`plain`"),
+                         ("Prepare", "**Pre**pare")):
+            with self.subTest(new=new):
+                result = audit(advice.replace(old, new) + " [S1].", channel="publish")
+                self.assertFalse(result.releasable)
+                self.assertEqual([(f.claim, f.rule) for f in result.findings],
+                                 [(1, "designation_exceeds_channel")])
+        body = ("The working copy kept at the custodian's desk is the wea*kest* link in the\n"
+                "custody chain for the orig*inal* binder [S1].")
+        result = audit(body, channel="publish")
+        self.assertFalse(result.releasable)
+        self.assertEqual([(f.claim, f.rule) for f in result.findings],
+                         [(1, "designation_exceeds_channel")])
+
     def test_question_copying_a_restricted_line_is_not_releasable(self) -> None:
         question = "Prepare the witness to explain why the copy was kept outside the records room."
         digest = build_packet(CORPUS, POLICY, question, channel="publish", limit=4).digest
@@ -812,7 +849,7 @@ class AuditTests(unittest.TestCase):
         line = "The custodian marked \ud55c\uad6d on the cover of the working copy."
         with tempfile.TemporaryDirectory() as raw:
             root = corpus_copy(raw)
-            (root / "privileged" / "P0003_spine.md").write_text(
+            (root / "privileged" / "P0003_cover.md").write_text(
                 record("P0003", "privileged", f"# Cover Note\n\n{line}"), encoding="utf-8"
             )
             corpus = compile_corpus(root)
@@ -863,6 +900,18 @@ class MarkupTests(unittest.TestCase):
             with self.subTest(image=image):
                 body = f"The binder stayed in the records room {image} [S1]."
                 self.assertEqual(self.found(body), [(8, 39, 1, "unsupported_markup", "")])
+
+    def test_reference_links_and_definitions_are_refused(self) -> None:
+        body = ("The working copy kept at the cust[odian][S1]'s desk is the weakest link in"
+                " the\ncustody chain for the orig[inal][] binder [S1].")
+        self.assertEqual(self.found(body), [(8, 34, 1, "unsupported_markup", ""),
+                                            (9, 27, 1, "unsupported_markup", "")])
+        for definition, column in (("[S1]: #", 1), ("> [S1]: #", 3), ("- [odian]: #", 3),
+                                   ("   [x]:", 4)):
+            with self.subTest(definition=definition):
+                found = self.found(f"The binder stayed in the records room [S1].\n\n{definition}")
+                self.assertIn((10, column, 2, "unsupported_markup", ""), found)
+        self.assertEqual(self.found("The binder [S1] stayed in the records room [S2]."), [])
 
     def test_plus_nested_and_indented_lists_are_refused_once(self) -> None:
         for first, second, position in (("+ ", "+ ", (8, 1)), ("- ", "  - ", (9, 3)),

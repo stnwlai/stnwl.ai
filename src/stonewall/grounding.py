@@ -11,6 +11,8 @@ Front matter
   packet and question, plus an optional expect; anything else is refused.
 - limit is a decimal integer from 1 to 20; packet is 64 lowercase hex digits.
 - expect is space-separated, sorted, unique, and a subset of RULES.
+- A '#' comment line is refused, so the question is the only free text the
+  front matter can carry.
 
 Claims
 - Body paragraphs split at blank lines. A heading is a line of up to three
@@ -53,9 +55,11 @@ Answer grammar
   Unicode format character (category Cf), never stripped before matching; a
   backslash before ASCII punctuation, anywhere in the paragraph; a run of
   letters mixing ASCII letters with letters whose Unicode name starts with
-  CYRILLIC or GREEK, at the run's start; an image '![...](...)'; a link
-  '[...](...)' whose bracket is not citation-shaped; a thematic break inside
-  a paragraph. Citation brackets and
+  CYRILLIC or GREEK, at the run's start; an image '![...](...)' or
+  '![...][...]'; a link '[...](...)' or reference link '[...][...]' whose
+  first bracket is not citation-shaped; a line that opens, after any '>' and
+  list marker, with a bracket and ':' (a link reference definition); a
+  thematic break inside a paragraph. Citation brackets and
   their link targets are not scanned for tags, references or footnotes. A
   paragraph that mixes '>' lines with other lines is reported once at its
   start. A '+' bullet, or any list marker after leading whitespace, is
@@ -110,11 +114,13 @@ Uncited
   figures and speakers are not checked.
 
 Quotation check, for each balanced quotation
-- It is found in a span when text.quotation_in holds and, if the span has
-  speaker turns, holds within one turn's text.
+- It is found in a span when text.quotation_in holds and, if the span comes
+  from a transcript, holds within one turn's text. A transcript span with no
+  turns, such as a heading, holds no quotation.
 - Found in a contributed span: proven, then speaker-checked.
-- Else, when a contributed span holds it only across turns: unsupported_quote,
-  detail 'spans turns'.
+- Else, when a contributed transcript span holds it outside any one turn:
+  unsupported_quote, detail 'spans turns', or 'outside turns' when no such
+  span has turns.
 - Else found in any packet entry's full text, including the same entry outside
   a narrowed range: quote_wrong_source, detail 'found in S<n>', the first such
   entry in rank order.
@@ -170,8 +176,10 @@ Release check
 - Restricted prose: the whole body, with citation brackets, their link
   targets and heading markers blanked, and each of disclosure.restricted_lines
   for release_to are NFKC-folded and case-folded (each character together with
-  the combining marks and Hangul conjoining jamo after it), with '*', '_',
-  '~', '-', U+2010 to U+2015 and U+2212 read as spaces, curly quotation marks
+  the combining marks and Hangul conjoining jamo after it). A run of '*',
+  '_', '~' and '`' is deleted between two letters, digits or combining marks,
+  since Markdown renders such a word whole, and elsewhere reads as a space;
+  '-', U+2010 to U+2015 and U+2212 read as spaces, curly quotation marks
   folded to ASCII and whitespace collapsed; each line also drops trailing
   '.?!;:,' and whitespace and counts only at 20 or more characters. Each
   occurrence is designation_exceeds_channel at the claim holding its start,
@@ -250,6 +258,10 @@ _LINK_TARGET_RE = re.compile(r"\(#[A-Za-z0-9_-]*\)")
 _ESCAPE_RE = re.compile(r"\\[!-/:-@\[-`{-~]")
 _MIXED_SCRIPTS = ("CYRILLIC", "GREEK")
 _EMPHASIS_RE = re.compile(r"[*_~]")
+_INLINE_MARKS_RE = re.compile(r"[*_~`]+")
+_DEFINITION_RE = re.compile(
+    r"(?: {0,3}> ?)*(?: {0,3}(?:[-*+]|\d{1,9}[.)]) +)? {0,3}\[(?!\^)[^\]\n]+\]:"
+)
 _SENTENCE_MARKS = ".?!\u3002\uff0e"
 _AFTER_MARK = "*_~`)]\u2019'"
 _PROSE_FOLD = str.maketrans(
@@ -452,6 +464,10 @@ def parse_answer(text: str, *, source: str) -> AnswerDocument:
         parsed = parse_document(text, source=source)
     except FrontMatterError as exc:
         raise AnswerError(str(exc)) from exc
+    closing = parsed.lines.index("---", 1)
+    for number, line in enumerate(parsed.lines[1:closing], start=2):
+        if line.lstrip().startswith("#"):
+            raise AnswerError(f"{source}:{number}: answer front matter takes no comments")
     metadata = parsed.metadata
     keys = set(metadata)
     if not ANSWER_FIELDS <= keys or keys - ANSWER_FIELDS - OPTIONAL_FIELDS:
@@ -808,12 +824,12 @@ def _markup(paragraph: str) -> list[tuple[int, str]]:
     plain = set(layout.brackets)
     for low, _high in (*layout.citations, *layout.brackets):
         close = _matching(paragraph, low)
-        if close is None or not paragraph.startswith("(", close + 1):
+        if close is None or paragraph[close + 1 : close + 2] not in ("(", "["):
             continue
         if low and paragraph[low - 1] == "!":
             found.append((low - 1, ""))  # an image
         elif (low, close + 1) in plain:
-            found.append((low, ""))  # a link that is not a citation
+            found.append((low, ""))  # a link or reference link that is not a citation
     lines = paragraph.split("\n")
     quoted = [_QUOTE_LINE_RE.match(line) is not None for line in lines]
     if any(quoted) and not all(quoted):
@@ -821,6 +837,8 @@ def _markup(paragraph: str) -> list[tuple[int, str]]:
     offset = 0
     nested = False
     for line in lines:
+        if _DEFINITION_RE.match(line):
+            found.append((offset + line.index("["), ""))  # a link reference definition
         if len(lines) > 1 and _BREAK_RE.fullmatch(line):
             found.append((offset + len(line) - len(line.lstrip()), ""))
         elif not nested and _NESTED_ITEM_RE.match(line):
@@ -929,12 +947,17 @@ class _Span:
     handle: str
     text: str
     turns: tuple[Turn, ...]
+    transcript: bool
+
+
+def _transcript(entry: PacketEntry, view: CompiledCorpus) -> bool:
+    artifact = view.artifact(entry.hit.citation.artifact_id)
+    return artifact is not None and artifact.artifact_type == "transcript"
 
 
 def _entry_turns(entry: PacketEntry, view: CompiledCorpus) -> tuple[Turn, ...]:
     """Speaker turns of a transcript entry; any other record has none."""
-    artifact = view.artifact(entry.hit.citation.artifact_id)
-    if artifact is None or artifact.artifact_type != "transcript":
+    if not _transcript(entry, view):
         return ()
     return speaker_turns(entry.text, entry.hit.citation.line_start)
 
@@ -944,21 +967,23 @@ def _labels(quotation: str, turns: tuple[Turn, ...]) -> set[str]:
     return {turn.label for turn in turns if quotation_in(quotation, turn.text)}
 
 
-def _in_one_turn(quotation: str, turns: tuple[Turn, ...]) -> bool:
-    """Whether a span with turns holds *quotation* inside one turn; no turns passes."""
-    return not turns or bool(_labels(quotation, turns))
+def _in_one_turn(quotation: str, turns: tuple[Turn, ...], transcript: bool) -> bool:
+    """Whether *quotation* lies inside one turn; only transcript text has turns to require."""
+    return not transcript or bool(_labels(quotation, turns))
 
 
 def _contribution(entry: PacketEntry, ref: CitationRef, view: CompiledCorpus) -> _Span:
     first = entry.hit.citation.line_start
     turns = _entry_turns(entry, view)
+    transcript = _transcript(entry, view)
     if ref.line_start is None or ref.line_end is None:
-        return _Span(entry.handle, entry.text, turns)
+        return _Span(entry.handle, entry.text, turns, transcript)
     lines = entry.text.split("\n")[ref.line_start - first : ref.line_end - first + 1]
     return _Span(
         entry.handle,
         "\n".join(lines),
         tuple(t for t in turns if t.line_start <= ref.line_end and t.line_end >= ref.line_start),
+        transcript,
     )
 
 
@@ -969,23 +994,40 @@ def _joins(character: str) -> bool:
     )
 
 
+def _word_character(character: str) -> bool:
+    return bool(character) and (
+        character.isalnum() or unicodedata.category(character).startswith("M")
+    )
+
+
 def _prose(text: str) -> tuple[str, tuple[int, ...]]:
     """*text* folded for restricted-line matching, with each character's offset.
 
     Each character, with the combining marks and Hangul conjoining jamo after
-    it, is NFKC-folded and case-folded, '*', '_', '~' and dashes read as spaces,
-    curly quotation marks fold to ASCII, and whitespace runs collapse to one
-    space.
+    it, is NFKC-folded and case-folded. A run of '*', '_', '~' and '`' between
+    two word characters is deleted, because Markdown renders 'me*mo*' as one
+    word; elsewhere such a run, and any dash, reads as a space. Curly quotation
+    marks fold to ASCII, and whitespace runs collapse to one space.
     """
+    inside = {
+        index
+        for match in _INLINE_MARKS_RE.finditer(text)
+        if _word_character(text[match.start() - 1 : match.start()])
+        and _word_character(text[match.end() : match.end() + 1])
+        for index in range(*match.span())
+    }
     folded: list[str] = []
     origins: list[int] = []
     index = 0
     while index < len(text):
+        if index in inside:
+            index += 1
+            continue
         end = index + 1
         while end < len(text) and _joins(text[end]):
             end += 1
         piece = unicodedata.normalize("NFKC", text[index:end]).translate(_PROSE_FOLD).casefold()
-        for character in _EMPHASIS_RE.sub(" ", piece):
+        for character in _INLINE_MARKS_RE.sub(" ", piece):
             if character.isspace():
                 if not folded or folded[-1] == " ":
                     continue
@@ -1113,9 +1155,13 @@ def _audit_claim(
             report("unbalanced_quotation")
         for quotation in claim.quotations:
             gathered = [entry for entry in spans if quotation_in(quotation.text, entry.text)]
-            found = [span for span in gathered if _in_one_turn(quotation.text, span.turns)]
+            found = [
+                span for span in gathered
+                if _in_one_turn(quotation.text, span.turns, span.transcript)
+            ]
             if gathered and not found:
-                report("unsupported_quote", detail="spans turns")
+                within = any(span.turns for span in gathered)
+                report("unsupported_quote", detail="spans turns" if within else "outside turns")
                 continue
             if not found:
                 elsewhere = next(
@@ -1123,7 +1169,9 @@ def _audit_claim(
                         e
                         for e in packet.entries
                         if quotation_in(quotation.text, e.text)
-                        and _in_one_turn(quotation.text, _entry_turns(e, view))
+                        and _in_one_turn(
+                            quotation.text, _entry_turns(e, view), _transcript(e, view)
+                        )
                     ),
                     None,
                 )

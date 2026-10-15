@@ -50,7 +50,14 @@ class AnswerError(StonewallError):
 
 
 class CheckHarnessError(StonewallError):
-    """The check harness or its seeded defects are misconfigured."""
+    """The check harness or its seeded defects are misconfigured.
+
+    *path*, when set, is the tree entry that could not be snapshotted.
+    """
+
+    def __init__(self, message: str, *, path: str = "") -> None:
+        super().__init__(message)
+        self.path = path
 
 
 class TranscriptError(RuleError):
