@@ -122,7 +122,7 @@ def load_config(path: Path) -> BoundaryConfig:
         raw = tomllib.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError) as exc:
         raise PublicationBoundaryError("publication boundary config is unreadable") from exc
-    if raw.get("version") != 1:
+    if type(raw.get("version")) is not int or raw["version"] != 1:
         raise PublicationBoundaryError("unsupported publication boundary config version")
     manifest_path = _relative_config_path(raw.get("manifest_path"), field="manifest_path")
     reference_root = _relative_config_path(raw.get("reference_root"), field="reference_root")

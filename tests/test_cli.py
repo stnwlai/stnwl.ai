@@ -12,6 +12,7 @@ SRC_ROOT = REPO_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
+from stonewall.checks import CHECKS
 from stonewall.cli import main
 
 QUESTION = "Where was the original binder kept, and did it ever leave?"
@@ -81,10 +82,18 @@ class CommandTests(unittest.TestCase):
         code, out, _ = run("packet", QUESTION, "--channel", "model", "--limit", "4",
                            "--format", "text")
         self.assertEqual(code, 0)
-        self.assertEqual(len(out.splitlines()), 5)
-        self.assertNotIn("binder", out)
-        self.assertNotIn("WITNESS", out)
-        self.assertTrue(out.splitlines()[4].endswith("  confidential"))
+        header, *rows = out.splitlines()
+        self.assertRegex(
+            header, r"^packet  [0-9a-f]{12}  channel model  limit 4  view [0-9a-f]{12}$"
+        )
+        self.assertEqual(len(rows), 4)
+        for row in rows:
+            self.assertRegex(
+                row,
+                r"^S[1-9][0-9]*  [A-Z][A-Z0-9_-]*[0-9]{4}:[0-9]+-[0-9]+@[0-9a-f]{12}  "
+                r"(public|confidential|privileged)$",
+            )
+        self.assertTrue(rows[3].endswith("  confidential"))
 
     def test_unknown_channel_exits_two(self) -> None:
         code, out, err = run("packet", QUESTION, "--channel", "nope")
@@ -96,6 +105,10 @@ class CommandTests(unittest.TestCase):
         self.assertEqual(first, run("checks", "--list", "--repo", str(REPO_ROOT)))
         self.assertEqual(first[0], 0)
         self.assertTrue(first[1].startswith("answers      answer-quote-drift"))
+        lines = first[1].splitlines()
+        for line in lines:
+            self.assertRegex(line, r"^\S+\s+\S+\s+\S+$")
+        self.assertEqual({line.split()[0] for line in lines}, {check.name for check in CHECKS})
 
 
 if __name__ == "__main__":

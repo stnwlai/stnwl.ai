@@ -183,6 +183,9 @@ answers      answer-speaker-present-tense     quote_wrong_speaker
 answers      answer-malformed-citation        malformed_citation
 answers      answer-unbalanced-quotation      unbalanced_quotation
 answers      answer-heading-fact              uncited_claim
+answers      answer-link-target-text          unsupported_figure
+answers      answer-speaker-lead-in           quote_wrong_speaker
+answers      answer-month-swap                unsupported_figure
 answers      record-edited-under-answer       packet_mismatch
 answers      fabricated-answer-repaired       expectation_unmet
 boundary     boundary-unapproved-path         unapproved_path
@@ -216,8 +219,8 @@ defect is rejected for its named rule. The defects include filtering after
 scoring, a set-ordered index that only cross-seed builds catch, a disabled
 quote check, a swapped speaker, an edited record under an answer, and drifted
 README output. Measured with `time` on the machine that generated these
-transcripts, `stonewall checks` finished in under 5 seconds and steps 1 to 8
-together in under 7 seconds.
+transcripts, `stonewall checks` finished in under 8 seconds and steps 1 to 8
+together in under 9 seconds.
 
 ## What each finding means
 
@@ -264,20 +267,31 @@ and compared byte for byte.
 
 - The audit proves provenance, not that a paraphrase is a fair reading of its
   source.
-- Sentences split at terminal punctuation; there is no abbreviation list.
+- A sentence ends at a terminal mark followed by whitespace; text run together
+  after a period stays one sentence. There is no abbreviation list, so
+  `Sept. 5` ends a sentence after `Sept.` and the part before it is reported
+  as `uncited_claim`. A mark inside an ordinary bracket also ends a sentence,
+  so `[sic.]` splits one; only citation brackets and quotations hold a
+  sentence open.
+- Headings are structure unless they contain a digit or a quotation mark, in
+  which case they are audited as claims.
 - Quotations are compared after collapsing whitespace only. Ellipses are
-  allowed; bracketed alterations are not.
+  allowed; bracketed alterations are not. From a transcript, a quotation must
+  lie within one turn; an ellipsis cannot join two turns.
 - Only double quotation marks (straight, curly, guillemets, fullwidth), single
   curly quotation marks and block quotes mark a quotation. The ASCII single
   quote is treated as an apostrophe, so words inside it are audited as an
   ordinary statement.
-- A quotation is speaker-checked when a speech verb (a fixed list) introduces
-  it. The speaker must be a registered alias directly before the verb, and the
-  quoted words must lie in one turn by that speaker. If the speaker is not
-  identified and the words come from a transcript, the quotation fails.
+- A quotation is speaker-checked when a speech verb from a fixed list comes
+  before it in the same sentence (or in a lead-in ending with a colon, for a
+  block quote). The speaker is the registered alias directly before the last
+  such verb. If no registered alias is there and the quoted words come from a
+  transcript, the quotation fails as `speaker not identified`. A quotation
+  with no speech verb before it is not speaker-checked.
 - A figure is a number, optionally signed, with an optional month name before
-  it and an optional scale word after it. Currency symbols and units are not
-  compared.
+  or after it and an optional scale word after it. Currency symbols and units
+  are not compared. Which event a figure belongs to is not compared, so two
+  dates swapped within the cited lines still pass.
 - Spelled-out numbers are not figures.
 - Answers cite without pins; the declared packet digest binds them to the
   record instead.
@@ -307,8 +321,8 @@ byte-for-byte parity with the bundle on disk.
 
 ## Design rules
 
-- Fail closed: an unknown designation, channel, speaker or command is refused,
-  never skipped.
+- Fail closed: an unknown designation, channel, transcript speaker label or
+  command is refused, never skipped.
 - Deterministic bytes: canonical JSON and stable ordering, independent of the
   hash seed.
 - Findings carry locations, rule ids and handles, never quoted words, figures

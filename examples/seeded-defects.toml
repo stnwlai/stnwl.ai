@@ -84,6 +84,33 @@ path = "examples/answers/grounded.md"
 parts = ["\n## The binder left on March 9\n"]
 
 [[defects]]
+name = "answer-link-target-text"
+check = "answers"
+expect = "unsupported_figure"
+op = "replace"
+path = "examples/answers/grounded.md"
+old = "working copy at the desk [S1]"
+new = "working copy at the desk [S1](and returned it on March 9)"
+
+[[defects]]
+name = "answer-speaker-lead-in"
+check = "answers"
+expect = "quote_wrong_speaker"
+op = "replace"
+path = "examples/answers/grounded.md"
+old = "the\nwitness answered \"It left once.\""
+new = "the\nwitness answered, in substance, \"So the original never left the records room?\""
+
+[[defects]]
+name = "answer-month-swap"
+check = "answers"
+expect = "unsupported_figure"
+op = "replace"
+path = "examples/answers/grounded.md"
+old = "on March 5 [S1]"
+new = "on 5 April [S1]"
+
+[[defects]]
 name = "record-edited-under-answer"
 check = "answers"
 expect = "packet_mismatch"

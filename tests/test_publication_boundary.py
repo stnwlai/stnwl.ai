@@ -162,11 +162,12 @@ class ManifestAndContractTests(unittest.TestCase):
         self.assertIn("sources/", loaded.denied_path_prefixes)
 
     def test_rejects_unknown_config_version(self) -> None:
-        with tempfile.TemporaryDirectory() as raw:
-            path = Path(raw) / "boundary.toml"
-            path.write_text("version = 2\n", encoding="utf-8")
-            with self.assertRaisesRegex(PublicationBoundaryError, "version"):
-                load_config(path)
+        for version in ("2", "true", "1.0"):
+            with self.subTest(version=version), tempfile.TemporaryDirectory() as raw:
+                path = Path(raw) / "boundary.toml"
+                path.write_text(f"version = {version}\n", encoding="utf-8")
+                with self.assertRaisesRegex(PublicationBoundaryError, "config version"):
+                    load_config(path)
 
     def test_rejects_non_relative_config_paths(self) -> None:
         for manifest_path in ("../outside.json", "/tmp/outside.json", "./manifest.json"):
