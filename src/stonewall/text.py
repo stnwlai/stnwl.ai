@@ -1,8 +1,9 @@
-"""Line-addressed chunking and tokenization for explainable retrieval."""
+"""Line-addressed chunking, tokenization, and verbatim matching for evidence."""
 
 from __future__ import annotations
 
 import re
+import unicodedata
 from collections.abc import Iterable
 
 from .hashing import sha256_bytes
@@ -12,6 +13,29 @@ _TOKEN_RE = re.compile(r"[a-z0-9]+(?:['-][a-z0-9]+)?", re.IGNORECASE)
 _HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 _FENCE_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
 _SPACE_RE = re.compile(r"\s+")
+_ELLIPSIS_RE = re.compile(r"\.\.\.|…")
+_DIGIT_CONTINUES_RE = re.compile(r"[.,:/-]\d")
+_DIGIT_PRECEDES_RE = re.compile(r"\d[.,:/-]")
+MONTHS: tuple[str, ...] = (
+    "January", "February", "March", "April", "May", "June", "July", "August", "September",
+    "October", "November", "December",
+)
+_MONTH_NAMES = {month[:3].casefold(): month for month in MONTHS}
+_MONTH = "(?i:(?:" + "|".join((*MONTHS, "Sept", *(m[:3] for m in MONTHS))) + r")\.?)"
+_START = r"(?<![0-9A-Za-z])(?<!\d[.,:/-])"
+FIGURE_RE = re.compile(
+    _START + r"(?P<day>\d{1,2})(?i:st|nd|rd|th)?\s+(?:(?i:day\s+of|of)\s+)?(?P<dmonth>"
+    + _MONTH + r")(?![0-9A-Za-z])"
+    r"|(?<![0-9A-Za-z])(?P<tmonth>" + _MONTH + r")\s+(?i:the)\s+(?P<tday>\d{1,2})"
+    r"(?i:st|nd|rd|th)?(?![0-9A-Za-z])"
+    r"|(?:(?<![0-9A-Za-z])(?P<month>" + _MONTH + r")\s+)?"
+    + _START
+    + r"(?P<number>(?:[-+\u2212](?=\d))?\d+(?:[.,:/-]\d+)*[A-Za-z]*[%\u2030]?[A-Za-z]*)"
+    r"(?:\s+(?P<scale>(?i:thousand|million|billion|trillion))(?![0-9A-Za-z]))?"
+)
+_FIGURE_SPACE_RE = re.compile(r"[*_~]")
+_FIGURE_JOIN_RE = re.compile(r"(?<=[\d+\u2212-])[*_~]+(?=\d)")
+_ORDINAL_RE = re.compile(r"(.*\d)(?i:st|nd|rd|th)")
 
 
 def tokenize(value: str) -> tuple[str, ...]:
@@ -25,6 +49,101 @@ def normalize_excerpt(value: str, *, limit: int = 320) -> str:
     if len(collapsed) <= limit:
         return collapsed
     return collapsed[: limit - 1].rstrip() + "…"
+
+
+def collapse_whitespace(value: str) -> str:
+    """Collapse every whitespace run to one space; line wraps are layout."""
+    return _SPACE_RE.sub(" ", value).strip()
+
+
+def _bounded(fragment: str, text: str, start: int) -> bool:
+    """Whether *fragment* at *start* neither splits a word nor truncates a number."""
+    end = start + len(fragment)
+    if fragment[0].isalnum() and start and text[start - 1].isalnum():
+        return False
+    if fragment[-1].isalnum() and end < len(text) and text[end].isalnum():
+        return False
+    if fragment[-1].isdecimal() and _DIGIT_CONTINUES_RE.match(text, end):
+        return False
+    preceding = text[max(start - 2, 0) : start]
+    return not (fragment[0].isdecimal() and _DIGIT_PRECEDES_RE.fullmatch(preceding))
+
+
+def quotation_in(quotation: str, text: str) -> bool:
+    """Whether *quotation* appears verbatim in *text*, modulo whitespace runs.
+
+    Case, punctuation, and Unicode forms are significant. An ellipsis splits the
+    quotation into fragments that must appear in order. Fragment edges sit on
+    word boundaries and never cut a number short.
+    """
+    haystack = collapse_whitespace(text)
+    pieces = _ELLIPSIS_RE.split(collapse_whitespace(quotation))
+    fragments = [piece.strip() for piece in pieces if piece.strip()]
+    if not fragments:
+        return False
+    position = 0
+    for fragment in fragments:
+        start = haystack.find(fragment, position)
+        while start != -1 and not _bounded(fragment, haystack, start):
+            start = haystack.find(fragment, start + 1)
+        if start == -1:
+            return False
+        position = start + len(fragment)
+    return True
+
+
+def _figure_key(match: re.Match[str]) -> tuple[str, str, str]:
+    """Month, signed number, and scale of one figure match, normalized."""
+    for day, month in (("day", "dmonth"), ("tday", "tmonth")):
+        if match.group(day):
+            return _MONTH_NAMES[match.group(month)[:3].casefold()], match.group(day), ""
+    month = _MONTH_NAMES.get((match.group("month") or "")[:3].casefold(), "")
+    number = match.group("number").replace("\u2212", "-")
+    ordinal = _ORDINAL_RE.fullmatch(number)
+    scale = (match.group("scale") or "").lower()
+    return month, ordinal.group(1) if ordinal else number, scale
+
+
+def _figure_text(text: str) -> str:
+    """*text* NFKC-folded, so superscript and fullwidth digits read as digits and
+    non-breaking spaces as spaces, with a literal '&nbsp;' read as a space.
+
+    Emphasis markers between a sign and a digit, or between two digits, are
+    deleted; elsewhere they read as spaces.
+    """
+    folded = unicodedata.normalize("NFKC", text).replace("&nbsp;", " ")
+    joined = _FIGURE_JOIN_RE.sub("", folded)
+    return collapse_whitespace(_FIGURE_SPACE_RE.sub(" ", joined))
+
+
+def figure_tokens(text: str) -> tuple[str, ...]:
+    """Normalized figures in *text*: '<Month> <number> <scale>', unused parts omitted."""
+    return tuple(
+        " ".join(part for part in _figure_key(match) if part)
+        for match in FIGURE_RE.finditer(_figure_text(text))
+    )
+
+
+def figure_in(figure: str, text: str) -> bool:
+    """Whether the figure token *figure* appears in *text*.
+
+    Numbers compare as whole signed tokens with any ordinal suffix dropped, and
+    a day before its month ('3rd day of March') or after 'the' ('March the 3rd')
+    reads as the month before its day. A figure without
+    a month or scale matches the same number under any qualifiers; a qualified
+    figure needs the same month and scale too.
+    """
+    wanted = [_figure_key(match) for match in FIGURE_RE.finditer(figure)]
+    if len(wanted) != 1:
+        return False
+    month, number, scale = wanted[0]
+    for match in FIGURE_RE.finditer(_figure_text(text)):
+        found_month, found_number, found_scale = _figure_key(match)
+        if found_number == number and (
+            not (month or scale) or (found_month, found_scale) == (month, scale)
+        ):
+            return True
+    return False
 
 
 def _nonempty_ranges(lines: tuple[str, ...]) -> Iterable[tuple[int, int]]:
@@ -101,6 +220,7 @@ def chunk_artifact(artifact: ArtifactRecord) -> list[ChunkRecord]:
                     artifact_id=artifact.artifact_id,
                     path=artifact.path,
                     artifact_sha256=artifact.sha256,
+                    designation=artifact.designation,
                     heading=active_heading,
                     line_start=line_start,
                     line_end=line_end,

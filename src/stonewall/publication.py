@@ -16,6 +16,8 @@ from typing import Any, Iterable
 from .compiler import compile_corpus
 from .errors import PublicationBoundaryError, StonewallError
 from .hashing import canonical_json_bytes, sha256_bytes
+from .layout import canonical_relative_path
+from .models import Finding
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,17 +31,6 @@ class BoundaryConfig:
     denied_path_prefixes: tuple[str, ...]
     denied_suffixes: frozenset[str]
     reference_metadata_fields: frozenset[str]
-
-
-@dataclass(frozen=True, slots=True, order=True)
-class Finding:
-    path: str
-    line: int
-    rule: str
-
-    def render(self) -> str:
-        location = f"{self.path}:{self.line}" if self.line else self.path
-        return f"[{self.rule}] {location}"
 
 
 _EMAIL_RE = re.compile(r"(?i)\b[A-Z0-9._%+-]+@([A-Z0-9.-]+\.[A-Z]{2,})\b")
@@ -105,14 +96,8 @@ def _require_string_list(raw: dict[str, Any], key: str) -> tuple[str, ...]:
 def _relative_config_path(value: Any, *, field: str) -> PurePosixPath:
     if not isinstance(value, str):
         raise PublicationBoundaryError(f"config field {field!r} must be a string")
-    path = PurePosixPath(value)
-    if (
-        not value
-        or "\\" in value
-        or path.is_absolute()
-        or path.as_posix() != value
-        or any(part in {"", ".", ".."} for part in path.parts)
-    ):
+    path = canonical_relative_path(value)
+    if path is None:
         raise PublicationBoundaryError(f"config field {field!r} must be a canonical relative path")
     return path
 
@@ -137,7 +122,7 @@ def load_config(path: Path) -> BoundaryConfig:
         raw = tomllib.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError) as exc:
         raise PublicationBoundaryError("publication boundary config is unreadable") from exc
-    if raw.get("version") != 1:
+    if type(raw.get("version")) is not int or raw["version"] != 1:
         raise PublicationBoundaryError("unsupported publication boundary config version")
     manifest_path = _relative_config_path(raw.get("manifest_path"), field="manifest_path")
     reference_root = _relative_config_path(raw.get("reference_root"), field="reference_root")

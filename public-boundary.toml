@@ -8,6 +8,9 @@ allowed_exact_paths = [
   "AGENTS.md",
   "LICENSE",
   "README.md",
+  "examples/disclosure-policy.toml",
+  "examples/seeded-defects.toml",
+  "examples/speakers.toml",
   "public-boundary.toml",
   "public-tree-manifest.json",
   "pyproject.toml",
@@ -15,6 +18,7 @@ allowed_exact_paths = [
 ]
 
 allowed_path_prefixes = [
+  "examples/answers/",
   "examples/corpus/",
   "src/stonewall/",
   "tests/",
@@ -54,6 +58,7 @@ denied_suffixes = [
 
 reference_metadata_fields = [
   "date",
+  "designation",
   "id",
   "type",
 ]

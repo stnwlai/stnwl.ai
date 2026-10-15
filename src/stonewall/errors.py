@@ -10,7 +10,14 @@ class FrontMatterError(StonewallError):
 
 
 class CorpusValidationError(StonewallError):
-    """The corpus cannot be compiled without violating an invariant."""
+    """The corpus cannot be compiled without violating an invariant.
+
+    str() is the message; ``rule`` names the invariant for check reports.
+    """
+
+    def __init__(self, message: str, *, rule: str = "corpus_invalid") -> None:
+        super().__init__(message)
+        self.rule = rule
 
 
 class CitationVerificationError(StonewallError):
@@ -19,3 +26,43 @@ class CitationVerificationError(StonewallError):
 
 class PublicationBoundaryError(StonewallError):
     """A tracked path or value is outside the public repository contract."""
+
+
+class RuleError(StonewallError):
+    """A failure that carries a stable rule id; str() is '<rule>: <detail>'."""
+
+    def __init__(self, rule: str, detail: str = "") -> None:
+        super().__init__(f"{rule}: {detail}" if detail else rule)
+        self.rule = rule
+        self.detail = detail
+
+
+class DisclosureError(RuleError):
+    """A disclosure policy is invalid, or a view or decision cannot be made."""
+
+
+class SpeakerRegistryError(RuleError):
+    """A speaker registry does not satisfy its contract."""
+
+
+class AnswerError(StonewallError):
+    """An answer document or evidence packet request is malformed."""
+
+
+class CheckHarnessError(StonewallError):
+    """The check harness or its seeded defects are misconfigured.
+
+    *path*, when set, is the tree entry that could not be snapshotted.
+    """
+
+    def __init__(self, message: str, *, path: str = "") -> None:
+        super().__init__(message)
+        self.path = path
+
+
+class TranscriptError(RuleError):
+    """A command transcript cannot be rendered or compared."""
+
+    def __init__(self, rule: str, detail: str = "", *, line: int = 0) -> None:
+        super().__init__(rule, detail)
+        self.line = line

@@ -2,6 +2,7 @@
 id: E0002
 type: correspondence
 date: 2025-03-08
+designation: public
 ---
 
 # Witness Availability Follow-up

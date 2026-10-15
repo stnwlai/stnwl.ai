@@ -1,0 +1,10 @@
+# Designations, least to most restrictive. Anything derived from several
+# records carries the most restrictive designation among them.
+version = 1
+designations = ["public", "confidential", "privileged"]
+
+# The most restrictive designation each output channel may carry.
+[ceilings]
+review = "privileged"
+model = "confidential"
+publish = "public"

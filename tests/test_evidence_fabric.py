@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 import tempfile
 import unittest
@@ -12,15 +13,18 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from stonewall.bundle import BUNDLE_FILES, build_bundle, bundle_bytes, verify_bundle
-from stonewall.compiler import compile_corpus
+from stonewall.compiler import compile_corpus, corpus_root_digest
 from stonewall.errors import (
     CitationVerificationError,
     CorpusValidationError,
     FrontMatterError,
+    RuleError,
 )
 from stonewall.frontmatter import parse_document
 from stonewall.hashing import merkle_root
-from stonewall.retrieval import query_corpus, verify_citation
+from stonewall.models import Finding
+from stonewall.retrieval import query_corpus, resolve_address, verify_citation
+from stonewall.text import FIGURE_RE, figure_in, figure_tokens, quotation_in
 
 CORPUS_ROOT = REPO_ROOT / "examples" / "corpus"
 
@@ -35,6 +39,7 @@ def artifact(
         f"id: {artifact_id}",
         f"type: {artifact_type}",
         "date: 2025-01-01",
+        "designation: public",
     ]
     return "---\n" + "\n".join(fields) + "\n---\n\n" + body + "\n"
 
@@ -80,7 +85,7 @@ class CompilerTests(unittest.TestCase):
         cls.corpus = compile_corpus(CORPUS_ROOT)
 
     def test_compiles_reference_artifact_inventory(self) -> None:
-        self.assertEqual(len(self.corpus.artifacts), 6)
+        self.assertEqual(len(self.corpus.artifacts), 8)
         self.assertGreater(len(self.corpus.chunks), len(self.corpus.artifacts))
 
     def test_artifact_ids_are_unique(self) -> None:
@@ -104,8 +109,10 @@ class CompilerTests(unittest.TestCase):
             root = Path(raw)
             (root / "one.md").write_text(artifact("M0001", "case"), encoding="utf-8")
             (root / "two.md").write_text(artifact("M0001", "case"), encoding="utf-8")
-            with self.assertRaisesRegex(CorpusValidationError, "duplicate artifact id"):
+            with self.assertRaisesRegex(CorpusValidationError, "duplicate artifact id") as caught:
                 compile_corpus(root)
+            self.assertEqual(caught.exception.rule, "duplicate_artifact_id")
+            self.assertTrue(str(caught.exception).startswith("duplicate artifact id M0001: "))
 
     def test_rejects_missing_date(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -116,6 +123,22 @@ class CompilerTests(unittest.TestCase):
             )
             with self.assertRaisesRegex(CorpusValidationError, "missing required field"):
                 compile_corpus(root)
+
+    def test_requires_designation_but_not_a_policy(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            record = root / "record.md"
+            record.write_text(
+                artifact("E0001", "email").replace("designation: public\n", ""),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(CorpusValidationError, "'designation'"):
+                compile_corpus(root)
+            record.write_text(
+                artifact("E0001", "email").replace(": public", ": Privileged"),
+                encoding="utf-8",
+            )
+            self.assertEqual(compile_corpus(root).artifacts[0].designation, "Privileged")
 
     def test_rejects_non_calendar_date(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -204,7 +227,22 @@ class ReproducibleBundleTests(unittest.TestCase):
             output = Path(raw) / "bundle"
             attestation = build_bundle(CORPUS_ROOT, output)
             self.assertEqual(set(attestation["outputs"]), set(BUNDLE_FILES) - {"attestation.json"})
-            self.assertEqual(attestation["artifact_count"], 6)
+            self.assertEqual(attestation["artifact_count"], 8)
+
+    def test_bundle_labels_every_record_with_its_designation(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            output = Path(raw) / "bundle"
+            build_bundle(CORPUS_ROOT, output)
+            catalog = json.loads((output / "catalog.json").read_bytes())
+            index = json.loads((output / "search-index.json").read_bytes())
+        self.assertEqual((catalog["schema_version"], index["schema_version"]), (2, 2))
+        labels = {entry["id"]: entry["designation"] for entry in catalog["artifacts"]}
+        self.assertEqual(len(labels), 8)
+        self.assertEqual((labels["D0001"], labels["P0001"]), ("confidential", "privileged"))
+        for chunk in index["chunks"]:
+            self.assertEqual(chunk["designation"], labels[chunk["artifact_id"]])
+        corpus = compile_corpus(CORPUS_ROOT)
+        self.assertEqual(catalog["corpus_root"], corpus_root_digest(corpus.artifacts))
 
     def test_verify_bundle_detects_byte_drift(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -219,7 +257,7 @@ class ReproducibleBundleTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raw:
             output = Path(raw) / "bundle"
             output.mkdir()
-            (output / "operator-note.txt").write_text("retain", encoding="utf-8")
+            (output / "stray-note.txt").write_text("retain", encoding="utf-8")
             with self.assertRaisesRegex(CorpusValidationError, "unowned output"):
                 build_bundle(CORPUS_ROOT, output)
 
@@ -249,7 +287,7 @@ class RetrievalTests(unittest.TestCase):
         body_hit = next(
             hit
             for hit in hits
-            if hit.citation.artifact_id == "D0001" and hit.citation.line_start == 11
+            if hit.citation.artifact_id == "D0001" and hit.citation.line_start == 12
         )
         self.assertEqual(body_hit.score_breakdown["exact_phrase"], 0.0)
 
@@ -258,7 +296,7 @@ class RetrievalTests(unittest.TestCase):
         source_hit = next(
             hit
             for hit in hits
-            if hit.citation.artifact_id == "E0001" and hit.citation.line_start == 11
+            if hit.citation.artifact_id == "E0001" and hit.citation.line_start == 12
         )
         self.assertEqual(source_hit.score_breakdown["exact_phrase"], 0.75)
 
@@ -292,6 +330,129 @@ class RetrievalTests(unittest.TestCase):
 
     def test_empty_query_returns_no_hits(self) -> None:
         self.assertEqual(query_corpus(self.corpus, "---", limit=5), [])
+
+    def test_resolve_address_verifies_the_span(self) -> None:
+        pin = self.corpus.artifact("T0002").sha256[:12]
+        citation, span = resolve_address(self.corpus, f"T0002:12-15@{pin}")
+        self.assertEqual((citation.line_start, citation.line_end), (12, 15))
+        self.assertEqual(len(span.split("\n")), 4)
+        self.assertTrue(span.startswith("EXAMINING COUNSEL: Where"))
+        self.assertEqual(resolve_address(self.corpus, "T0002:12-15")[0], citation)
+
+    def test_resolve_address_rejects_unverifiable_addresses(self) -> None:
+        cases = {
+            "T0002:12-15@000000000000": "pin does not match",
+            "T0002:2-2": "outside the record body",
+            "T0002:19-22": "outside the record body",
+            "Z9999:1-1": "artifact is unknown",
+            "T0002:15-12": "malformed",
+            "T0002:12-15 ": "malformed",
+            "T0002:0-2": "malformed",
+        }
+        for address, message in cases.items():
+            with self.subTest(address=address):
+                with self.assertRaisesRegex(CitationVerificationError, message):
+                    resolve_address(self.corpus, address)
+
+
+class VerbatimMatchingTests(unittest.TestCase):
+    TEXT = "I compared all 42 pages before the\nbinder went back. The custodian's desk."
+
+    def test_quotation_collapses_line_wraps_and_nothing_else(self) -> None:
+        self.assertTrue(quotation_in("before the binder went back.", self.TEXT))
+        self.assertTrue(quotation_in("pages before  the\n binder", self.TEXT))
+        self.assertFalse(quotation_in("Before the binder", self.TEXT))
+        self.assertFalse(quotation_in("the binder went back!", self.TEXT))
+        self.assertFalse(quotation_in("custodian\u2019s desk", self.TEXT))
+
+    def test_quotation_never_truncates_a_number_or_word(self) -> None:
+        self.assertFalse(quotation_in("compared all 4", self.TEXT))
+        self.assertFalse(quotation_in("all 4", "compared all 4.5 pages"))
+        self.assertTrue(quotation_in("all 4", "compared all 4, then"))
+        self.assertFalse(quotation_in("pare", self.TEXT))
+
+    def test_ellipsis_fragments_must_appear_in_order(self) -> None:
+        self.assertTrue(quotation_in("I compared ... went back.", self.TEXT))
+        self.assertTrue(quotation_in("I compared\u2026binder", self.TEXT))
+        self.assertFalse(quotation_in("went back ... I compared", self.TEXT))
+        self.assertFalse(quotation_in(" ... ", self.TEXT))
+
+    def test_figures_are_whole_tokens(self) -> None:
+        sentence = "Filed on the 13th for 1.5M after 650K, page 7."
+        found = [match.group(0) for match in FIGURE_RE.finditer(sentence)]
+        self.assertEqual(found, ["13th", "1.5M", "650K", "7"])
+        for text in ("5,000", "1.5", "3-5", "15", "a5"):
+            self.assertFalse(figure_in("5", text), text)
+        self.assertFalse(figure_in("13", "on March 3"))
+        self.assertFalse(figure_in("3", "on March 13"))
+        self.assertTrue(figure_in("5", "on March\n5."))
+
+    def test_figure_tokens_carry_sign_month_and_scale(self) -> None:
+        text = "On Mar. 3rd, March 5, 2025, x-4, -5, +6 and \u22127 cost $5 Million at 3-5."
+        self.assertEqual(
+            figure_tokens(text),
+            ("March 3", "March 5", "2025", "4", "-5", "+6", "-7", "5 million", "3-5"),
+        )
+
+    def test_signed_figures_match_only_the_same_sign(self) -> None:
+        self.assertFalse(figure_in("-5", "5"))
+        self.assertFalse(figure_in("-5", "+5"))
+        self.assertFalse(figure_in("5", "-5"))
+        self.assertTrue(figure_in("-5", "\u22125"))
+
+    def test_qualified_figures_need_the_same_qualifiers(self) -> None:
+        self.assertFalse(figure_in("April 5", "on March 5"))
+        self.assertTrue(figure_in("March 3", "on March 3rd"))
+        self.assertTrue(figure_in("March 3", "on Mar 3"))
+        self.assertFalse(figure_in("5 million", "paid $5"))
+        self.assertTrue(figure_in("5", "on March 5"))
+        self.assertTrue(figure_in("5", "paid 5 million"))
+
+    def test_month_names_read_in_any_case_and_order(self) -> None:
+        self.assertEqual(
+            figure_tokens("5 April, april 5, Sept. 5, 3rd of mar, MAY 1 and Marching 7"),
+            ("April 5", "April 5", "September 5", "March 3", "May 1", "7"),
+        )
+        for figure in ("5 April", "april 5", "Sept. 5", "April **5**", "April\u00a05"):
+            with self.subTest(figure=figure):
+                (token,) = figure_tokens(figure)
+                self.assertFalse(figure_in(token, "on March 5"))
+        for figure in ("5 March", "March 5th", "March 5TH", "March _5_"):
+            with self.subTest(figure=figure):
+                (token,) = figure_tokens(figure)
+                self.assertTrue(figure_in(token, "on March\u00a0**5**"))
+        (lowercase,) = figure_tokens("april 3")
+        self.assertFalse(figure_in(lowercase, "on March 3"))
+        (day_first,) = figure_tokens("3rd OF March")
+        self.assertEqual(day_first, "March 3")
+        self.assertFalse(figure_in(day_first, "on April 3"))
+
+    def test_attached_percent_is_part_of_the_figure(self) -> None:
+        self.assertEqual(figure_tokens("42% and 7\u2030"), ("42%", "7\u2030"))
+        self.assertTrue(figure_in("42%", "about 42% of pages"))
+        self.assertFalse(figure_in("42%", "all 42 pages"))
+        self.assertFalse(figure_in("42", "about 42% of pages"))
+        self.assertEqual(figure_tokens("the 42%ile mark"), ("42%ile",))
+        self.assertFalse(figure_in("42%", "the 42%ile mark"))
+        self.assertFalse(figure_in("42%ile", "about 42% of pages"))
+
+    def test_emphasis_inside_a_number_joins_it(self) -> None:
+        self.assertEqual(figure_tokens("-*42* and 4**2** and 3 *5*"), ("-42", "42", "3", "5"))
+        self.assertFalse(figure_in("42", "-*42*"))
+        self.assertTrue(figure_in("-42", "\u2212_42_"))
+        self.assertTrue(figure_in("42", "all **42** pages"))
+
+    def test_compatibility_digits_fold_to_figures(self) -> None:
+        self.assertEqual(figure_tokens("all \u2079\u2079 pages, \uff11\uff12 items"),
+                         ("99", "12"))
+        self.assertTrue(figure_in("42", "all \uff14\uff12 pages"))
+        self.assertFalse(figure_in("99", "all \u2079 pages"))
+
+    def test_rule_errors_and_findings_render_without_values(self) -> None:
+        self.assertEqual(str(RuleError("unknown_channel", "x")), "unknown_channel: x")
+        self.assertEqual(str(RuleError("unknown_channel")), "unknown_channel")
+        finding = Finding("a.md", 3, "email_address")
+        self.assertEqual(finding.to_dict(), {"line": 3, "path": "a.md", "rule": "email_address"})
 
 
 if __name__ == "__main__":

@@ -18,6 +18,7 @@ class ArtifactRecord:
     body_start_line: int
     total_lines: int
     event_date: str
+    designation: str
     metadata: dict[str, str]
 
     def to_manifest_entry(self) -> dict[str, Any]:
@@ -28,6 +29,7 @@ class ArtifactRecord:
             "sha256": self.sha256,
             "title": self.title,
             "event_date": self.event_date,
+            "designation": self.designation,
             "body_start_line": self.body_start_line,
             "total_lines": self.total_lines,
         }
@@ -39,6 +41,7 @@ class ChunkRecord:
     artifact_id: str
     path: PurePosixPath
     artifact_sha256: str
+    designation: str
     heading: str
     line_start: int
     line_end: int
@@ -51,6 +54,7 @@ class ChunkRecord:
             "artifact_id": self.artifact_id,
             "path": self.path.as_posix(),
             "artifact_sha256": self.artifact_sha256,
+            "designation": self.designation,
             "heading": self.heading,
             "line_start": self.line_start,
             "line_end": self.line_end,
@@ -107,3 +111,17 @@ class EvidenceHit:
                 for key, value in sorted(self.score_breakdown.items())
             },
         }
+
+
+@dataclass(frozen=True, slots=True, order=True)
+class Finding:
+    path: str
+    line: int
+    rule: str
+
+    def render(self) -> str:
+        location = f"{self.path}:{self.line}" if self.line else self.path
+        return f"[{self.rule}] {location}"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"line": self.line, "path": self.path, "rule": self.rule}

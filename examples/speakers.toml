@@ -1,0 +1,15 @@
+# Speaker labels used in transcript records, and the phrases that name them.
+# Aliases match on word boundaries, longest first.
+version = 1
+
+[[speakers]]
+label = "THE WITNESS"
+aliases = ["the witness", "witness", "the deponent", "deponent"]
+
+[[speakers]]
+label = "EXAMINING COUNSEL"
+aliases = ["examining counsel", "counsel"]
+
+[[speakers]]
+label = "DEFENDING COUNSEL"
+aliases = ["defending counsel", "defense counsel"]

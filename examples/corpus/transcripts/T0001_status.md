@@ -2,6 +2,7 @@
 id: T0001
 type: transcript
 date: 2025-03-18
+designation: public
 ---
 
 # Status Conference Extract

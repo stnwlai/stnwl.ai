@@ -1,0 +1,305 @@
+# Each defect is applied to a fresh copy of the publishable tree. The named
+# check must report the expected rule. A defect that no longer applies is an
+# error, never a skip.
+version = 1
+
+[[defects]]
+name = "answer-quote-drift"
+check = "answers"
+expect = "unsupported_quote"
+op = "replace"
+path = "examples/answers/grounded.md"
+old = "compared all 42"
+new = "compared all 24"
+
+[[defects]]
+name = "answer-figure-drift"
+check = "answers"
+expect = "unsupported_figure"
+op = "replace"
+path = "examples/answers/grounded.md"
+old = "on March 5 [S1]"
+new = "on March 15 [S1]"
+
+[[defects]]
+name = "answer-invented-authority"
+check = "answers"
+expect = "unknown_artifact"
+op = "replace"
+path = "examples/answers/grounded.md"
+old = "[S2]"
+new = "[Z0042:3-4]"
+
+[[defects]]
+name = "answer-bracketed-quote"
+check = "answers"
+expect = "unsupported_quote"
+op = "replace"
+path = "examples/answers/grounded.md"
+old = "answered \"It left once.\" [S1]"
+new = "answered [that \"It never left.\"] [S1]"
+
+[[defects]]
+name = "answer-speaker-swap"
+check = "answers"
+expect = "quote_wrong_speaker"
+op = "replace"
+path = "examples/answers/grounded.md"
+old = "witness answered"
+new = "counsel answered"
+
+[[defects]]
+name = "answer-speaker-present-tense"
+check = "answers"
+expect = "quote_wrong_speaker"
+op = "replace"
+path = "examples/answers/grounded.md"
+old = "the\nwitness answered \"It left once.\""
+new = "the\nwitness testifies that \"So the original never left the records room?\""
+
+[[defects]]
+name = "answer-malformed-citation"
+check = "answers"
+expect = "malformed_citation"
+op = "replace"
+path = "examples/answers/grounded.md"
+old = "[S4]"
+new = "[S4] [see S2]"
+
+[[defects]]
+name = "answer-unbalanced-quotation"
+check = "answers"
+expect = "unbalanced_quotation"
+op = "replace"
+path = "examples/answers/grounded.md"
+old = "\"I compared all 42\npages before the binder went back\""
+new = "I compared all 42\npages before the binder went back\u201d"
+
+[[defects]]
+name = "answer-heading-fact"
+check = "answers"
+expect = "uncited_claim"
+op = "append"
+path = "examples/answers/grounded.md"
+parts = ["\n## The binder left on March 9\n"]
+
+[[defects]]
+name = "answer-link-target-text"
+check = "answers"
+expect = "unsupported_figure"
+op = "replace"
+path = "examples/answers/grounded.md"
+old = "working copy at the desk [S1]"
+new = "working copy at the desk [S1](and returned it on March 9)"
+
+[[defects]]
+name = "answer-speaker-lead-in"
+check = "answers"
+expect = "quote_wrong_speaker"
+op = "replace"
+path = "examples/answers/grounded.md"
+old = "the\nwitness answered \"It left once.\""
+new = "the\nwitness answered, in substance, \"So the original never left the records room?\""
+
+[[defects]]
+name = "answer-month-swap"
+check = "answers"
+expect = "unsupported_figure"
+op = "replace"
+path = "examples/answers/grounded.md"
+old = "on March 5 [S1]"
+new = "on 5 April [S1]"
+
+[[defects]]
+name = "answer-html-entity-quote"
+check = "answers"
+expect = "unsupported_markup"
+op = "replace"
+path = "examples/answers/grounded.md"
+old = "\"It left once.\""
+new = "&ldquo;It left once.&rdquo;"
+
+[[defects]]
+name = "answer-restricted-prose"
+check = "answers"
+expect = "designation_exceeds_channel"
+op = "append"
+path = "examples/answers/grounded.md"
+parts = [
+  "The working copy kept at the custodian's desk ",
+  "is the weakest link in the\ncustody chain [S1].\n",
+]
+
+[[defects]]
+name = "answer-parenthetical-authority"
+check = "answers"
+expect = "malformed_citation"
+op = "replace"
+path = "examples/answers/grounded.md"
+old = "[S4]"
+new = "(Z0042:3-4) [S4]"
+
+[[defects]]
+name = "record-edited-under-answer"
+check = "answers"
+expect = "packet_mismatch"
+op = "replace"
+path = "examples/corpus/transcripts/T0002_custody.md"
+old = "returned it on March 5."
+new = "returned it on March 6."
+
+[[defects]]
+name = "fabricated-answer-repaired"
+check = "answers"
+expect = "expectation_unmet"
+op = "replace"
+path = "examples/answers/fabricated.md"
+old = "[S9]"
+new = "[S1]"
+
+[[defects]]
+name = "boundary-unapproved-path"
+check = "boundary"
+expect = "unapproved_path"
+op = "write"
+path = "notes/draft.md"
+parts = ["draft\n"]
+
+[[defects]]
+name = "boundary-email-shape"
+check = "boundary"
+expect = "email_address"
+op = "write"
+path = "tests/fixture_contact.txt"
+parts = ["reviewer", "@mail.invalid", "\n"]
+
+[[defects]]
+name = "boundary-byte-drift"
+check = "boundary"
+expect = "manifest_drift"
+op = "append"
+path = "AGENTS.md"
+parts = ["\n"]
+
+[[defects]]
+name = "set-ordered-index"
+check = "bundle"
+expect = "bundle_not_reproducible"
+op = "replace"
+path = "src/stonewall/models.py"
+old = "\"terms\": list(self.terms),"
+new = "\"terms\": list(set(self.terms)),"
+
+[[defects]]
+name = "record-duplicate-id"
+check = "corpus"
+expect = "duplicate_artifact_id"
+op = "replace"
+path = "examples/corpus/correspondence/E0002_availability.md"
+old = "id: E0002"
+new = "id: E0001"
+
+[[defects]]
+name = "policy-ceiling-raised"
+check = "disclosure"
+expect = "fixed_decision_violated"
+op = "replace"
+path = "examples/disclosure-policy.toml"
+old = "model = \"confidential\""
+new = "model = \"privileged\""
+
+[[defects]]
+name = "designation-case-variant"
+check = "disclosure"
+expect = "unknown_designation"
+op = "replace"
+path = "examples/corpus/privileged/P0001_custody_advice.md"
+old = "designation: privileged"
+new = "designation: Privileged"
+
+[[defects]]
+name = "transcript-unregistered-speaker"
+check = "speakers"
+expect = "unregistered_speaker"
+op = "replace"
+path = "examples/corpus/transcripts/T0002_custody.md"
+old = "DEFENDING COUNSEL: Objection"
+new = "THE REPORTER: Objection"
+
+[[defects]]
+name = "registry-ambiguous-alias"
+check = "speakers"
+expect = "ambiguous_alias"
+op = "replace"
+path = "examples/speakers.toml"
+old = "aliases = [\"defending counsel\", \"defense counsel\"]"
+new = "aliases = [\"defending counsel\", \"defense counsel\", \"counsel\"]"
+
+[[defects]]
+name = "readme-output-drift"
+check = "transcripts"
+expect = "transcript_drift"
+op = "replace"
+path = "README.md"
+old = "verdict  NOT GROUNDED"
+new = "verdict  GROUNDED"
+
+[[defects]]
+name = "readme-privileged-text"
+check = "transcripts"
+expect = "transcript_unpublishable"
+op = "append"
+path = "README.md"
+parts = ["\n```console\n", "$ stonewall cite P0001:12-13 --channel review\n", "```\n"]
+
+[[defects]]
+name = "transcript-privileged-heading"
+check = "transcripts"
+expect = "transcript_unpublishable"
+op = "append"
+path = "README.md"
+parts = ["\n```console\n", "$ stonewall cite P0001:8-8 --channel review\n", "```\n"]
+
+[[defects]]
+name = "transcript-reads-ignored-file"
+check = "transcripts"
+expect = "transcript_unsupported"
+op = "append"
+path = "README.md"
+parts = ["\n```console\n", "$ cat build/reference/catalog.json\n", "```\n"]
+
+[[defects]]
+name = "filter-after-scoring"
+check = "unit"
+expect = "test_privileged_record_cannot_reorder_model_packet"
+op = "replace"
+path = "src/stonewall/packet.py"
+old = "hits = query_corpus(view, question, limit=limit)"
+new = "hits = [hit for hit in query_corpus(corpus, question, limit=MAX_PACKET_LIMIT) if view.artifact(hit.citation.artifact_id)][:limit]"
+
+[[defects]]
+name = "span-digest-unchecked"
+check = "unit"
+expect = "test_citation_rejects_tampered_span_digest"
+op = "replace"
+path = "src/stonewall/retrieval.py"
+old = "if sha256_bytes(span.encode(\"utf-8\")) != citation.span_sha256:"
+new = "if False:"
+
+[[defects]]
+name = "quote-check-disabled"
+check = "unit"
+expect = "test_fabricated_fixture_findings_are_pinned"
+op = "replace"
+path = "src/stonewall/grounding.py"
+old = "quotation_in(quotation.text, entry.text)"
+new = "True"
+
+[[defects]]
+name = "fixed-decision-removed"
+check = "unit"
+expect = "test_loosened_policy_is_refused"
+op = "replace"
+path = "src/stonewall/disclosure.py"
+old = "    (\"privileged\", \"model\", False),\n"
+new = ""
