@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path, PurePosixPath
 
 from .errors import CorpusValidationError
 from .frontmatter import ParsedDocument, parse_document
-from .hashing import sha256_bytes
+from .hashing import merkle_root, sha256_bytes
 from .models import ArtifactRecord, ChunkRecord
 from .text import chunk_artifact, markdown_headings
 
@@ -23,6 +24,20 @@ class CompiledCorpus:
     root: Path
     artifacts: tuple[ArtifactRecord, ...]
     chunks: tuple[ChunkRecord, ...]
+
+    def artifact(self, artifact_id: str) -> ArtifactRecord | None:
+        """Return the artifact with *artifact_id*, or None when it is absent."""
+        return next(
+            (item for item in self.artifacts if item.artifact_id == artifact_id), None
+        )
+
+
+def corpus_root_digest(artifacts: Iterable[ArtifactRecord]) -> str:
+    """Merkle root over ``(path, sha256)`` for exactly the given artifacts."""
+    return merkle_root(
+        (artifact.path.as_posix(), artifact.sha256) for artifact in artifacts
+    )
+
 
 def _required_string(
     metadata: dict[str, str],
@@ -91,6 +106,9 @@ def _artifact_from_document(
         date.fromisoformat(event_date)
     except ValueError as exc:
         raise CorpusValidationError(f"{source}: date is not a calendar date") from exc
+    # Policy-agnostic: any nonempty label compiles; disclosure views refuse
+    # labels their policy does not declare.
+    designation = _required_string(parsed.metadata, "designation", source=source)
     return ArtifactRecord(
         artifact_id=artifact_id,
         artifact_type=artifact_type,
@@ -101,6 +119,7 @@ def _artifact_from_document(
         body_start_line=parsed.body_start_line,
         total_lines=len(parsed.lines),
         event_date=event_date,
+        designation=designation,
         metadata=dict(parsed.metadata),
     )
 

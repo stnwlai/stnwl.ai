@@ -16,6 +16,7 @@ from typing import Any, Iterable
 from .compiler import compile_corpus
 from .errors import PublicationBoundaryError, StonewallError
 from .hashing import canonical_json_bytes, sha256_bytes
+from .models import Finding
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,17 +30,6 @@ class BoundaryConfig:
     denied_path_prefixes: tuple[str, ...]
     denied_suffixes: frozenset[str]
     reference_metadata_fields: frozenset[str]
-
-
-@dataclass(frozen=True, slots=True, order=True)
-class Finding:
-    path: str
-    line: int
-    rule: str
-
-    def render(self) -> str:
-        location = f"{self.path}:{self.line}" if self.line else self.path
-        return f"[{self.rule}] {location}"
 
 
 _EMAIL_RE = re.compile(r"(?i)\b[A-Z0-9._%+-]+@([A-Z0-9.-]+\.[A-Z]{2,})\b")

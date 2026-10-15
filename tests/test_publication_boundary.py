@@ -35,7 +35,7 @@ def config() -> BoundaryConfig:
         denied_exact_paths=frozenset({".env"}),
         denied_path_prefixes=("sources/", "tmp/"),
         denied_suffixes=frozenset({".key", ".pdf"}),
-        reference_metadata_fields=frozenset({"date", "id", "type"}),
+        reference_metadata_fields=frozenset({"date", "designation", "id", "type"}),
     )
 
 
@@ -51,76 +51,76 @@ class ScannerTests(unittest.TestCase):
         self.assertEqual(self.scan("reviewer@example.com\n"), [])
 
     def test_blocks_unapproved_email_without_echoing_value(self) -> None:
-        canary = "person" + "@mail.invalid"
-        findings = self.scan(f"contact: {canary}\n")
+        sample = "person" + "@mail.invalid"
+        findings = self.scan(f"contact: {sample}\n")
         report = "\n".join(finding.render() for finding in findings)
         self.assertIn("email_address", report)
-        self.assertNotIn(canary, report)
+        self.assertNotIn(sample, report)
 
     def test_blocks_phone_without_echoing_value(self) -> None:
-        canary = "212" + "-555-0199"
-        report = "\n".join(f.render() for f in self.scan(f"call {canary}\n"))
+        sample = "212" + "-555-0199"
+        report = "\n".join(f.render() for f in self.scan(f"call {sample}\n"))
         self.assertIn("phone_number", report)
-        self.assertNotIn(canary, report)
+        self.assertNotIn(sample, report)
 
     def test_blocks_ssn_shape_without_echoing_value(self) -> None:
-        canary = "123" + "-45-6789"
-        report = "\n".join(f.render() for f in self.scan(canary + "\n"))
+        sample = "123" + "-45-6789"
+        report = "\n".join(f.render() for f in self.scan(sample + "\n"))
         self.assertIn("ssn_shape", report)
-        self.assertNotIn(canary, report)
+        self.assertNotIn(sample, report)
 
     def test_blocks_absolute_user_path_without_echoing_value(self) -> None:
-        canary = "/" + "Users/" + "named-user/Documents/evidence"
-        report = "\n".join(f.render() for f in self.scan(canary + "\n"))
+        sample = "/" + "Users/" + "named-user/Documents/evidence"
+        report = "\n".join(f.render() for f in self.scan(sample + "\n"))
         self.assertIn("absolute_user_path", report)
-        self.assertNotIn(canary, report)
+        self.assertNotIn(sample, report)
 
     def test_blocks_home_user_path_without_echoing_value(self) -> None:
-        canary = "/" + "home/" + "named-user/evidence"
-        report = "\n".join(f.render() for f in self.scan(canary + "\n"))
+        sample = "/" + "home/" + "named-user/evidence"
+        report = "\n".join(f.render() for f in self.scan(sample + "\n"))
         self.assertIn("absolute_user_path", report)
-        self.assertNotIn(canary, report)
+        self.assertNotIn(sample, report)
 
     def test_blocks_sensitive_filename_without_echoing_value(self) -> None:
-        canary = "person" + "@mail.invalid.txt"
-        report = "\n".join(f.render() for f in self.scan("record\n", name=canary))
+        sample = "person" + "@mail.invalid.txt"
+        report = "\n".join(f.render() for f in self.scan("record\n", name=sample))
         self.assertIn("email_address", report)
-        self.assertNotIn(canary, report)
+        self.assertNotIn(sample, report)
 
     def test_allows_explicit_username_placeholder(self) -> None:
         self.assertEqual(self.scan("C:\\Users\\<username>\\Documents\n"), [])
 
     def test_blocks_street_address_without_echoing_value(self) -> None:
-        canary = "742" + " Evergreen Terrace"
-        report = "\n".join(f.render() for f in self.scan(canary + "\n"))
+        sample = "742" + " Evergreen Terrace"
+        report = "\n".join(f.render() for f in self.scan(sample + "\n"))
         self.assertIn("street_address", report)
-        self.assertNotIn(canary, report)
+        self.assertNotIn(sample, report)
 
     def test_blocks_credential_shape_without_echoing_value(self) -> None:
-        canary = "ghp_" + "A" * 32
-        report = "\n".join(f.render() for f in self.scan(canary + "\n"))
+        sample = "ghp_" + "A" * 32
+        report = "\n".join(f.render() for f in self.scan(sample + "\n"))
         self.assertIn("credential_shape", report)
-        self.assertNotIn(canary, report)
+        self.assertNotIn(sample, report)
 
     def test_blocks_assigned_secret_without_echoing_value(self) -> None:
-        canary = "unpublished" + "value123456"
-        report = "\n".join(f.render() for f in self.scan(f'token="{canary}"\n'))
+        sample = "unpublished" + "value123456"
+        report = "\n".join(f.render() for f in self.scan(f'token="{sample}"\n'))
         self.assertIn("assigned_secret", report)
-        self.assertNotIn(canary, report)
+        self.assertNotIn(sample, report)
 
     def test_blocks_unquoted_assigned_secret_without_echoing_value(self) -> None:
-        canary = "unquoted" + "value123456"
-        report = "\n".join(f.render() for f in self.scan(f"API_KEY={canary}\n"))
+        sample = "unquoted" + "value123456"
+        report = "\n".join(f.render() for f in self.scan(f"API_KEY={sample}\n"))
         self.assertIn("assigned_secret", report)
-        self.assertNotIn(canary, report)
+        self.assertNotIn(sample, report)
 
     def test_blocks_json_assigned_secret_without_echoing_value(self) -> None:
-        canary = "serialized" + "value123456"
+        sample = "serialized" + "value123456"
         report = "\n".join(
-            f.render() for f in self.scan(f'{{"api_key":"{canary}"}}\n')
+            f.render() for f in self.scan(f'{{"api_key":"{sample}"}}\n')
         )
         self.assertIn("assigned_secret", report)
-        self.assertNotIn(canary, report)
+        self.assertNotIn(sample, report)
 
     def test_allows_environment_secret_expression(self) -> None:
         self.assertEqual(self.scan("SERVICE_TOKEN=process.env.SERVICE_TOKEN\n"), [])
@@ -245,19 +245,19 @@ class ManifestAndContractTests(unittest.TestCase):
         self.assertEqual(validate_reference_contract(REPO_ROOT, loaded), [])
 
     def test_invalid_reference_contract_does_not_echo_source_value(self) -> None:
-        canary = "identity" + "_bearing_value"
+        sample = "identity" + "_bearing_value"
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             reference = root / "examples" / "corpus"
             reference.mkdir(parents=True)
             (reference / "record.md").write_text(
-                f"---\nid: {canary}\ntype: case\ndate: 2025-01-01\n---\n\n# Record\n",
+                f"---\nid: {sample}\ntype: case\ndate: 2025-01-01\ndesignation: public\n---\n\n# Record\n",
                 encoding="utf-8",
             )
             findings = validate_reference_contract(root, config())
         report = "\n".join(finding.render() for finding in findings)
         self.assertIn("reference_contract_invalid", report)
-        self.assertNotIn(canary, report)
+        self.assertNotIn(sample, report)
 
     def test_check_requires_public_manifest(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -265,7 +265,7 @@ class ManifestAndContractTests(unittest.TestCase):
             reference = root / "examples" / "corpus"
             reference.mkdir(parents=True)
             (reference / "case.md").write_text(
-                "---\nid: M0001\ntype: case\ndate: 2025-01-01\n---\n\n# Matter M0001\n\nRecord.\n",
+                "---\nid: M0001\ntype: case\ndate: 2025-01-01\ndesignation: public\n---\n\n# Matter M0001\n\nRecord.\n",
                 encoding="utf-8",
             )
             subprocess.run(["git", "init", "-q"], cwd=root, check=True)
@@ -292,7 +292,7 @@ class ManifestAndContractTests(unittest.TestCase):
             reference.mkdir(parents=True)
             artifact_path = reference / "case.md"
             artifact_path.write_text(
-                "---\nid: M0001\ntype: case\ndate: 2025-01-01\n---\n\n# Matter M0001\n\nRecord.\n",
+                "---\nid: M0001\ntype: case\ndate: 2025-01-01\ndesignation: public\n---\n\n# Matter M0001\n\nRecord.\n",
                 encoding="utf-8",
             )
             subprocess.run(["git", "init", "-q"], cwd=root, check=True)
@@ -313,7 +313,7 @@ class ManifestAndContractTests(unittest.TestCase):
             reference.mkdir(parents=True)
             artifact_path = reference / "case.md"
             artifact_path.write_text(
-                "---\nid: M0001\ntype: case\ndate: 2025-01-01\n---\n\n# Matter M0001\n\nRecord.\n",
+                "---\nid: M0001\ntype: case\ndate: 2025-01-01\ndesignation: public\n---\n\n# Matter M0001\n\nRecord.\n",
                 encoding="utf-8",
             )
             subprocess.run(["git", "init", "-q"], cwd=root, check=True)

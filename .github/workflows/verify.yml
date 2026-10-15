@@ -21,6 +21,7 @@ jobs:
     timeout-minutes: 10
     env:
       PYTHONPATH: src
+      PYTHONDONTWRITEBYTECODE: "1"
 
     steps:
       - name: Checkout repository
@@ -36,10 +37,19 @@ jobs:
       - name: Run contract tests
         run: python -m unittest discover -s tests -p "test_*.py"
 
-      - name: Build and verify evidence bundle
+      - name: Build and verify evidence bundle across hash seeds
         run: |
-          python -m stonewall build --output build/reference
-          python -m stonewall verify --output build/reference
+          PYTHONHASHSEED=1 python -m stonewall build --output build/reference
+          PYTHONHASHSEED=2 python -m stonewall verify --output build/reference
+
+      - name: Audit the grounded example answer
+        run: python -m stonewall audit-answer examples/answers/grounded.md
+
+      - name: Check README transcripts
+        run: python -m stonewall transcripts --check README.md
 
       - name: Verify publication boundary
         run: python scripts/check_public_boundary.py
+
+      - name: Prove every check can fail
+        run: python -m stonewall checks

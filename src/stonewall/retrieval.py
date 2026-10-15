@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import re
 from collections import Counter
 from pathlib import Path
 
@@ -12,6 +13,12 @@ from .frontmatter import parse_document
 from .hashing import sha256_bytes, sha256_file
 from .models import Citation, EvidenceHit
 from .text import normalize_excerpt, tokenize
+
+
+ADDRESS_RE = re.compile(
+    r"^(?P<id>[A-Z][A-Z0-9_-]*[0-9]{4}):(?P<start>[1-9][0-9]*)"
+    r"(?:-(?P<end>[1-9][0-9]*))?(?:@(?P<pin>[0-9a-f]{12}))?$"
+)
 
 
 def _inverse_document_frequency(document_count: int, document_frequency: int) -> float:
@@ -126,3 +133,35 @@ def verify_citation(corpus_root: Path, citation: Citation) -> str:
             f"citation span changed for {citation.artifact_id}"
         )
     return span
+
+
+def resolve_address(corpus: CompiledCorpus, address: str) -> tuple[Citation, str]:
+    """Resolve ``ID:start[-end][@pin]`` against the corpus and verify its span."""
+    match = ADDRESS_RE.fullmatch(address)
+    if match is None:
+        raise CitationVerificationError("citation address is malformed")
+    start = int(match.group("start"))
+    end = int(match.group("end") or start)
+    if end < start:
+        raise CitationVerificationError("citation address is malformed")
+    artifact = corpus.artifact(match.group("id"))
+    if artifact is None:
+        raise CitationVerificationError("citation artifact is unknown")
+    if not artifact.body_start_line <= start <= end <= artifact.total_lines:
+        raise CitationVerificationError("citation range is outside the record body")
+    pin = match.group("pin")
+    if pin is not None and pin != artifact.sha256[:12]:
+        raise CitationVerificationError("citation pin does not match")
+    try:
+        lines = (corpus.root / artifact.path).read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError) as exc:
+        raise CitationVerificationError("citation source is not canonical") from exc
+    citation = Citation(
+        artifact_id=artifact.artifact_id,
+        path=artifact.path,
+        line_start=start,
+        line_end=end,
+        artifact_sha256=artifact.sha256,
+        span_sha256=sha256_bytes("\n".join(lines[start - 1 : end]).encode("utf-8")),
+    )
+    return citation, verify_citation(corpus.root, citation)

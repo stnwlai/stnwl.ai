@@ -1,6 +1,6 @@
 """Stonewall's public evidence-fabric reference implementation."""
 
-from .models import ArtifactRecord, Citation, EvidenceHit
+from .models import ArtifactRecord, Citation, EvidenceHit, Finding
 
-__all__ = ["ArtifactRecord", "Citation", "EvidenceHit"]
-__version__ = "0.1.0"
+__all__ = ["ArtifactRecord", "Citation", "EvidenceHit", "Finding"]
+__version__ = "0.2.0"

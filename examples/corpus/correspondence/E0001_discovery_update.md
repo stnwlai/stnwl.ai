@@ -2,6 +2,7 @@
 id: E0001
 type: correspondence
 date: 2025-03-06
+designation: public
 ---
 
 # Discovery Scheduling Update

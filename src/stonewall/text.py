@@ -1,4 +1,4 @@
-"""Line-addressed chunking and tokenization for explainable retrieval."""
+"""Line-addressed chunking, tokenization, and verbatim matching for evidence."""
 
 from __future__ import annotations
 
@@ -12,6 +12,10 @@ _TOKEN_RE = re.compile(r"[a-z0-9]+(?:['-][a-z0-9]+)?", re.IGNORECASE)
 _HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 _FENCE_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
 _SPACE_RE = re.compile(r"\s+")
+_ELLIPSIS_RE = re.compile(r"\.\.\.|…")
+_DIGIT_CONTINUES_RE = re.compile(r"[.,:/-]\d")
+_DIGIT_PRECEDES_RE = re.compile(r"\d[.,:/-]")
+FIGURE_RE = re.compile(r"(?<![0-9A-Za-z])(?<!\d[.,:/-])\d+(?:[.,:/-]\d+)*[A-Za-z]*")
 
 
 def tokenize(value: str) -> tuple[str, ...]:
@@ -25,6 +29,57 @@ def normalize_excerpt(value: str, *, limit: int = 320) -> str:
     if len(collapsed) <= limit:
         return collapsed
     return collapsed[: limit - 1].rstrip() + "…"
+
+
+def collapse_whitespace(value: str) -> str:
+    """Collapse every whitespace run to one space; line wraps are layout."""
+    return _SPACE_RE.sub(" ", value).strip()
+
+
+def _bounded(fragment: str, text: str, start: int) -> bool:
+    """Whether *fragment* at *start* neither splits a word nor truncates a number."""
+    end = start + len(fragment)
+    if fragment[0].isalnum() and start and text[start - 1].isalnum():
+        return False
+    if fragment[-1].isalnum() and end < len(text) and text[end].isalnum():
+        return False
+    if fragment[-1].isdecimal() and _DIGIT_CONTINUES_RE.match(text, end):
+        return False
+    preceding = text[max(start - 2, 0) : start]
+    return not (fragment[0].isdecimal() and _DIGIT_PRECEDES_RE.fullmatch(preceding))
+
+
+def quotation_in(quotation: str, text: str) -> bool:
+    """Whether *quotation* appears verbatim in *text*, modulo whitespace runs.
+
+    Case, punctuation, and Unicode forms are significant. An ellipsis splits the
+    quotation into fragments that must appear in order. Fragment edges sit on
+    word boundaries and never cut a number short.
+    """
+    haystack = collapse_whitespace(text)
+    pieces = _ELLIPSIS_RE.split(collapse_whitespace(quotation))
+    fragments = [piece.strip() for piece in pieces if piece.strip()]
+    if not fragments:
+        return False
+    position = 0
+    for fragment in fragments:
+        start = haystack.find(fragment, position)
+        while start != -1 and not _bounded(fragment, haystack, start):
+            start = haystack.find(fragment, start + 1)
+        if start == -1:
+            return False
+        position = start + len(fragment)
+    return True
+
+
+def figure_in(figure: str, text: str) -> bool:
+    """Whether *figure* appears in *text* as a whole number token."""
+    pattern = (
+        r"(?<![0-9A-Za-z])(?<!\d[.,:/-])"
+        + re.escape(figure)
+        + r"(?![0-9A-Za-z])(?![.,:/-]\d)"
+    )
+    return re.search(pattern, collapse_whitespace(text)) is not None
 
 
 def _nonempty_ranges(lines: tuple[str, ...]) -> Iterable[tuple[int, int]]:
@@ -101,6 +156,7 @@ def chunk_artifact(artifact: ArtifactRecord) -> list[ChunkRecord]:
                     artifact_id=artifact.artifact_id,
                     path=artifact.path,
                     artifact_sha256=artifact.sha256,
+                    designation=artifact.designation,
                     heading=active_heading,
                     line_start=line_start,
                     line_end=line_end,

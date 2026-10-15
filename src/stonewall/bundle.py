@@ -9,25 +9,24 @@ from pathlib import Path
 from typing import Any
 
 from . import __version__
-from .compiler import CompiledCorpus, compile_corpus
+from .compiler import CompiledCorpus, compile_corpus, corpus_root_digest
 from .errors import CorpusValidationError
-from .hashing import canonical_json_bytes, merkle_root, sha256_bytes
+from .hashing import canonical_json_bytes, sha256_bytes
 
 BUNDLE_FILES = ("catalog.json", "search-index.json", "attestation.json")
 
 
 def _payloads(corpus: CompiledCorpus) -> dict[str, dict[str, Any]]:
-    corpus_root_hash = merkle_root(
-        (artifact.path.as_posix(), artifact.sha256) for artifact in corpus.artifacts
-    )
+    # Policy-agnostic: every record is included and labelled with its designation.
+    corpus_root_hash = corpus_root_digest(corpus.artifacts)
     catalog = {
-        "schema_version": 1,
+        "schema_version": 2,
         "corpus_root": corpus_root_hash,
         "artifact_count": len(corpus.artifacts),
         "artifacts": [artifact.to_manifest_entry() for artifact in corpus.artifacts],
     }
     search_index = {
-        "schema_version": 1,
+        "schema_version": 2,
         "corpus_root": corpus_root_hash,
         "chunk_count": len(corpus.chunks),
         "chunks": [chunk.to_index_entry() for chunk in corpus.chunks],
