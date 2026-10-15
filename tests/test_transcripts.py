@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -17,12 +18,14 @@ from stonewall.models import Finding
 from stonewall.transcripts import (
     check_transcripts,
     parse_transcripts,
+    publishable_file,
     render_command,
     write_transcripts,
 )
 
 README = PurePosixPath("README.md")
 SENTINEL = 'The memo says "hold the copy" until the hearing ends.'
+QUESTION = "Where was the original binder kept, and did it ever leave?"
 
 
 def console(command: str, body: str = "") -> str:
@@ -42,6 +45,9 @@ class TranscriptTests(unittest.TestCase):
             encoding="utf-8",
         )
         (self.root / "note.txt").write_text("a public note\n", encoding="utf-8")
+        (self.root / ".gitignore").write_text(".env\n", encoding="utf-8")
+        (self.root / ".env").write_text("LOCAL=1\n", encoding="utf-8")
+        subprocess.run(["git", "init", "-q"], cwd=self.root, check=True)
 
     def readme(self, text: str) -> Path:
         path = self.root / "README.md"
@@ -82,6 +88,52 @@ class TranscriptTests(unittest.TestCase):
                 self.assert_rule("transcript_unsupported", render_command, self.root, f"cat {path}")
         self.assertEqual(render_command(self.root, "cat note.txt"), "$ cat note.txt\na public note\n")
 
+    def test_commands_read_only_publishable_files(self) -> None:
+        outside = self.root.parent / f"{self.root.name}-outside.md"
+        shutil.copy(REPO_ROOT / "examples/answers/grounded.md", outside)
+        self.addCleanup(outside.unlink)
+        (self.root / "answer-link.md").symlink_to(self.root / "examples/answers/grounded.md")
+        for command in (
+            "cat .env",
+            "cat .git/HEAD",
+            f"stonewall audit-answer ../{outside.name}",
+            f"stonewall audit-answer {outside}",
+            "stonewall audit-answer ./examples/answers/grounded.md",
+            "stonewall audit-answer answer-link.md",
+            "stonewall audit-answer .env",
+        ):
+            with self.subTest(command=command):
+                self.assert_rule("transcript_unsupported", render_command, self.root, command)
+        rendered = render_command(self.root, "stonewall audit-answer examples/answers/grounded.md")
+        self.assertIn("verdict  GROUNDED", rendered)
+        self.assertEqual(publishable_file(self.root, "note.txt"), self.root / "note.txt")
+
+    def test_crlf_document_is_unsupported(self) -> None:
+        self.readme("Intro\n\n" + console("cat note.txt", "a public note\r\n"))
+        error = self.assert_rule("transcript_unsupported", parse_transcripts,
+                                 (self.root / "README.md").read_bytes().decode("utf-8"))
+        self.assertEqual((error.detail, error.line), ("LF line endings required", 5))
+        self.assertEqual(check_transcripts(self.root, README),
+                         [Finding("README.md", 5, "transcript_unsupported")])
+
+    def test_privileged_heading_and_escaped_whitespace_are_unpublishable(self) -> None:
+        record = self.root / "examples/corpus/privileged/P0001_custody_advice.md"
+        record.write_text(
+            record.read_text(encoding="utf-8")
+            .replace("is the weakest", "is the\tweakest")
+            .replace("custody chain", "custody\tchain")
+            .replace("explain why", "explain\twhy"),
+            encoding="utf-8",
+        )
+        for command in (
+            f'stonewall packet "{QUESTION}" --channel review --limit 4',
+            "stonewall cite P0001:8-8 --channel review",
+        ):
+            with self.subTest(command=command):
+                self.readme(console(command))
+                self.assertEqual(check_transcripts(self.root, README),
+                                 [Finding("README.md", 1, "transcript_unpublishable")])
+
     def test_drift_reported_without_echoing_text(self) -> None:
         self.readme("Intro\n\n" + console("cat note.txt", "stale words\n"))
         findings = check_transcripts(self.root, README)
@@ -98,7 +150,7 @@ class TranscriptTests(unittest.TestCase):
         self.assertEqual(write_transcripts(self.root, README), 0)
         self.assertTrue(path.read_text(encoding="utf-8").endswith("a public note\n```\n\nOutro\n"))
         self.assertEqual(sorted(p.name for p in self.root.iterdir()),
-                         ["README.md", "examples", "note.txt"])
+                         [".env", ".git", ".gitignore", "README.md", "examples", "note.txt"])
 
     def test_unterminated_block(self) -> None:
         self.readme("Intro\n\n```console\n$ cat note.txt\n")

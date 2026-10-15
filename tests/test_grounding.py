@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = REPO_ROOT / "src"
@@ -19,6 +20,7 @@ from stonewall.errors import AnswerError, DisclosureError
 from stonewall.grounding import AnswerAudit, audit_answer, parse_answer, split_claims
 from stonewall.hashing import canonical_json_bytes, sha256_bytes
 from stonewall.packet import build_packet
+from stonewall.retrieval import query_corpus
 
 CORPUS_ROOT = REPO_ROOT / "examples" / "corpus"
 ANSWERS = REPO_ROOT / "examples" / "answers"
@@ -30,16 +32,28 @@ SPEAKERS = load_speakers(REPO_ROOT / "examples" / "speakers.toml")
 DIGEST = build_packet(CORPUS, POLICY, QUESTION, channel="model", limit=4).digest
 
 
-def answer_text(body: str, *, header: str = "") -> str:
+REVIEW_DIGEST = build_packet(CORPUS, POLICY, QUESTION, channel="review", limit=4).digest
+
+
+def answer_text(
+    body: str, *, header: str = "", channel: str = "model", digest: str = DIGEST
+) -> str:
     return (
-        f"---\nquestion: {QUESTION}\nchannel: model\nlimit: 4\npacket: {DIGEST}\n"
+        f"---\nquestion: {QUESTION}\nchannel: {channel}\nlimit: 4\npacket: {digest}\n"
         f"{header}---\n\n{body}\n"
     )
 
 
-def audit(body: str, *, release_to: str | None = None) -> AnswerAudit:
-    document = parse_answer(answer_text(body), source="answer.md")
+def audit(
+    body: str, *, release_to: str | None = None, channel: str = "model"
+) -> AnswerAudit:
+    digest = REVIEW_DIGEST if channel == "review" else DIGEST
+    document = parse_answer(answer_text(body, channel=channel, digest=digest), source="answer.md")
     return audit_answer(document, CORPUS, POLICY, SPEAKERS, release_to=release_to)
+
+
+def outcomes(body: str) -> list[tuple[str, str]]:
+    return [(finding.rule, finding.detail) for finding in audit(body).findings]
 
 
 def rules(body: str) -> tuple[str, ...]:
@@ -105,6 +119,15 @@ class PacketTests(unittest.TestCase):
             digest = sha256_bytes(entry.text.encode("utf-8"))
             self.assertEqual(digest, entry.hit.citation.span_sha256)
 
+    def test_retrieval_outside_the_view_is_refused(self) -> None:
+        def unfiltered(_view: CompiledCorpus, question: str, *, limit: int) -> list:
+            return query_corpus(CORPUS, question, limit=limit)
+
+        with mock.patch("stonewall.packet.query_corpus", unfiltered), self.assertRaises(
+            AnswerError
+        ):
+            build_packet(CORPUS, POLICY, "weakest link custody chain", channel="model", limit=4)
+
     def test_packet_limit_bounds(self) -> None:
         for limit in (0, 21):
             with self.assertRaises(AnswerError):
@@ -158,9 +181,43 @@ class ParsingTests(unittest.TestCase):
         self.assertEqual(claims[0].figures, ("1.5", "3.25"))
 
     def test_headings_and_list_markers_are_not_claims(self) -> None:
-        claims = split_claims("# Summary\n\n- First point [S1].\n* Second point [S2].\n## End")
+        claims = split_claims(
+            "# Summary\n\n- First point [S1].\n* Second point [S2].\n"
+            "1. Third point [S3].\n12) Fourth point [S4].\n## End"
+        )
         texts = [claim.text for claim in claims]
-        self.assertEqual(texts, ["First point [S1].", "Second point [S2]."])
+        self.assertEqual(
+            texts,
+            ["First point [S1].", "Second point [S2].", "Third point [S3].", "Fourth point [S4]."],
+        )
+        self.assertEqual([claim.figures for claim in claims], [(), (), (), ()])
+
+    def test_numbered_list_items_are_audited_without_markers(self) -> None:
+        result = audit("1. The witness signed it out on March 3 [S1].\n"
+                       "2) The witness compared all 42 pages [S2].")
+        self.assertEqual(result.findings, ())
+        self.assertEqual([(p.line, p.column) for p in result.claims], [(8, 4), (9, 4)])
+
+    def test_hash_line_that_is_not_a_heading_is_audited(self) -> None:
+        self.assertEqual([c.text for c in split_claims("#99 pages were missing")],
+                         ["#99 pages were missing"])
+        self.assertEqual(rules("#99 pages were missing"), ("uncited_claim",))
+
+    def test_heading_with_a_figure_or_quotation_is_a_claim(self) -> None:
+        claims = split_claims('## On March 9 "it vanished"\n\nBody [S1].')
+        self.assertEqual([c.text for c in claims], ['On March 9 "it vanished"', "Body [S1]."])
+        self.assertEqual(rules('## On March 9 "it vanished"'), ("uncited_claim",))
+        self.assertEqual(rules("## Custody"), ("empty_answer",))
+
+    def test_sentence_ends_after_closing_emphasis_and_footnotes(self) -> None:
+        tail = "The witness signed it out on March 3 [S1]."
+        for lead in ("**The binder burned.**", "_The binder burned._",
+                     "(The binder burned.)", "The binder burned.[^1]",
+                     "He wrote 'the binder burned.'", "The binder burned.)**"):
+            with self.subTest(lead=lead):
+                claims = split_claims(f"{lead} {tail}")
+                self.assertEqual([c.text for c in claims], [lead, tail])
+                self.assertEqual(rules(f"{lead} {tail}"), ("uncited_claim",))
 
     def test_ref_grammar(self) -> None:
         self.assertEqual(self.refs("A [S1]. B [S1, S3]. C [D0001:12-13]. D [D0001:12]."),
@@ -180,8 +237,39 @@ class ParsingTests(unittest.TestCase):
         result = audit("The binder was kept [sic] in the records room [emphasis added] [S1].")
         self.assertEqual(result.findings, ())
 
-    def test_markdown_link_is_not_a_citation(self) -> None:
-        self.assertEqual(rules("The records room [S1](x)."), ("uncited_claim",))
+    def test_markdown_link_to_handle_is_a_citation(self) -> None:
+        self.assertEqual(self.refs("The records room [S1](x-5)."), [["S1"]])
+        self.assertEqual(rules("The records room [S1](x-5)."), ())
+
+    def test_link_to_privileged_handle_reaches_the_release_check(self) -> None:
+        result = audit("The copy is the weak link [S1] [S2](#s2).", channel="review",
+                       release_to="publish")
+        self.assertEqual([(f.claim, f.rule, f.ref) for f in result.findings],
+                         [(1, "designation_exceeds_channel", "S2")])
+
+    def test_quotation_inside_plain_bracket_is_checked(self) -> None:
+        body = 'The witness testified [that "I never let the original leave"] [S1].'
+        self.assertEqual(rules(body), ("unsupported_quote",))
+
+    def test_figure_inside_plain_bracket_is_checked(self) -> None:
+        body = "The witness compared [all 99] pages before the binder went back [S2]."
+        self.assertEqual(rules(body), ("unsupported_figure",))
+
+    def test_citation_bracket_with_extra_words_is_malformed(self) -> None:
+        for bracket in ("[see P0001:12-13]", "[see D0001:12-13]", "[cf. S2]"):
+            with self.subTest(bracket=bracket):
+                body = f"The copy is the weak link [S1] {bracket}."
+                self.assertEqual(rules(body), ("malformed_citation",))
+
+    def test_nested_citation_bracket_is_malformed(self) -> None:
+        self.assertEqual(self.refs("The records room [S1 [S2]]."), [[]])
+        self.assertEqual(rules("The records room [S1 [S2]]."),
+                         ("malformed_citation", "uncited_claim"))
+
+    def test_handle_bound_follows_packet_limit(self) -> None:
+        self.assertEqual(self.refs("A [S20]. B [S21]."), [["S20"], []])
+        with mock.patch("stonewall.grounding.MAX_PACKET_LIMIT", 25):
+            self.assertEqual(self.refs("B [S21]."), [["S21"]])
 
     def test_brackets_inside_quotation_are_quoted_text(self) -> None:
         claim = split_claims('He wrote "see [S1] here" [S2].')[0]
@@ -253,15 +341,25 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(rules('The record says "compared all 4" [S2].'), ("unsupported_quote",))
 
     def test_ellipsis_fragments_must_appear_in_order(self) -> None:
-        self.assertEqual(rules('The record says "It left once ... March 5" [S1].'), ())
-        reversed_order = rules('The record says "March 5 ... It left once" [S1].')
+        self.assertEqual(rules('The record reads "It left once ... March 5" [S1].'), ())
+        reversed_order = rules('The record reads "March 5 ... It left once" [S1].')
         self.assertEqual(reversed_order, ("unsupported_quote",))
+
+    def test_ellipsis_splice_across_turns_is_unsupported(self) -> None:
+        body = 'The record reads "In the records room ... the original never left" [S1].'
+        self.assertEqual(outcomes(body), [("unsupported_quote", "spans turns")])
 
     def test_figure_matching_is_word_bounded(self) -> None:
         self.assertEqual(rules("It went out on March 3 [S1]."), ())
-        for figure in ("13", "33", "3.5", "3rd"):
+        for figure in ("13", "33", "3.5", "-3"):
             found = rules(f"It went out on March {figure} [S1].")
             self.assertEqual(found, ("unsupported_figure",), figure)
+
+    def test_figure_qualifiers_are_compared(self) -> None:
+        for body in ("It went out on March 3rd [S1].", "It went out on the 5th [S1]."):
+            self.assertEqual(rules(body), (), body)
+        for body in ("It returned on April 5 [S1].", "It cost $5 million [S1]."):
+            self.assertEqual(rules(body), ("unsupported_figure",), body)
 
     def test_figures_inside_quotations_and_refs_are_not_figures(self) -> None:
         claim = split_claims('The record "has 99 pages" here [T0002:19-21].')[0]
@@ -300,9 +398,100 @@ class AuditTests(unittest.TestCase):
             self.assertNotIn("987654", output)
 
     def test_defending_counsel_objection_is_proven(self) -> None:
-        result = audit('Defending counsel stated "Objection to form." [S2]')
+        for name in ("Defending counsel", "Defense counsel"):
+            result = audit(f'{name} stated "Objection to form." [S2]')
+            self.assertEqual(result.findings, (), name)
+            self.assertEqual(result.claims[0].speakers, ("DEFENDING COUNSEL",))
+
+    def test_present_tense_speech_verb_binds(self) -> None:
+        result = audit('The witness testifies that "It left once." [S1].')
+        self.assertEqual(result.claims[0].speakers, ("THE WITNESS",))
+        body = 'The witness testifies that "So the original never left the records room?" [S1].'
+        self.assertEqual(outcomes(body), [("quote_wrong_speaker", "said by EXAMINING COUNSEL")])
+
+    def test_interrupting_clause_leaves_speaker_unidentified(self) -> None:
+        body = ('The witness, when counsel asked, testified that '
+                '"So the original never left the records room?" [S1].')
+        self.assertEqual(outcomes(body), [("quote_wrong_speaker", "speaker not identified")])
+
+    def test_quote_after_a_non_speech_verb_is_not_speaker_checked(self) -> None:
+        # 'read' is not a speech verb and 'answered' is not adjacent to the
+        # quotation, so no speech-verb phrase introduces it.
+        body = ('The witness answered earlier, then the exhibit was read: '
+                '"So the original never left the records room?" [S1]')
+        self.assertEqual(outcomes(body), [])
+        self.assertEqual(audit(body).claims[0].speakers, ())
+
+    def test_unregistered_or_possessive_speaker_on_a_transcript_fails(self) -> None:
+        possessive = (
+            "The witness's counsel said "
+            '"Did anyone compare the copy against the original?" [S2].'
+        )
+        for body in ('The reporter stated "It left once." [S1].', possessive):
+            with self.subTest(body=body):
+                self.assertEqual(outcomes(body),
+                                 [("quote_wrong_speaker", "speaker not identified")])
+
+    def test_unregistered_speaker_on_a_document_is_not_checked(self) -> None:
+        body = 'The order stated "Confirm how the witness received" [S4].'
+        self.assertEqual(outcomes(body), [])
+
+    def test_any_cited_span_with_the_speaker_proves_the_quotation(self) -> None:
+        body = 'The witness said "the records room" [T0002:14-14, T0002:13-13].'
+        self.assertEqual(outcomes(body), [])
+        self.assertEqual(audit(body).claims[0].speakers, ("THE WITNESS",))
+        wrong = 'The witness said "the records room" [T0002:14-14].'
+        self.assertEqual(outcomes(wrong), [("quote_wrong_speaker", "said by EXAMINING COUNSEL")])
+
+    def test_recognized_quotation_pairs_are_checked(self) -> None:
+        for open_, close in (("\u2018", "\u2019"), ("\u00ab", "\u00bb"), ("\uff02", "\uff02"),
+                             ("\u201c", "\u201d")):
+            with self.subTest(mark=open_):
+                body = f"The witness testified that {open_}it burned{close} [S1]."
+                self.assertEqual(rules(body), ("unsupported_quote",))
+
+    def test_apostrophe_does_not_close_a_single_quotation(self) -> None:
+        claim = split_claims("He said \u2018it\u2019s here\u2019 [S1].")[0]
+        self.assertEqual([q.text for q in claim.quotations], ["it\u2019s here"])
+        self.assertEqual(rules("The custodian\u2019s desk held a copy [S1]."), ())
+
+    def test_unpaired_quotation_punctuation_is_unbalanced(self) -> None:
+        for body in ("The witness testified that \u201dit burned\u201d [S1].",
+                     "The witness testified that \u00bbit burned [S1].",
+                     "The witness testified that it burned\u2019 here [S1]."):
+            with self.subTest(body=body):
+                self.assertEqual(rules(body), ("unbalanced_quotation",))
+
+    def test_ascii_single_quotes_are_not_quotation_marks(self) -> None:
+        result = audit("The witness testified that 'it burned' [S1].")
         self.assertEqual(result.findings, ())
-        self.assertEqual(result.claims[0].speakers, ("DEFENDING COUNSEL",))
+        self.assertEqual(result.claims[0].kind, "statement")
+
+    def test_block_quote_is_one_quotation(self) -> None:
+        fabricated = "The witness testified as follows [S1]:\n\n> I never let it leave. [S1]"
+        self.assertEqual(pairs(audit(fabricated)), {(2, "unsupported_quote")})
+        true = "> It left once. I signed it out\n> on March 3 [S1]."
+        result = audit(true)
+        self.assertEqual(result.findings, ())
+        self.assertEqual(result.claims[0].kind, "quotation")
+        self.assertEqual(rules("> It left once."), ("uncited_claim",))
+
+    def test_block_quote_has_no_speaker_check(self) -> None:
+        result = audit("> So the original never left the records room? [S1]")
+        self.assertEqual(result.findings, ())
+        self.assertEqual(result.claims[0].speakers, ())
+
+    def test_release_follows_the_declared_packet(self) -> None:
+        body = "The binder stayed in the records room [S1]."
+        self.assertTrue(audit(body, channel="review").ok)
+        result = audit(body, channel="review", release_to="publish")
+        self.assertTrue(result.grounded)
+        self.assertFalse(result.releasable)
+        self.assertEqual(
+            [(f.line, f.column, f.claim, f.rule, f.detail) for f in result.findings],
+            [(5, 1, 0, "designation_exceeds_channel", "packet privileged exceeds publish")],
+        )
+        self.assertIn("NOT RELEASABLE to publish", result.render_text())
 
     def test_answer_cannot_smuggle_refs_inside_quotes(self) -> None:
         self.assertEqual(rules('"see [S1]"'), ("uncited_claim",))

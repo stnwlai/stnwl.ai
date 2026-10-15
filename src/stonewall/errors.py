@@ -10,7 +10,14 @@ class FrontMatterError(StonewallError):
 
 
 class CorpusValidationError(StonewallError):
-    """The corpus cannot be compiled without violating an invariant."""
+    """The corpus cannot be compiled without violating an invariant.
+
+    str() is the message; ``rule`` names the invariant for check reports.
+    """
+
+    def __init__(self, message: str, *, rule: str = "corpus_invalid") -> None:
+        super().__init__(message)
+        self.rule = rule
 
 
 class CitationVerificationError(StonewallError):

@@ -61,7 +61,7 @@ def build_parser() -> argparse.ArgumentParser:
     query.add_argument("terms")
     query.add_argument("--limit", type=int, default=8)
     query.add_argument("--verify-citations", action="store_true")
-    query.add_argument("--channel", default="review")
+    query.add_argument("--channel", default="publish")
 
     packet = subparsers.add_parser("packet", help="build the evidence packet for a channel")
     packet.add_argument("question")
@@ -70,13 +70,13 @@ def build_parser() -> argparse.ArgumentParser:
     packet.add_argument("--format", choices=("json", "text"), default="json")
 
     audit = subparsers.add_parser("audit-answer", help="audit an answer against its packet")
-    audit.add_argument("path", type=Path)
+    audit.add_argument("path")  # kept raw so transcripts can confine it
     audit.add_argument("--release-to")
     audit.add_argument("--format", choices=("text", "json"), default="text")
 
     cite = subparsers.add_parser("cite", help="print the verified lines of an address")
     cite.add_argument("address")
-    cite.add_argument("--channel", default="review")
+    cite.add_argument("--channel", default="publish")
 
     checks = subparsers.add_parser("checks", help="run every check against its seeded defects")
     checks.add_argument("--repo", type=Path, default=Path("."))
@@ -136,6 +136,7 @@ def _transcripts(args: argparse.Namespace) -> int:
     root = Path.cwd()
     document = PurePosixPath(args.document)
     try:
+        transcripts.publishable_file(root, args.document)
         if args.write:
             print(f"rewrote {transcripts.write_transcripts(root, document)} block(s)")
             return 0
@@ -193,7 +194,8 @@ def run(args: argparse.Namespace) -> int:
             print(_packet_text(packet))
         return 0
     if args.command == "audit-answer":
-        document = load_answer(args.path, source=args.path.as_posix())
+        path = Path(args.path)
+        document = load_answer(path, source=path.as_posix())
         audit = audit_answer(
             document, corpus, policy, load_speakers(args.speakers), release_to=args.release_to
         )

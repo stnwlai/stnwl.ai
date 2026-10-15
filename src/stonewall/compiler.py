@@ -153,7 +153,8 @@ def compile_corpus(root: Path) -> CompiledCorpus:
         if artifact.artifact_id in seen_ids:
             raise CorpusValidationError(
                 f"duplicate artifact id {artifact.artifact_id}: "
-                f"{seen_ids[artifact.artifact_id]} and {artifact.path}"
+                f"{seen_ids[artifact.artifact_id]} and {artifact.path}",
+                rule="duplicate_artifact_id",
             )
         seen_ids[artifact.artifact_id] = artifact.path
         artifacts.append(artifact)
@@ -164,5 +165,7 @@ def compile_corpus(root: Path) -> CompiledCorpus:
         for chunk in chunk_artifact(artifact)
     )
     if len({chunk.chunk_id for chunk in chunks}) != len(chunks):
-        raise CorpusValidationError("content-addressed chunk identity collision")
+        raise CorpusValidationError(
+            "content-addressed chunk identity collision", rule="chunk_identity_collision"
+        )
     return CompiledCorpus(root=root, artifacts=ordered, chunks=chunks)

@@ -39,13 +39,14 @@ Generate transcripts with Python 3.12, the CI version.
   frozen slotted dataclasses, typed errors, canonical JSON, deterministic
   ordering.
 - Corpus records carry `id`, `type`, `date`, and `designation`. Preserve
-  coded IDs. Editing a record changes the evidence packet, so every answer
-  written against it reports `packet_mismatch` by design. Refresh an answer's
-  `packet:` line by hand, from `stonewall packet`, only when the change is
-  intended.
-- A check, rule, or fixed policy decision is not done until a seeded defect in
-  `examples/seeded-defects.toml` proves it fails for its named rule. A check
-  lands with its defects in the same change.
+  coded IDs. Editing a record the answer's channel can see changes its
+  evidence packet, so every answer written against that channel reports
+  `packet_mismatch` by design; records above the channel's ceiling do not
+  affect it. Refresh an answer's `packet:` line by hand, from
+  `stonewall packet`, only when the change is intended.
+- A check or audit rule is not done until a seeded defect or a pinned test
+  proves it fails for its named rule. A check lands with its defects in the
+  same change.
 - Never delete, weaken, or retarget a seeded defect, an expected-failure
   answer, or `FIXED_DECISIONS` to make a run pass; fix the check. A defect
   that no longer applies is a fixture to update.

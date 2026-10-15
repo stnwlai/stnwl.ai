@@ -6,10 +6,10 @@ An answer cannot cite what retrieval did not return.
 
 Courts have sanctioned lawyers for filings that cite authority that does not
 exist and quote words no record contains. That is not a prompt problem; it is
-a system that let an unverifiable sentence out the door. Stonewall is built so
-every claim resolves to an artifact ID, a source path and a line range, and
-this repository is the runnable reference for the contracts underneath, over a
-synthetic record, in standard-library Python.
+a system that let an unverifiable sentence out the door. This repository is
+the runnable reference, over a synthetic record and in standard-library
+Python, for contracts in which every claim resolves to an artifact ID and a
+source path, with line ranges where required.
 
 Legal AI fails in three ways that matter:
 
@@ -28,8 +28,8 @@ product is built, and it carries no operational code, data, or configuration.
 
 ## Sixty seconds
 
-Every block below is regenerated and compared by CI. Run them from the
-repository root after setting this alias:
+Every `console` block below is regenerated and compared by CI. Run them from
+the repository root after setting this alias:
 
 ```bash
 alias stonewall='PYTHONPATH=src python3 -m stonewall'
@@ -130,11 +130,15 @@ claim 5  12:42  ok  statement  S4
 ```
 
 Change one word inside a quotation in `examples/answers/grounded.md` and rerun
-step 4.
+step 4, then restore it with `git checkout -- examples/answers/grounded.md`
+before continuing.
 
 **5. Grounded is not the same as releasable.** Claim 5 rests on a confidential
 preparation outline, so the same answer may not go to the `publish` channel.
-The report names the handle and the designation, never the text.
+The report names the handle and the designation, never the text. Release also
+follows the declared packet: an answer written from a packet that held
+confidential or privileged material cannot be released below that
+designation, even if it cites only public handles.
 
 ```console
 $ stonewall audit-answer examples/answers/grounded.md --release-to publish
@@ -173,20 +177,27 @@ $ stonewall checks --list
 answers      answer-quote-drift               unsupported_quote
 answers      answer-figure-drift              unsupported_figure
 answers      answer-invented-authority        unknown_artifact
+answers      answer-bracketed-quote           unsupported_quote
 answers      answer-speaker-swap              quote_wrong_speaker
+answers      answer-speaker-present-tense     quote_wrong_speaker
+answers      answer-malformed-citation        malformed_citation
+answers      answer-unbalanced-quotation      unbalanced_quotation
+answers      answer-heading-fact              uncited_claim
 answers      record-edited-under-answer       packet_mismatch
 answers      fabricated-answer-repaired       expectation_unmet
 boundary     boundary-unapproved-path         unapproved_path
 boundary     boundary-email-shape             email_address
 boundary     boundary-byte-drift              manifest_drift
 bundle       set-ordered-index                bundle_not_reproducible
-corpus       record-duplicate-id              corpus_invalid
+corpus       record-duplicate-id              duplicate_artifact_id
 disclosure   policy-ceiling-raised            fixed_decision_violated
 disclosure   designation-case-variant         unknown_designation
 speakers     transcript-unregistered-speaker  unregistered_speaker
 speakers     registry-ambiguous-alias         ambiguous_alias
 transcripts  readme-output-drift              transcript_drift
 transcripts  readme-privileged-text           transcript_unpublishable
+transcripts  transcript-privileged-heading    transcript_unpublishable
+transcripts  transcript-reads-ignored-file    transcript_unsupported
 unit         filter-after-scoring             test_privileged_record_cannot_reorder_model_packet
 unit         span-digest-unchecked            test_citation_rejects_tampered_span_digest
 unit         quote-check-disabled             test_fabricated_fixture_findings_are_pinned
@@ -205,8 +216,8 @@ defect is rejected for its named rule. The defects include filtering after
 scoring, a set-ordered index that only cross-seed builds catch, a disabled
 quote check, a swapped speaker, an edited record under an answer, and drifted
 README output. Measured with `time` on the machine that generated these
-transcripts, `stonewall checks` finished in under 4 seconds and steps 1 to 8
-together in under 5 seconds.
+transcripts, `stonewall checks` finished in under 5 seconds and steps 1 to 8
+together in under 7 seconds.
 
 ## What each finding means
 
@@ -221,7 +232,7 @@ together in under 5 seconds.
 | `unsupported_quote` | Quoted words that no cited record contains. |
 | `quote_wrong_source` | Real words attributed to the wrong passage. |
 | `quote_wrong_speaker` | Real words attributed to the wrong person, such as a question presented as an answer. |
-| `unsupported_figure` | A number or date the cited lines do not contain. |
+| `unsupported_figure` | A number the cited lines do not contain, including a date whose month differs. |
 | `packet_mismatch` | The record changed after the answer was written against it. |
 | `empty_answer` | An answer with nothing in it to check. |
 | `designation_exceeds_channel` | An answer that rests on material its destination may not receive. |
@@ -236,7 +247,7 @@ together in under 5 seconds.
 | Fail-closed publication boundary | A path allowlist, content checks and an exact-tree manifest reject unreviewed files and byte drift. | `tests/test_publication_boundary.py` |
 | Grounded answers | Every sentence must cite, and every citation, quotation and figure must resolve to the evidence packet the answer declares. | `tests/test_grounding.py` |
 | Speaker-bound quotations | A quotation attributed to a speaker must lie inside one turn by that speaker. | `tests/test_attribution.py` |
-| Designation flow control | Records above a channel's ceiling are removed before scoring, and an answer is releasable only where its most restrictive source may go. | `tests/test_disclosure.py` |
+| Designation flow control | Records above a channel's ceiling are removed before scoring, and an answer is releasable only where its declared packet and every cited source may go. | `tests/test_disclosure.py` |
 | Checks that can fail | Every check passes on an unmodified copy, writes nothing, and rejects seeded defects for a named reason. | `tests/test_checks.py`, `tests/test_transcripts.py` |
 
 ## Every check can fail
@@ -256,9 +267,17 @@ and compared byte for byte.
 - Sentences split at terminal punctuation; there is no abbreviation list.
 - Quotations are compared after collapsing whitespace only. Ellipses are
   allowed; bracketed alterations are not.
-- A speaker is checked only when a speaker and a speech verb come immediately
-  before the quotation. A quotation with no such phrase is not
-  speaker-checked.
+- Only double quotation marks (straight, curly, guillemets, fullwidth), single
+  curly quotation marks and block quotes mark a quotation. The ASCII single
+  quote is treated as an apostrophe, so words inside it are audited as an
+  ordinary statement.
+- A quotation is speaker-checked when a speech verb (a fixed list) introduces
+  it. The speaker must be a registered alias directly before the verb, and the
+  quoted words must lie in one turn by that speaker. If the speaker is not
+  identified and the words come from a transcript, the quotation fails.
+- A figure is a number, optionally signed, with an optional month name before
+  it and an optional scale word after it. Currency symbols and units are not
+  compared.
 - Spelled-out numbers are not figures.
 - Answers cite without pins; the declared packet digest binds them to the
   record instead.
@@ -269,7 +288,9 @@ and compared byte for byte.
 
 ## Run everything
 
-Python 3.12 or later and git are required. These are the commands CI runs:
+Python 3.12 or later and a git clone are required (`stonewall checks` and the
+boundary check list files through Git, so they do not run from an archive
+download). These are the commands CI runs:
 
 ```bash
 PYTHONPATH=src python3 -m unittest discover -s tests -p "test_*.py"

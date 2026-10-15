@@ -40,6 +40,7 @@ FIXED_DECISIONS: tuple[tuple[str, str, bool], ...] = (
     ("privileged", "publish", False),
     ("privileged", "review", True),
 )
+FIXED_ORDER = ("public", "confidential", "privileged")
 PUBLISH_CHANNEL = "publish"
 _NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 _POLICY_KEYS = frozenset({"ceilings", "designations", "version"})
@@ -139,6 +140,9 @@ def load_policy(path: Path) -> DisclosurePolicy:
         designations=tuple(designations),
         ceilings=tuple(sorted(ceilings.items())),
     )
+    ranks = [policy.rank(designation) for designation in FIXED_ORDER]
+    if None not in ranks and ranks != sorted(ranks):
+        raise DisclosureError("fixed_decision_violated", "designation order")
     for designation, channel, expected in FIXED_DECISIONS:
         if (
             policy.rank(designation) is None
@@ -214,7 +218,8 @@ def unpublishable_lines(
 ) -> tuple[tuple[str, str], ...]:
     """Collapsed body lines of every record the publish channel may not carry.
 
-    Blank lines, headings, and lines shorter than twenty characters after
+    A heading counts twice: as its collapsed line and as its text without the
+    markers. Blank lines and anything shorter than twenty characters after
     collapsing are skipped.
     """
     found: list[tuple[str, str]] = []
@@ -222,9 +227,12 @@ def unpublishable_lines(
         if policy.permits(artifact.designation, PUBLISH_CHANNEL):
             continue
         lines = tuple(artifact.body.splitlines())
-        headings = {index for index, _level, _title in markdown_headings(lines)}
+        headings = {index: title for index, _level, title in markdown_headings(lines)}
         for index, line in enumerate(lines):
-            text = collapse_whitespace(line)
-            if index not in headings and len(text) >= _MIN_LINE_CHARS:
-                found.append((artifact.artifact_id, text))
+            forms = [collapse_whitespace(line)]
+            if index in headings:
+                forms.append(collapse_whitespace(headings[index]))
+            for text in forms:
+                if len(text) >= _MIN_LINE_CHARS:
+                    found.append((artifact.artifact_id, text))
     return tuple(found)

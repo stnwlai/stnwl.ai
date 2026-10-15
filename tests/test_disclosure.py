@@ -138,6 +138,17 @@ class PolicyTests(unittest.TestCase):
         for text in texts:
             self.assert_rule(text, "fixed_decision_violated")
 
+    def test_designation_order_is_fixed(self) -> None:
+        text = self.edited(
+            '["public", "confidential", "privileged"]',
+            '["public", "privileged", "confidential"]',
+        ).replace('publish = "public"\n', 'publish = "public"\nshare = "confidential"\n')
+        self.assertIn('share = "confidential"', text)
+        with self.assertRaises(DisclosureError) as caught:
+            self.load_text(text)
+        self.assertEqual(caught.exception.rule, "fixed_decision_violated")
+        self.assertEqual(caught.exception.detail, "designation order")
+
     def test_policy_shape_errors(self) -> None:
         for text in (
             self.edited("version = 1", "version = 2"),
@@ -219,9 +230,10 @@ class ViewTests(unittest.TestCase):
             removed = channel_view(compile_corpus(root), self.policy, "model")
             self.assertEqual(view_digest(removed), digest)
 
-    def test_unpublishable_lines_skip_headings_and_short_lines(self) -> None:
+    def test_unpublishable_lines_cover_headings_and_skip_short_lines(self) -> None:
         body = (
-            "# Advice\n\n## Notes\n\nToo short to count.\n\nExactly twenty chars\n\n"
+            "# Advice\n\n## Notes\n\n## Heading long enough to count\n\n"
+            "Too short to count.\n\nExactly twenty chars\n\n"
             "This   line is long enough\n   to be detected."
         )
         with tempfile.TemporaryDirectory() as raw:
@@ -237,6 +249,8 @@ class ViewTests(unittest.TestCase):
         self.assertEqual(
             lines,
             (
+                ("P0001", "## Heading long enough to count"),
+                ("P0001", "Heading long enough to count"),
                 ("P0001", "Exactly twenty chars"),
                 ("P0001", "This line is long enough"),
             ),
@@ -245,6 +259,8 @@ class ViewTests(unittest.TestCase):
         self.assertEqual({item for item, _text in reference}, {"D0001", "D0002", "P0001"})
         advice = "Prepare the witness to explain why the copy was kept outside the records room."
         self.assertIn(("P0001", advice), reference)
+        self.assertIn(("P0001", "# Client Advice on Binder Custody"), reference)
+        self.assertIn(("P0001", "Client Advice on Binder Custody"), reference)
 
 
 if __name__ == "__main__":

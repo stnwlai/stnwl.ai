@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -56,6 +57,25 @@ class CommandTests(unittest.TestCase):
         code, _, err = run("cite", "P0001:12-13", "--channel", "model")
         self.assertEqual(code, 2)
         self.assertEqual(err, "stonewall: citation artifact is unknown\n")
+
+    def test_query_and_cite_default_to_the_publish_channel(self) -> None:
+        self.assertEqual(run("cite", "P0001:12-13"),
+                         (2, "", "stonewall: citation artifact is unknown\n"))
+        code, out, _ = run("cite", "P0001:12-13", "--channel", "review")
+        self.assertEqual(code, 0)
+        self.assertTrue(out.splitlines()[0].endswith("  privileged"))
+        code, out, _ = run("query", "weakest link custody", "--limit", "1")
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out)["channel"], "publish")
+        self.assertNotIn("P0001", out)
+
+    def test_transcripts_document_must_be_publishable(self) -> None:
+        with contextlib.chdir(REPO_ROOT):
+            for document in ("./README.md", "/etc/hostname", "../README.md", "missing.md"):
+                with self.subTest(document=document):
+                    code, out, err = run("transcripts", "--check", document)
+                    self.assertEqual((code, out), (2, ""))
+                    self.assertIn("[transcript_unsupported]", err)
 
     def test_packet_text_carries_no_record_text(self) -> None:
         code, out, _ = run("packet", QUESTION, "--channel", "model", "--limit", "4",

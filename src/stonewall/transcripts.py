@@ -3,7 +3,8 @@
 A transcript block opens with a line that is exactly '```console', closes with
 a line that is exactly '```', and starts with '$ <command>'. Only a few
 read-only commands may appear, and they run in-process from the repository
-root, so the output is deterministic and independent of the hash seed.
+root, so the output is deterministic and independent of the hash seed. A file
+a command reads must be in the publishable candidate set.
 
 Publishability is checked before drift: a block whose rendered output or
 written body contains a whole body line of a record the publish channel may
@@ -17,6 +18,7 @@ import contextlib
 import io
 import json
 import os
+import re
 import shlex
 import stat
 import tempfile
@@ -25,15 +27,20 @@ from pathlib import Path, PurePosixPath
 
 from .compiler import compile_corpus
 from .disclosure import load_policy, unpublishable_lines
-from .errors import StonewallError, TranscriptError
-from .layout import CORPUS_DIR, POLICY_FILE
+from .errors import PublicationBoundaryError, StonewallError, TranscriptError
+from .layout import CORPUS_DIR, POLICY_FILE, canonical_relative_path
 from .models import Finding
+from .publication import candidate_paths
 from .text import collapse_whitespace
 
 ALLOWED_SUBCOMMANDS = frozenset({"audit-answer", "cite", "packet"})
 _FENCE = "```"
 _OPEN = "```console"
 _SHELL_CHARACTERS = frozenset("|&;<>`$\n")
+# Subcommand -> argument destinations that name a file the command reads.
+_PATH_ARGUMENTS = {"audit-answer": ("path",)}
+# JSON escapes of whitespace; matched as spaces so an escaped tab still collapses.
+_JSON_SPACE_RE = re.compile(r"\\(?:[bfnrt]|u00(?:0[bB]|1[c-fC-F]))")
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +54,9 @@ class TranscriptBlock:
 
 def parse_transcripts(text: str) -> tuple[TranscriptBlock, ...]:
     """Find every console block; an unclosed fence is an error, never a skip."""
+    if "\r" in text:
+        number = text.count("\n", 0, text.index("\r")) + 1
+        raise TranscriptError("transcript_unsupported", "LF line endings required", line=number)
     blocks: list[TranscriptBlock] = []
     lines = text.splitlines(keepends=True)
     offsets = [0]
@@ -74,15 +84,10 @@ def parse_transcripts(text: str) -> tuple[TranscriptBlock, ...]:
     return tuple(blocks)
 
 
-def _canonical_file(repo_root: Path, value: str) -> Path:
-    path = PurePosixPath(value)
-    if (
-        not value
-        or "\\" in value
-        or path.is_absolute()
-        or path.as_posix() != value
-        or any(part in {"", ".", ".."} for part in value.split("/"))
-    ):
+def publishable_file(repo_root: Path, value: str) -> Path:
+    """The file *value* names, if it is canonical, symlink-free and publishable."""
+    path = canonical_relative_path(value)
+    if path is None:
         raise TranscriptError("transcript_unsupported", "path is not canonical")
     current = repo_root
     for part in path.parts:
@@ -91,7 +96,25 @@ def _canonical_file(repo_root: Path, value: str) -> Path:
             raise TranscriptError("transcript_unsupported", "path uses a symlink")
     if not current.is_file():
         raise TranscriptError("transcript_unsupported", "path is not a regular file")
+    try:
+        candidates = candidate_paths(repo_root)
+    except PublicationBoundaryError as exc:
+        raise TranscriptError("transcripts_unavailable") from exc
+    if path not in candidates:
+        raise TranscriptError("transcript_unsupported", "path is not publishable")
     return current
+
+
+def _path_arguments(tokens: list[str]) -> list[str]:
+    """Raw file arguments of a stonewall command; none when it will not parse."""
+    from . import cli  # lazy: the command surface imports this module
+
+    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+        try:
+            args = cli.build_parser().parse_args(tokens[1:])
+        except SystemExit:
+            return []  # the command reports its own usage error and reads nothing
+    return [getattr(args, dest) for dest in _PATH_ARGUMENTS.get(args.command, ())]
 
 
 def render_command(repo_root: Path, command: str) -> str:
@@ -105,7 +128,7 @@ def render_command(repo_root: Path, command: str) -> str:
         raise unsupported from exc
     if len(tokens) == 2 and tokens[0] == "cat":
         try:
-            output = _canonical_file(repo_root, tokens[1]).read_bytes().decode("utf-8")
+            output = publishable_file(repo_root, tokens[1]).read_bytes().decode("utf-8")
         except UnicodeDecodeError as exc:
             raise unsupported from exc
         code = 0
@@ -115,6 +138,8 @@ def render_command(repo_root: Path, command: str) -> str:
     ):
         from . import cli  # lazy: the command surface imports this module
 
+        for value in _path_arguments(tokens):
+            publishable_file(repo_root, value)
         out, err = io.StringIO(), io.StringIO()
         with (
             contextlib.chdir(repo_root),
@@ -140,12 +165,18 @@ def _unpublishable(repo_root: Path) -> tuple[str, ...]:
     except StonewallError as exc:
         raise TranscriptError("transcripts_unavailable") from exc
     lines = {text for _artifact_id, text in unpublishable_lines(corpus, policy)}
-    escaped = {json.dumps(text, ensure_ascii=False)[1:-1] for text in lines}
-    return tuple(sorted(lines | escaped))
+    forms = {_normalized(text) for text in lines} | {
+        _normalized(json.dumps(text, ensure_ascii=False)[1:-1]) for text in lines
+    }
+    return tuple(sorted(forms))
+
+
+def _normalized(text: str) -> str:
+    return collapse_whitespace(_JSON_SPACE_RE.sub(" ", text))
 
 
 def _carries(needles: tuple[str, ...], *texts: str) -> bool:
-    return any(needle in collapse_whitespace(text) for text in texts for needle in needles)
+    return any(needle in _normalized(text) for text in texts for needle in needles)
 
 
 def _read(repo_root: Path, document: PurePosixPath) -> str:

@@ -1,9 +1,10 @@
 """Speaker-bound quotations over role-labelled transcript turns.
 
 A transcript line ``LABEL: text`` opens a turn by that speaker; following
-non-blank, non-heading lines continue it. A sentence that names a speaker with
-a speech verb right before a quotation binds the quotation to that speaker, so
-it must lie inside one turn by them. Names resolve on word boundaries, longest
+non-blank, non-heading lines continue it. A registered name directly followed
+by a speech verb, an optional 'that', and nothing else up to the opening mark
+binds the quotation to that speaker, so it must lie inside one turn by them. A
+name after a possessive never binds. Names resolve on word boundaries, longest
 alias first. Registry failures carry rule ids and counts, never alias text.
 """
 
@@ -21,14 +22,20 @@ from .errors import SpeakerRegistryError
 from .text import quotation_in
 
 ATTRIBUTION_VERBS: tuple[str, ...] = (
-    "admitted", "agreed", "answered", "asked", "conceded", "confirmed", "denied",
-    "explained", "recalled", "replied", "responded", "said", "stated", "testified",
+    "admits", "admitted", "agreed", "agrees", "answered", "answers", "asked", "asks",
+    "conceded", "concedes", "confirmed", "confirms", "denied", "denies", "explained",
+    "explains", "recalled", "recalls", "replied", "replies", "responded", "responds",
+    "said", "says", "stated", "states", "testified", "testifies",
 )
 LABEL_LINE_RE = re.compile(r"^(?P<label>[A-Z]+(?: [A-Z]+)*): (?P<text>\S.*)$")
 _LABEL_RE = re.compile(r"^[A-Z]+(?: [A-Z]+)*$")
 _ALIAS_RE = re.compile(r"^[a-z]+(?: [a-z]+)*$")
 _HEADING_RE = re.compile(r"^#{1,6}\s+\S")
-_VERB_RE = re.compile(r"(?i)\s+(?:" + "|".join(ATTRIBUTION_VERBS) + r")\b")
+_VERBS = "(?:" + "|".join(ATTRIBUTION_VERBS) + ")"
+_VERB_RE = re.compile(r"(?i)\s+" + _VERBS + r"\b")
+_PHRASE_RE = re.compile(r"(?i)(?<!\w)" + _VERBS + r"(?:\s+that)?[\s,:]*\Z")
+_REST_RE = re.compile(r"(?i)(?:\s+that)?[\s,:]*")
+_POSSESSIVE_RE = re.compile(r"['\u2019]s\s+\Z")
 _REGISTRY_KEYS = frozenset({"speakers", "version"})
 _SPEAKER_KEYS = frozenset({"aliases", "label"})
 
@@ -63,7 +70,7 @@ def _mention_pattern(entries: tuple[tuple[str, str], ...]) -> re.Pattern[str]:
         f"(?P<a{index}>" + r"\s+".join(map(re.escape, alias.split(" "))) + ")"
         for index, (alias, _label) in enumerate(entries)
     )
-    return re.compile(r"(?i)(?<![0-9a-z])(?:" + branches + r")(?![0-9a-z])")
+    return re.compile(r"(?i)(?<!\w)(?:" + branches + r")(?!\w)")
 
 
 @dataclass(frozen=True, slots=True)
@@ -92,14 +99,30 @@ class SpeakerRegistry:
             found.append(Mention(match.start(), match.end(), label, alias))
         return tuple(found)
 
-    def attribution(self, text: str) -> Mention | None:
-        """The last mention followed directly by a speech verb, if any.
+    def attribution_phrase(self, text: str) -> tuple[bool, Mention | None]:
+        """Whether *text* ends in a speech-verb phrase, and the mention it binds.
 
         Callers pass the claim text before the opening quotation mark, with
-        citation brackets and earlier quotations blanked so offsets hold.
+        citation brackets and earlier quotations blanked so offsets hold. A
+        mention binds only when a verb follows it directly and nothing but an
+        optional 'that', commas, colons and whitespace follows the verb, and
+        no possessive precedes it.
         """
-        bound = [m for m in self.mentions(text) if _VERB_RE.match(text, m.end)]
-        return bound[-1] if bound else None
+        if _PHRASE_RE.search(text) is None:
+            return False, None
+        for mention in self.mentions(text):
+            verb = _VERB_RE.match(text, mention.end)
+            if (
+                verb is not None
+                and _REST_RE.fullmatch(text, verb.end()) is not None
+                and _POSSESSIVE_RE.search(text, 0, mention.start) is None
+            ):
+                return True, mention
+        return True, None
+
+    def attribution(self, text: str) -> Mention | None:
+        """The mention bound by the speech-verb phrase ending *text*, if any."""
+        return self.attribution_phrase(text)[1]
 
 
 def _invalid(detail: str) -> SpeakerRegistryError:
@@ -131,7 +154,7 @@ def load_speakers(path: Path) -> SpeakerRegistry:
     if set(raw) - _REGISTRY_KEYS:
         raise _invalid("speaker registry has unknown keys")
     version = raw.get("version")
-    if isinstance(version, bool) or version != 1:
+    if type(version) is not int or version != 1:
         raise _invalid("unsupported speaker registry version")
     entries = raw.get("speakers")
     if not isinstance(entries, list) or not entries:

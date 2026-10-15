@@ -86,8 +86,20 @@ class AttributionTests(unittest.TestCase):
         self.assertEqual([m.label for m in REGISTRY.mentions(text)], ["DEFENDING COUNSEL"])
         self.assertNotEqual(self.label(text), naive)
 
+    def test_registry_version_must_be_the_integer_one(self) -> None:
+        speaker = '[[speakers]]\nlabel = "A"\naliases = ["a"]\n'
+        for version in ("1.0", "true"):
+            with self.subTest(version=version):
+                with tempfile.TemporaryDirectory() as directory:
+                    path = Path(directory) / "speakers.toml"
+                    path.write_text(f"version = {version}\n{speaker}", encoding="utf-8")
+                    with self.assertRaises(SpeakerRegistryError) as caught:
+                        load_speakers(path)
+                self.assertEqual(caught.exception.rule, "registry_invalid")
+
     def test_mentions_respect_word_boundaries(self) -> None:
-        for text in ("the eyewitness said", "witnesses said", "counselor said"):
+        for text in ("the eyewitness said", "witnesses said", "counselor said",
+                     "the witness\u00e9 said"):
             with self.subTest(text=text):
                 self.assertEqual(REGISTRY.mentions(text), ())
 
@@ -95,10 +107,26 @@ class AttributionTests(unittest.TestCase):
         self.assertEqual(self.label("the\nwitness answered"), "THE WITNESS")
 
     def test_attribution_requires_adjacent_verb(self) -> None:
-        for text in ("Counsel's outline", "the witness also testified", "counsel to"):
+        for text in ("Counsel's outline", "the witness also testified", "counsel to",
+                     "Counsel asked the witness", "The witness, when counsel asked, testified "):
             with self.subTest(text=text):
                 self.assertIsNone(REGISTRY.attribution(text))
-        self.assertEqual(self.label("Counsel asked the witness"), "EXAMINING COUNSEL")
+        self.assertEqual(self.label("Counsel asked "), "EXAMINING COUNSEL")
+        self.assertEqual(self.label("The witness testifies that\n"), "THE WITNESS")
+        self.assertEqual(self.label("Defense counsel said, "), "DEFENDING COUNSEL")
+
+    def test_possessive_mention_does_not_bind(self) -> None:
+        for text in ("the witness's counsel said ", "the witness\u2019s counsel said "):
+            with self.subTest(text=text):
+                self.assertEqual(REGISTRY.attribution_phrase(text), (True, None))
+
+    def test_attribution_phrase_reports_a_trailing_speech_verb(self) -> None:
+        self.assertEqual(REGISTRY.attribution_phrase("The reporter stated: "), (True, None))
+        self.assertEqual(REGISTRY.attribution_phrase("The exhibit was read: "), (False, None))
+        self.assertEqual(REGISTRY.attribution_phrase("The witness said earlier "), (False, None))
+        found, mention = REGISTRY.attribution_phrase("The witness answers ")
+        self.assertTrue(found)
+        self.assertEqual(mention.label if mention else None, "THE WITNESS")
 
     def test_attribution_takes_last_phrase_before_quote(self) -> None:
         text = "Counsel asked, and the witness answered "

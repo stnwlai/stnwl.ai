@@ -15,7 +15,18 @@ _SPACE_RE = re.compile(r"\s+")
 _ELLIPSIS_RE = re.compile(r"\.\.\.|…")
 _DIGIT_CONTINUES_RE = re.compile(r"[.,:/-]\d")
 _DIGIT_PRECEDES_RE = re.compile(r"\d[.,:/-]")
-FIGURE_RE = re.compile(r"(?<![0-9A-Za-z])(?<!\d[.,:/-])\d+(?:[.,:/-]\d+)*[A-Za-z]*")
+MONTHS: tuple[str, ...] = (
+    "January", "February", "March", "April", "May", "June", "July", "August", "September",
+    "October", "November", "December",
+)
+_MONTH_NAMES = {month[:3]: month for month in MONTHS}
+FIGURE_RE = re.compile(
+    r"(?:(?<![0-9A-Za-z])(?P<month>" + "|".join(MONTHS)
+    + r"|(?:" + "|".join(_MONTH_NAMES) + r")\.?)\s+)?"
+    r"(?<![0-9A-Za-z])(?<!\d[.,:/-])(?P<number>(?:[-+\u2212](?=\d))?\d+(?:[.,:/-]\d+)*[A-Za-z]*)"
+    r"(?:\s+(?P<scale>(?i:thousand|million|billion|trillion))(?![0-9A-Za-z]))?"
+)
+_ORDINAL_RE = re.compile(r"(.*\d)(?:st|nd|rd|th)")
 
 
 def tokenize(value: str) -> tuple[str, ...]:
@@ -72,14 +83,41 @@ def quotation_in(quotation: str, text: str) -> bool:
     return True
 
 
-def figure_in(figure: str, text: str) -> bool:
-    """Whether *figure* appears in *text* as a whole number token."""
-    pattern = (
-        r"(?<![0-9A-Za-z])(?<!\d[.,:/-])"
-        + re.escape(figure)
-        + r"(?![0-9A-Za-z])(?![.,:/-]\d)"
+def _figure_key(match: re.Match[str]) -> tuple[str, str, str]:
+    """Month, signed number, and scale of one figure match, normalized."""
+    month = _MONTH_NAMES.get((match.group("month") or "")[:3], "")
+    number = match.group("number").replace("\u2212", "-")
+    ordinal = _ORDINAL_RE.fullmatch(number)
+    scale = (match.group("scale") or "").lower()
+    return month, ordinal.group(1) if ordinal else number, scale
+
+
+def figure_tokens(text: str) -> tuple[str, ...]:
+    """Normalized figures in *text*: '<Month> <number> <scale>', unused parts omitted."""
+    return tuple(
+        " ".join(part for part in _figure_key(match) if part)
+        for match in FIGURE_RE.finditer(text)
     )
-    return re.search(pattern, collapse_whitespace(text)) is not None
+
+
+def figure_in(figure: str, text: str) -> bool:
+    """Whether the figure token *figure* appears in *text*.
+
+    Numbers compare as whole signed tokens with any ordinal suffix dropped. A
+    figure without a month or scale matches the same number under any
+    qualifiers; a qualified figure needs the same month and scale too.
+    """
+    wanted = [_figure_key(match) for match in FIGURE_RE.finditer(figure)]
+    if len(wanted) != 1:
+        return False
+    month, number, scale = wanted[0]
+    for match in FIGURE_RE.finditer(collapse_whitespace(text)):
+        found_month, found_number, found_scale = _figure_key(match)
+        if found_number == number and (
+            not (month or scale) or (found_month, found_scale) == (month, scale)
+        ):
+            return True
+    return False
 
 
 def _nonempty_ranges(lines: tuple[str, ...]) -> Iterable[tuple[int, int]]:

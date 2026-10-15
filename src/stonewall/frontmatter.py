@@ -1,8 +1,8 @@
 """Strict, dependency-free front-matter parsing for reference artifacts.
 
-The three-field corpus contract needs only nonempty strings. Matching single or
-double quotes are accepted and removed; every other YAML feature is out of
-scope.
+Corpus records and answers need only flat `key: value` pairs of nonempty
+strings. Matching single or double quotes are accepted and removed; every other
+YAML feature is out of scope.
 """
 
 from __future__ import annotations

@@ -31,6 +31,7 @@ from .compiler import CompiledCorpus, compile_corpus
 from .disclosure import load_policy, unknown_designations
 from .errors import (
     CheckHarnessError,
+    CorpusValidationError,
     DisclosureError,
     PublicationBoundaryError,
     SpeakerRegistryError,
@@ -46,6 +47,7 @@ from .layout import (
     POLICY_FILE,
     README_FILE,
     SPEAKERS_FILE,
+    canonical_relative_path,
 )
 from .models import Finding
 from .publication import candidate_paths, check_boundary, load_config
@@ -62,7 +64,8 @@ SUBPROCESS_TIMEOUT = 60
 _DEFECT_KEYS = frozenset({"check", "expect", "name", "new", "old", "op", "parts", "path"})
 _NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 _RULE_RE = re.compile(r"^[a-z][a-z0-9_]*$")
-_UNIT_FAILURE_RE = re.compile(r"^(?:FAIL|ERROR): (test_\w+) ", re.MULTILINE)
+_UNIT_FAILURE_RE = re.compile(r"^FAIL: (test_\w+) ", re.MULTILINE)
+_UNIT_ERROR_RE = re.compile(r"^ERROR: test_\w+ ", re.MULTILINE)
 
 
 @dataclass(frozen=True, slots=True)
@@ -83,11 +86,17 @@ class SeededDefect:
     parts: tuple[str, ...] = ()
 
 
+def _saw(findings: tuple[Finding, ...]) -> str:
+    """Rule ids and locations only, never content."""
+    return ", ".join(f"{f.rule} {f.path}:{f.line}" for f in findings) or "none"
+
+
 @dataclass(frozen=True, slots=True)
 class CheckOutcome:
     name: str
     rules: tuple[str, ...]
     wrote: tuple[str, ...]
+    findings: tuple[Finding, ...] = ()
 
     @property
     def passed(self) -> bool:
@@ -102,6 +111,7 @@ class DefectOutcome:
     status: str  # rejected | survived | wrong_reason | wrote_tree | check_crashed
     rules: tuple[str, ...]
     wrote: tuple[str, ...]
+    findings: tuple[Finding, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -125,13 +135,15 @@ class CheckReport:
 
     def to_dict(self) -> dict[str, Any]:
         checks = [
-            {"defects": self._counts(o.name)[1], "name": o.name,
+            {"defects": self._counts(o.name)[1],
+             "findings": [finding.to_dict() for finding in o.findings], "name": o.name,
              "rejected": self._counts(o.name)[0], "unmodified_rules": list(o.rules),
              "wrote": list(o.wrote)}
             for o in self.clean
         ]
         defects = [
-            {"check": d.check, "expect": d.expect, "name": d.name,
+            {"check": d.check, "expect": d.expect,
+             "findings": [finding.to_dict() for finding in d.findings], "name": d.name,
              "rules": list(d.rules), "status": d.status, "wrote": list(d.wrote)}
             for d in self.defects
         ]
@@ -150,14 +162,13 @@ class CheckReport:
                 f"{rejected}/{total} defects rejected",
             ]
             if outcome.rules:
-                fields.append(f"saw: {' '.join(outcome.rules)}")
+                fields.append(f"saw: {_saw(outcome.findings)}")
             lines.append("  ".join(fields))
         for defect in self.defects:
             if defect.status != "rejected":
-                saw = " ".join(defect.rules) or "none"
                 lines.append(
                     f"{defect.status.upper()} {defect.name}"
-                    f" ({defect.check} expected {defect.expect}, saw: {saw})"
+                    f" ({defect.check} expected {defect.expect}, saw: {_saw(defect.findings)})"
                 )
         lines.extend(f"UNCHALLENGED {name}" for name in self.unchallenged)
         lines.append("PASS" if self.passed else "FAIL")
@@ -177,6 +188,8 @@ def check_answers(root: Path, scratch: Path) -> list[Finding]:
         speakers = load_speakers(root / SPEAKERS_FILE)
         answers = sorted((root / ANSWERS_DIR).glob("*.md"))
     except (OSError, StonewallError):
+        answers = []
+    if not answers:
         return [Finding(ANSWERS_DIR.as_posix(), 0, "answers_unavailable")]
     findings: list[Finding] = []
     for path in answers:
@@ -236,8 +249,9 @@ def check_bundle(root: Path, scratch: Path) -> list[Finding]:
 def check_corpus(root: Path, scratch: Path) -> list[Finding]:
     try:
         compile_corpus(root / CORPUS_DIR)
-    except StonewallError:
-        return [Finding(CORPUS_DIR.as_posix(), 0, "corpus_invalid")]
+    except StonewallError as exc:
+        rule = exc.rule if isinstance(exc, CorpusValidationError) else "corpus_invalid"
+        return [Finding(CORPUS_DIR.as_posix(), 0, rule)]
     return []
 
 
@@ -286,8 +300,10 @@ def check_transcripts(root: Path, scratch: Path) -> list[Finding]:
         return [Finding(README_FILE.as_posix(), 0, "transcripts_unavailable")]
 
 
-def check_unit(root: Path, scratch: Path) -> list[Finding]:
-    command = [sys.executable, "-B", "-m", "unittest", *UNIT_TESTS]
+def check_unit(
+    root: Path, scratch: Path, *, unit_tests: Sequence[str] = UNIT_TESTS
+) -> list[Finding]:
+    command = [sys.executable, "-B", "-m", "unittest", *unit_tests]
     try:
         completed = subprocess.run(
             command, cwd=root, env=_subprocess_env(root), capture_output=True,
@@ -295,13 +311,14 @@ def check_unit(root: Path, scratch: Path) -> list[Finding]:
         )
     except subprocess.TimeoutExpired:
         return [Finding("tests", 0, "unit_timeout")]
-    failed = sorted(
-        set(_UNIT_FAILURE_RE.findall(completed.stdout))
-        | set(_UNIT_FAILURE_RE.findall(completed.stderr))
-    )
-    if completed.returncode != 0 and not failed:
-        return [Finding("tests", 0, "unit_crashed")]
-    return [Finding("tests", 0, method) for method in failed]
+    output = completed.stdout + "\n" + completed.stderr
+    # Only an assertion failure names its test; an error is never proof.
+    rules = set(_UNIT_FAILURE_RE.findall(output))
+    if _UNIT_ERROR_RE.search(output):
+        rules.add("unit_errored")
+    if completed.returncode != 0 and not rules:
+        rules.add("unit_crashed")
+    return [Finding("tests", 0, rule) for rule in sorted(rules)]
 
 
 CHECKS: tuple[Check, ...] = (
@@ -314,19 +331,6 @@ CHECKS: tuple[Check, ...] = (
     Check("transcripts", check_transcripts),
     Check("unit", check_unit),
 )
-
-
-def _canonical_path(value: object) -> PurePosixPath | None:
-    if not isinstance(value, str) or not value or "\\" in value:
-        return None
-    path = PurePosixPath(value)
-    if (
-        path.is_absolute()
-        or path.as_posix() != value
-        or any(part in {"", ".", ".."} for part in value.split("/"))
-    ):
-        return None
-    return path
 
 
 def _nonempty_string(raw: dict[str, Any], key: str) -> str:
@@ -348,7 +352,8 @@ def load_defects(
         raw = tomllib.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError) as exc:
         raise CheckHarnessError("seeded defects file is unreadable") from exc
-    if set(raw) - {"defects", "version"} or raw.get("version") != 1:
+    version = raw.get("version")
+    if set(raw) - {"defects", "version"} or type(version) is not int or version != 1:
         raise CheckHarnessError("seeded defects file must be version 1")
     entries = raw.get("defects")
     if not isinstance(entries, list) or not all(isinstance(e, dict) for e in entries):
@@ -362,11 +367,13 @@ def load_defects(
         name, check, expect, op = (
             _nonempty_string(entry, key) for key in ("name", "check", "expect", "op")
         )
-        relative = _canonical_path(entry.get("path"))
+        relative = canonical_relative_path(entry.get("path"))
         if not _NAME_RE.fullmatch(name) or any(d.name == name for d in defects):
             raise CheckHarnessError(f"seeded defect name is invalid or duplicated: {name}")
-        if check not in known or not _RULE_RE.fullmatch(expect):
+        if check not in known:
             raise CheckHarnessError(f"seeded defect names an unknown check: {name}")
+        if not _RULE_RE.fullmatch(expect):
+            raise CheckHarnessError(f"seeded defect expects an invalid rule id: {name}")
         if op not in OPS:
             raise CheckHarnessError(f"seeded defect has an unknown op: {name}")
         if relative is None:
@@ -376,13 +383,12 @@ def load_defects(
         if check == "unit" and expect not in methods:
             raise CheckHarnessError(f"unit defect expects an unknown test: {name}")
         old, new, parts = entry.get("old", ""), entry.get("new", ""), entry.get("parts", [])
+        if not isinstance(parts, list) or not all(isinstance(part, str) for part in parts):
+            raise CheckHarnessError(f"seeded defect parts must be a list of strings: {name}")
         if op == "replace":
             if not isinstance(old, str) or not old or not isinstance(new, str) or parts:
                 raise CheckHarnessError(f"replace defect needs old and new: {name}")
-        elif (
-            "old" in entry or "new" in entry or not isinstance(parts, list) or not parts
-            or not all(isinstance(part, str) for part in parts) or not "".join(parts)
-        ):
+        elif "old" in entry or "new" in entry or not "".join(parts):
             raise CheckHarnessError(f"{op} defect needs parts only: {name}")
         defects.append(
             SeededDefect(name, check, expect, op, relative, old, new, tuple(parts))
@@ -417,16 +423,24 @@ def snapshot_tree(root: Path) -> dict[str, str]:
 def stage_tree(repo_root: Path, destination: Path) -> None:
     """Copy exactly the publishable candidate set and make it a git tree."""
     destination.mkdir(parents=True, exist_ok=True)
-    for relative in candidate_paths(repo_root):
+    paths = candidate_paths(repo_root)
+    for relative in paths:
         source = repo_root / relative
         if source.is_symlink() or not source.is_file():
             raise CheckHarnessError("staged files must be regular files")
         target = destination / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
+    # The index equals the source candidate set, so a tracked file that an
+    # ignore rule matches stays a candidate in the staged copy too.
+    listing = b"".join(path.as_posix().encode("utf-8") + b"\0" for path in paths)
     try:
         subprocess.run(
             ["git", "init", "-q"], cwd=destination, check=True, capture_output=True
+        )
+        subprocess.run(
+            ["git", "add", "-f", "--pathspec-from-file=-", "--pathspec-file-nul"],
+            cwd=destination, input=listing, check=True, capture_output=True,
         )
     except (OSError, subprocess.CalledProcessError) as exc:
         raise CheckHarnessError("cannot initialise the staged copy") from exc
@@ -465,14 +479,18 @@ def render_registry(defects: Sequence[SeededDefect], checks: Sequence[Check] = C
     )
 
 
+def _rules(findings: Iterable[Finding]) -> tuple[str, ...]:
+    return tuple(sorted({finding.rule for finding in findings}))
+
+
 def _changed(before: dict[str, str], after: dict[str, str]) -> tuple[str, ...]:
     return tuple(sorted(p for p in set(before) | set(after) if before.get(p) != after.get(p)))
 
 
 def _run_once(
     check: Check, staged: Path, work: Path, defect: SeededDefect | None
-) -> tuple[tuple[str, ...], tuple[str, ...], bool]:
-    """Run *check* on a fresh copy; return (rules, wrote, crashed)."""
+) -> tuple[tuple[Finding, ...], tuple[str, ...], bool]:
+    """Run *check* on a fresh copy; return (findings, wrote, crashed)."""
     tree, scratch = work / "tree", work / "scratch"
     shutil.copytree(staged, tree, symlinks=True)
     scratch.mkdir()
@@ -481,11 +499,11 @@ def _run_once(
             apply_defect(tree, defect)
         before = snapshot_tree(tree)
         try:
-            rules = tuple(sorted({finding.rule for finding in check.run(tree, scratch)}))
+            findings = tuple(sorted(set(check.run(tree, scratch))))
             crashed = False
         except Exception:  # noqa: BLE001 -- a crash is a result, never a pass
-            rules, crashed = ("check_crashed",), True
-        return rules, _changed(before, snapshot_tree(tree)), crashed
+            findings, crashed = (Finding(check.name, 0, "check_crashed"),), True
+        return findings, _changed(before, snapshot_tree(tree)), crashed
     finally:
         shutil.rmtree(work, ignore_errors=True)
 
@@ -515,11 +533,12 @@ def run_checks(
         runs = 0
         for check in selected:
             runs += 1
-            rules, wrote, _crashed = _run_once(check, staged, base / f"run{runs}", None)
-            clean.append(CheckOutcome(check.name, rules, wrote))
+            found, wrote, _crashed = _run_once(check, staged, base / f"run{runs}", None)
+            clean.append(CheckOutcome(check.name, _rules(found), wrote, found))
             for defect in (d for d in defects if d.check == check.name):
                 runs += 1
-                rules, wrote, crashed = _run_once(check, staged, base / f"run{runs}", defect)
+                found, wrote, crashed = _run_once(check, staged, base / f"run{runs}", defect)
+                rules = _rules(found)
                 if wrote:
                     status = "wrote_tree"
                 elif crashed:
@@ -531,7 +550,9 @@ def run_checks(
                 else:
                     status = "rejected"
                 outcomes.append(
-                    DefectOutcome(defect.name, defect.check, defect.expect, status, rules, wrote)
+                    DefectOutcome(
+                        defect.name, defect.check, defect.expect, status, rules, wrote, found
+                    )
                 )
     challenged = {outcome.check for outcome in outcomes}
     return CheckReport(

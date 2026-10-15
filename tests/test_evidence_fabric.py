@@ -24,7 +24,7 @@ from stonewall.frontmatter import parse_document
 from stonewall.hashing import merkle_root
 from stonewall.models import Finding
 from stonewall.retrieval import query_corpus, resolve_address, verify_citation
-from stonewall.text import FIGURE_RE, figure_in, quotation_in
+from stonewall.text import FIGURE_RE, figure_in, figure_tokens, quotation_in
 
 CORPUS_ROOT = REPO_ROOT / "examples" / "corpus"
 
@@ -109,8 +109,10 @@ class CompilerTests(unittest.TestCase):
             root = Path(raw)
             (root / "one.md").write_text(artifact("M0001", "case"), encoding="utf-8")
             (root / "two.md").write_text(artifact("M0001", "case"), encoding="utf-8")
-            with self.assertRaisesRegex(CorpusValidationError, "duplicate artifact id"):
+            with self.assertRaisesRegex(CorpusValidationError, "duplicate artifact id") as caught:
                 compile_corpus(root)
+            self.assertEqual(caught.exception.rule, "duplicate_artifact_id")
+            self.assertTrue(str(caught.exception).startswith("duplicate artifact id M0001: "))
 
     def test_rejects_missing_date(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -384,6 +386,27 @@ class VerbatimMatchingTests(unittest.TestCase):
         self.assertFalse(figure_in("13", "on March 3"))
         self.assertFalse(figure_in("3", "on March 13"))
         self.assertTrue(figure_in("5", "on March\n5."))
+
+    def test_figure_tokens_carry_sign_month_and_scale(self) -> None:
+        text = "On Mar. 3rd, March 5, 2025, x-4, -5, +6 and \u22127 cost $5 Million at 3-5."
+        self.assertEqual(
+            figure_tokens(text),
+            ("March 3", "March 5", "2025", "4", "-5", "+6", "-7", "5 million", "3-5"),
+        )
+
+    def test_signed_figures_match_only_the_same_sign(self) -> None:
+        self.assertFalse(figure_in("-5", "5"))
+        self.assertFalse(figure_in("-5", "+5"))
+        self.assertFalse(figure_in("5", "-5"))
+        self.assertTrue(figure_in("-5", "\u22125"))
+
+    def test_qualified_figures_need_the_same_qualifiers(self) -> None:
+        self.assertFalse(figure_in("April 5", "on March 5"))
+        self.assertTrue(figure_in("March 3", "on March 3rd"))
+        self.assertTrue(figure_in("March 3", "on Mar 3"))
+        self.assertFalse(figure_in("5 million", "paid $5"))
+        self.assertTrue(figure_in("5", "on March 5"))
+        self.assertTrue(figure_in("5", "paid 5 million"))
 
     def test_rule_errors_and_findings_render_without_values(self) -> None:
         self.assertEqual(str(RuleError("unknown_channel", "x")), "unknown_channel: x")

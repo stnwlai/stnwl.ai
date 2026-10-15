@@ -16,6 +16,7 @@ from typing import Any, Iterable
 from .compiler import compile_corpus
 from .errors import PublicationBoundaryError, StonewallError
 from .hashing import canonical_json_bytes, sha256_bytes
+from .layout import canonical_relative_path
 from .models import Finding
 
 
@@ -95,14 +96,8 @@ def _require_string_list(raw: dict[str, Any], key: str) -> tuple[str, ...]:
 def _relative_config_path(value: Any, *, field: str) -> PurePosixPath:
     if not isinstance(value, str):
         raise PublicationBoundaryError(f"config field {field!r} must be a string")
-    path = PurePosixPath(value)
-    if (
-        not value
-        or "\\" in value
-        or path.is_absolute()
-        or path.as_posix() != value
-        or any(part in {"", ".", ".."} for part in path.parts)
-    ):
+    path = canonical_relative_path(value)
+    if path is None:
         raise PublicationBoundaryError(f"config field {field!r} must be a canonical relative path")
     return path
 

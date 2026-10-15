@@ -97,13 +97,12 @@ def build_packet(
     if not 1 <= limit <= MAX_PACKET_LIMIT:
         raise AnswerError(f"packet limit must be 1..{MAX_PACKET_LIMIT}")
     view = channel_view(corpus, policy, channel)
-    permitted = frozenset(artifact.artifact_id for artifact in view.artifacts)
     hits = query_corpus(view, question, limit=limit)
     entries: list[PacketEntry] = []
     for rank, hit in enumerate(hits, start=1):
         artifact = view.artifact(hit.citation.artifact_id)
-        # Defense in depth: the view already excludes these records.
-        if artifact is None or hit.citation.artifact_id not in permitted:
+        # Guards retrieval that bypasses the view: every hit must be in it.
+        if artifact is None:
             raise AnswerError("packet span is outside the channel view")
         entries.append(
             PacketEntry(
