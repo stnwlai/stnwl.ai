@@ -413,15 +413,22 @@ class VerbatimMatchingTests(unittest.TestCase):
             figure_tokens("5 April, april 5, Sept. 5, 3rd of mar, MAY 1 and Marching 7"),
             ("April 5", "April 5", "September 5", "March 3", "May 1", "7"),
         )
-        for figure in ("5 April", "april 5", "Sept. 5", "April **5**", "April&nbsp;5",
-                       "April\u00a05"):
+        for figure in ("5 April", "april 5", "Sept. 5", "April **5**", "April\u00a05"):
             with self.subTest(figure=figure):
                 (token,) = figure_tokens(figure)
                 self.assertFalse(figure_in(token, "on March 5"))
-        for figure in ("5 March", "March 5th", "March _5_"):
+        for figure in ("5 March", "March 5th", "March 5TH", "March _5_"):
             with self.subTest(figure=figure):
                 (token,) = figure_tokens(figure)
-                self.assertTrue(figure_in(token, "on March&nbsp;**5**"))
+                self.assertTrue(figure_in(token, "on March\u00a0**5**"))
+        (lowercase,) = figure_tokens("april 3")
+        self.assertFalse(figure_in(lowercase, "on March 3"))
+
+    def test_compatibility_digits_fold_to_figures(self) -> None:
+        self.assertEqual(figure_tokens("all \u2079\u2079 pages, \uff11\uff12 items"),
+                         ("99", "12"))
+        self.assertTrue(figure_in("42", "all \uff14\uff12 pages"))
+        self.assertFalse(figure_in("99", "all \u2079 pages"))
 
     def test_rule_errors_and_findings_render_without_values(self) -> None:
         self.assertEqual(str(RuleError("unknown_channel", "x")), "unknown_channel: x")

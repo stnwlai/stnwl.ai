@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 from collections.abc import Iterable
 
 from .hashing import sha256_bytes
@@ -29,8 +30,8 @@ FIGURE_RE = re.compile(
     + _START + r"(?P<number>(?:[-+\u2212](?=\d))?\d+(?:[.,:/-]\d+)*[A-Za-z]*)"
     r"(?:\s+(?P<scale>(?i:thousand|million|billion|trillion))(?![0-9A-Za-z]))?"
 )
-_FIGURE_SPACE_RE = re.compile(r"&nbsp;|[\u00a0*_~]")
-_ORDINAL_RE = re.compile(r"(.*\d)(?:st|nd|rd|th)")
+_FIGURE_SPACE_RE = re.compile(r"[*_~]")
+_ORDINAL_RE = re.compile(r"(.*\d)(?i:st|nd|rd|th)")
 
 
 def tokenize(value: str) -> tuple[str, ...]:
@@ -99,8 +100,9 @@ def _figure_key(match: re.Match[str]) -> tuple[str, str, str]:
 
 
 def _figure_text(text: str) -> str:
-    """*text* with non-breaking spaces and emphasis markers read as spaces."""
-    return collapse_whitespace(_FIGURE_SPACE_RE.sub(" ", text))
+    """*text* NFKC-folded, so superscript and fullwidth digits read as digits and
+    non-breaking spaces as spaces, with emphasis markers read as spaces."""
+    return collapse_whitespace(_FIGURE_SPACE_RE.sub(" ", unicodedata.normalize("NFKC", text)))
 
 
 def figure_tokens(text: str) -> tuple[str, ...]:

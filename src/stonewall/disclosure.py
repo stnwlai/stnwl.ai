@@ -45,6 +45,7 @@ PUBLISH_CHANNEL = "publish"
 _NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 _POLICY_KEYS = frozenset({"ceilings", "designations", "version"})
 _MIN_LINE_CHARS = 20
+_CLOSING_HASHES_RE = re.compile(r"\s+#+\s*$")
 
 
 @dataclass(frozen=True, slots=True)
@@ -213,26 +214,33 @@ def view_digest(view: CompiledCorpus) -> str:
     return corpus_root_digest(view.artifacts)
 
 
-def unpublishable_lines(
-    corpus: CompiledCorpus, policy: DisclosurePolicy
+def restricted_lines(
+    corpus: CompiledCorpus, policy: DisclosurePolicy, channel: str
 ) -> tuple[tuple[str, str], ...]:
-    """Collapsed body lines of every record the publish channel may not carry.
+    """Collapsed body lines of every record *channel* may not carry, by record ID.
 
     A heading counts twice: as its collapsed line and as its text without the
-    markers. Blank lines and anything shorter than twenty characters after
-    collapsing are skipped.
+    markers or a closing '#' sequence. Blank lines and anything shorter than
+    twenty characters after collapsing are skipped.
     """
     found: list[tuple[str, str]] = []
     for artifact in corpus.artifacts:
-        if policy.permits(artifact.designation, PUBLISH_CHANNEL):
+        if policy.permits(artifact.designation, channel):
             continue
         lines = tuple(artifact.body.splitlines())
         headings = {index: title for index, _level, title in markdown_headings(lines)}
         for index, line in enumerate(lines):
             forms = [collapse_whitespace(line)]
             if index in headings:
-                forms.append(collapse_whitespace(headings[index]))
+                forms.append(collapse_whitespace(_CLOSING_HASHES_RE.sub("", headings[index])))
             for text in forms:
                 if len(text) >= _MIN_LINE_CHARS:
                     found.append((artifact.artifact_id, text))
     return tuple(found)
+
+
+def unpublishable_lines(
+    corpus: CompiledCorpus, policy: DisclosurePolicy
+) -> tuple[tuple[str, str], ...]:
+    """The restricted lines of the publish channel."""
+    return restricted_lines(corpus, policy, PUBLISH_CHANNEL)

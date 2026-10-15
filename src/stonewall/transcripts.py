@@ -165,10 +165,8 @@ def _unpublishable(repo_root: Path) -> tuple[str, ...]:
     except StonewallError as exc:
         raise TranscriptError("transcripts_unavailable") from exc
     lines = {text for _artifact_id, text in unpublishable_lines(corpus, policy)}
-    forms = {_normalized(text) for text in lines} | {
-        _normalized(json.dumps(text, ensure_ascii=False)[1:-1]) for text in lines
-    }
-    return tuple(sorted(forms))
+    escaped = {json.dumps(text, ensure_ascii=False)[1:-1] for text in lines}
+    return tuple(sorted(lines | {_normalized(text) for text in lines | escaped}))
 
 
 def _normalized(text: str) -> str:
@@ -176,7 +174,9 @@ def _normalized(text: str) -> str:
 
 
 def _carries(needles: tuple[str, ...], *texts: str) -> bool:
-    return any(needle in _normalized(text) for text in texts for needle in needles)
+    """Whether any text, read raw or with JSON escapes normalized, holds a needle."""
+    forms = [form for text in texts for form in (collapse_whitespace(text), _normalized(text))]
+    return any(needle in form for form in forms for needle in needles)
 
 
 def _read(repo_root: Path, document: PurePosixPath) -> str:

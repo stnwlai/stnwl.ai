@@ -3,7 +3,9 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -77,6 +79,18 @@ class CommandTests(unittest.TestCase):
                     code, out, err = run("transcripts", "--check", document)
                     self.assertEqual((code, out), (2, ""))
                     self.assertIn("[transcript_unsupported]", err)
+
+    def test_transcripts_document_outside_candidate_set_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            (root / ".gitignore").write_text("build/\n", encoding="utf-8")
+            (root / "build").mkdir()
+            (root / "build" / "notes.md").write_text("Notes\n", encoding="utf-8")
+            with contextlib.chdir(root):
+                code, out, err = run("transcripts", "--check", "build/notes.md")
+        self.assertEqual((code, out), (2, ""))
+        self.assertEqual(err, "stonewall: [transcript_unsupported] build/notes.md\n")
 
     def test_packet_text_carries_no_record_text(self) -> None:
         code, out, _ = run("packet", QUESTION, "--channel", "model", "--limit", "4",

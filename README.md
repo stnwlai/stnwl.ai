@@ -130,8 +130,7 @@ claim 5  12:42  ok  statement  S4
 ```
 
 Change one word inside a quotation in `examples/answers/grounded.md` and rerun
-step 4, then restore it with `git checkout -- examples/answers/grounded.md`
-before continuing.
+step 4, then undo that one-word edit before continuing.
 
 **5. Grounded is not the same as releasable.** Claim 5 rests on a confidential
 preparation outline, so the same answer may not go to the `publish` channel.
@@ -186,6 +185,8 @@ answers      answer-heading-fact              uncited_claim
 answers      answer-link-target-text          unsupported_figure
 answers      answer-speaker-lead-in           quote_wrong_speaker
 answers      answer-month-swap                unsupported_figure
+answers      answer-html-entity-quote         unsupported_markup
+answers      answer-restricted-prose          designation_exceeds_channel
 answers      record-edited-under-answer       packet_mismatch
 answers      fabricated-answer-repaired       expectation_unmet
 boundary     boundary-unapproved-path         unapproved_path
@@ -219,7 +220,7 @@ defect is rejected for its named rule. The defects include filtering after
 scoring, a set-ordered index that only cross-seed builds catch, a disabled
 quote check, a swapped speaker, an edited record under an answer, and drifted
 README output. Measured with `time` on the machine that generated these
-transcripts, `stonewall checks` finished in under 8 seconds and steps 1 to 8
+transcripts, `stonewall checks` finished in under 7 seconds and steps 1 to 8
 together in under 9 seconds.
 
 ## What each finding means
@@ -238,7 +239,8 @@ together in under 9 seconds.
 | `unsupported_figure` | A number the cited lines do not contain, including a date whose month differs. |
 | `packet_mismatch` | The record changed after the answer was written against it. |
 | `empty_answer` | An answer with nothing in it to check. |
-| `designation_exceeds_channel` | An answer that rests on material its destination may not receive. |
+| `designation_exceeds_channel` | An answer that rests on, or repeats, material its destination may not receive. |
+| `unsupported_markup` | Markup the audit does not read, which could hide words or a quotation from it. |
 
 ## Contracts
 
@@ -272,9 +274,14 @@ and compared byte for byte.
   `Sept. 5` ends a sentence after `Sept.` and the part before it is reported
   as `uncited_claim`. A mark inside an ordinary bracket also ends a sentence,
   so `[sic.]` splits one; only citation brackets and quotations hold a
-  sentence open.
-- Headings are structure unless they contain a digit or a quotation mark, in
-  which case they are audited as claims.
+  sentence open. After a closing quotation mark the sentence continues unless
+  a capital letter, a citation bracket or the paragraph end follows.
+- Headings are audited as claims, so an uncited heading fails.
+- An answer may use plain paragraphs, `-`/`*`/numbered list items at the start
+  of a line, ATX headings, `>` block quotes and citation brackets. HTML,
+  character references, images, other links, `+` bullets, nested lists and
+  lazy block-quote lines are refused as `unsupported_markup`.
+- Items in a citation bracket are separated by `,` or `;`.
 - Quotations are compared after collapsing whitespace only. Ellipses are
   allowed; bracketed alterations are not. From a transcript, a quotation must
   lie within one turn; an ellipsis cannot join two turns.
@@ -288,15 +295,26 @@ and compared byte for byte.
   such verb. If no registered alias is there and the quoted words come from a
   transcript, the quotation fails as `speaker not identified`. A quotation
   with no speech verb before it is not speaker-checked.
+- A speaker is named by a registered alias read as written. A qualifier before
+  it is not read (`opposing counsel` is read as `counsel`), and a possessive
+  before it (`the defendant's counsel`) leaves the speaker unidentified.
 - A figure is a number, optionally signed, with an optional month name before
-  or after it and an optional scale word after it. Currency symbols and units
-  are not compared. Which event a figure belongs to is not compared, so two
-  dates swapped within the cited lines still pass.
+  or after it and an optional scale word after it. Currency symbols are not
+  compared. Units written as separate words are not compared; letters attached
+  to a number (`42kg`, `650K`) are part of the figure. Which event a figure
+  belongs to is not compared, so two dates swapped within the cited lines
+  still pass.
+- A number glued to letters before it (`B13`, `April5`) is not a figure, and a
+  range such as `3-5` is one figure. Superscript and fullwidth digits read as
+  ordinary digits, and a no-break space as a space.
 - Spelled-out numbers are not figures.
 - Answers cite without pins; the declared packet digest binds them to the
   record instead.
 - Confidential-text detection in transcripts compares whole lines of 20 or
   more characters, so partial-line excerpts are not detected.
+- Answer prose is screened for whole lines of 20 or more characters copied
+  from records above the release channel; shorter or partial excerpts are not
+  detected.
 - No model is called. The answers are fixtures standing in for model output.
 - Designations here are synthetic labels on fictional records.
 

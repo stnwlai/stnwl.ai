@@ -18,6 +18,7 @@ from stonewall.disclosure import (
     channel_view,
     decide,
     load_policy,
+    restricted_lines,
     unknown_designations,
     unpublishable_lines,
     view_digest,
@@ -261,6 +262,30 @@ class ViewTests(unittest.TestCase):
         self.assertIn(("P0001", advice), reference)
         self.assertIn(("P0001", "# Client Advice on Binder Custody"), reference)
         self.assertIn(("P0001", "Client Advice on Binder Custody"), reference)
+
+    def test_heading_closing_hashes_are_stripped(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            (root / "P0001_note.md").write_text(
+                record("P0001", "privileged", "# Note\n\n## Secret custody strategy ###"),
+                encoding="utf-8",
+            )
+            lines = unpublishable_lines(compile_corpus(root), self.policy)
+        self.assertEqual(
+            lines,
+            (("P0001", "## Secret custody strategy ###"), ("P0001", "Secret custody strategy")),
+        )
+
+    def test_restricted_lines_follow_the_channel(self) -> None:
+        def records(channel: str) -> set[str]:
+            return {item for item, _text in restricted_lines(self.corpus, self.policy, channel)}
+
+        self.assertEqual(records("review"), set())
+        self.assertEqual(records("model"), {"P0001"})
+        self.assertEqual(
+            restricted_lines(self.corpus, self.policy, "publish"),
+            unpublishable_lines(self.corpus, self.policy),
+        )
 
 
 if __name__ == "__main__":

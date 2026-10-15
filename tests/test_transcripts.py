@@ -86,6 +86,11 @@ class TranscriptTests(unittest.TestCase):
         for path in ("../x", "/etc/hosts", "a//b", "./note.txt", "link.txt", "examples"):
             with self.subTest(path=path):
                 self.assert_rule("transcript_unsupported", render_command, self.root, f"cat {path}")
+        for character in ("\x00", "\x01", "\t", "\x1f", "\x7f"):
+            with self.subTest(character=repr(character)):
+                error = self.assert_rule("transcript_unsupported", publishable_file,
+                                         self.root, f"note{character}.txt")
+                self.assertEqual(error.detail, "path is not canonical")
         self.assertEqual(render_command(self.root, "cat note.txt"), "$ cat note.txt\na public note\n")
 
     def test_commands_read_only_publishable_files(self) -> None:
@@ -131,6 +136,18 @@ class TranscriptTests(unittest.TestCase):
         ):
             with self.subTest(command=command):
                 self.readme(console(command))
+                self.assertEqual(check_transcripts(self.root, README),
+                                 [Finding("README.md", 1, "transcript_unpublishable")])
+
+    def test_backslash_before_restricted_text_is_unpublishable(self) -> None:
+        line = "the memo was kept in the vault drawer overnight"
+        memo = self.root / "examples/corpus/privileged/P0002_sentinel.md"
+        template = memo.read_text(encoding="utf-8")
+        for recorded in (line, "\\" + line):
+            with self.subTest(recorded=recorded):
+                memo.write_text(template.replace(SENTINEL, recorded), encoding="utf-8")
+                (self.root / "shown.txt").write_text("\\" + line + "\n", encoding="utf-8")
+                self.readme(console("cat shown.txt"))
                 self.assertEqual(check_transcripts(self.root, README),
                                  [Finding("README.md", 1, "transcript_unpublishable")])
 

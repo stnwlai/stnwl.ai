@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import PurePosixPath
 
 CORPUS_DIR = PurePosixPath("examples/corpus")
@@ -11,11 +12,13 @@ ANSWERS_DIR = PurePosixPath("examples/answers")
 DEFECTS_FILE = PurePosixPath("examples/seeded-defects.toml")
 README_FILE = PurePosixPath("README.md")
 BOUNDARY_FILE = PurePosixPath("public-boundary.toml")
+# A backslash, NUL, any other control character, or DEL.
+_UNSAFE_RE = re.compile(r"[\\\x00-\x1f\x7f]")
 
 
 def canonical_relative_path(value: object) -> PurePosixPath | None:
     """*value* as a canonical relative POSIX path, or None when it is not one."""
-    if not isinstance(value, str) or not value or "\\" in value:
+    if not isinstance(value, str) or not value or _UNSAFE_RE.search(value):
         return None
     path = PurePosixPath(value)
     if (

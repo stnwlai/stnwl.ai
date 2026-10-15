@@ -92,6 +92,7 @@ class HarnessTests(unittest.TestCase):
         (self.repo / "ignored").mkdir()
         (self.repo / ".gitignore").write_text("ignored/\n", encoding="utf-8")
         (self.repo / "data" / "value.txt").write_text("ok\n", encoding="utf-8")
+        (self.repo / "data" / "value.txt").chmod(0o644)
         (self.repo / "ignored" / "local.txt").write_text("local\n", encoding="utf-8")
         tool = self.repo / "tool.sh"
         tool.write_text("#!/bin/sh\n", encoding="utf-8")
@@ -120,8 +121,8 @@ class HarnessTests(unittest.TestCase):
         stage_tree(self.repo, staged)
         snapshot = snapshot_tree(staged)
         self.assertEqual(sorted(snapshot), [".gitignore", "data/value.txt", "tool.sh"])
-        self.assertTrue(snapshot["tool.sh"].endswith(":x"))
-        self.assertTrue(snapshot["data/value.txt"].endswith(":-"))
+        self.assertTrue(snapshot["tool.sh"].endswith(":0755"))
+        self.assertTrue(snapshot["data/value.txt"].endswith(":0644"))
         self.assertTrue((staged / ".git").is_dir())
 
     def test_unmodified_copy_passes_on_synthetic_tree(self) -> None:
@@ -137,13 +138,14 @@ class HarnessTests(unittest.TestCase):
                 return value_check(root, scratch)
             return run
 
-        actions = {
-            "data/new.txt": lambda root: (root / "data" / "new.txt").write_text("x"),
-            "tool.sh": lambda root: (root / "tool.sh").unlink(),
-            "data/value.txt": lambda root: (root / "data" / "value.txt").chmod(0o755),
-            "empty": lambda root: (root / "empty").mkdir(),
-        }
-        for expected, action in actions.items():
+        actions = (
+            ("data/new.txt", lambda root: (root / "data" / "new.txt").write_text("x")),
+            ("tool.sh", lambda root: (root / "tool.sh").unlink()),
+            ("data/value.txt", lambda root: (root / "data" / "value.txt").chmod(0o755)),
+            ("data/value.txt", lambda root: (root / "data" / "value.txt").chmod(0o600)),
+            ("empty", lambda root: (root / "empty").mkdir()),
+        )
+        for expected, action in actions:
             with self.subTest(expected=expected):
                 report = self.run_with(Check("value", make(action)))
                 self.assertEqual(report.clean[0].wrote, (expected,))
@@ -241,7 +243,8 @@ class HarnessTests(unittest.TestCase):
 
     def test_load_defects_rejects_noncanonical_paths(self) -> None:
         checks = (Check("value", value_check),)
-        for path in ("../x", "/x", "a\\\\b", "./a", "a//b", ""):
+        for path in ("../x", "/x", "a\\\\b", "./a", "a//b", "", "a\\u0000b", "a\\tb",
+                     "a\\u001fb", "a\\u007fb"):
             entry = VALUE_DEFECT.replace('"data/value.txt"', f'"{path}"')
             with self.subTest(path=path), self.assertRaises(CheckHarnessError):
                 load_defects(self.defects_file(entry), checks=checks)

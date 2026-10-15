@@ -111,6 +111,26 @@ old = "on March 5 [S1]"
 new = "on 5 April [S1]"
 
 [[defects]]
+name = "answer-html-entity-quote"
+check = "answers"
+expect = "unsupported_markup"
+op = "replace"
+path = "examples/answers/grounded.md"
+old = "\"It left once.\""
+new = "&ldquo;It left once.&rdquo;"
+
+[[defects]]
+name = "answer-restricted-prose"
+check = "answers"
+expect = "designation_exceeds_channel"
+op = "append"
+path = "examples/answers/grounded.md"
+parts = [
+  "The working copy kept at the custodian's desk ",
+  "is the weakest link in the\ncustody chain [S1].\n",
+]
+
+[[defects]]
 name = "record-edited-under-answer"
 check = "answers"
 expect = "packet_mismatch"

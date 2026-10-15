@@ -397,7 +397,10 @@ def load_defects(
 
 
 def snapshot_tree(root: Path) -> dict[str, str]:
-    """Map each path to '<sha256>:x|-' (files) or 'dir' (empty directories)."""
+    """Map each path to '<sha256>:<mode>' (files) or 'dir' (empty directories).
+
+    The mode is every permission bit in octal, so any chmod is a write.
+    """
     snapshot: dict[str, str] = {}
     for current, dirnames, filenames in os.walk(root):
         base = Path(current)
@@ -415,8 +418,8 @@ def snapshot_tree(root: Path) -> dict[str, str]:
             if name in filenames:
                 if not stat.S_ISREG(mode):
                     raise CheckHarnessError("tree contains a non-regular file")
-                flag = "x" if mode & 0o100 else "-"
-                snapshot[path.relative_to(root).as_posix()] = f"{sha256_file(path)}:{flag}"
+                bits = f"{stat.S_IMODE(mode):04o}"
+                snapshot[path.relative_to(root).as_posix()] = f"{sha256_file(path)}:{bits}"
     return dict(sorted(snapshot.items()))
 
 
