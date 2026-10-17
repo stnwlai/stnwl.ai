@@ -140,8 +140,11 @@ def resolve_address(corpus: CompiledCorpus, address: str) -> tuple[Citation, str
     match = ADDRESS_RE.fullmatch(address)
     if match is None:
         raise CitationVerificationError("citation address is malformed")
-    start = int(match.group("start"))
-    end = int(match.group("end") or start)
+    try:
+        start = int(match.group("start"))
+        end = int(match.group("end") or start)
+    except ValueError as exc:
+        raise CitationVerificationError("citation address is malformed") from exc
     if end < start:
         raise CitationVerificationError("citation address is malformed")
     artifact = corpus.artifact(match.group("id"))

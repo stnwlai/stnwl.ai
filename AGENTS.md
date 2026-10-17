@@ -2,17 +2,21 @@
 
 ## Scope
 
-This repository is one executable engineering reference. It proves eight
-contracts and nothing else: content-addressed evidence, line-verifiable
-citations, explainable BM25 retrieval, a fail-closed publication boundary,
-grounded answers, speaker-bound quotations, designation flow control, and
-checks that can fail.
+`stnwlai/stnwl.ai` is Stonewall's public marketing repository. The product and
+real corpus belong in `stnwlai/stonewall`. Keep public copy short, factual,
+and clear about that distinction.
+
+The bundled evidence demo uses synthetic records to illustrate
+content-addressed evidence, line-verifiable citations, explainable BM25
+retrieval, a fail-closed publication boundary, grounded answers, speaker-bound
+quotations, designation flow control, and checks that can fail. Describe these
+as demo behavior, not as proof of the private product's capabilities.
 
 `README.md` is the only narrative surface. Do not add a Pages site, portal,
 archive mirror, product brief, operational runbook, integration sample, agent
 configuration, or production architecture. No model calls, no network access,
-no hosted surface. Do not describe how the private product retrieves, models,
-or stores data.
+no hosted surface. Keep private product code, corpus data, credentials, and
+implementation details out of this repository.
 
 ## Commands
 
