@@ -29,7 +29,7 @@ def _json(value: Any) -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="stonewall",
-        description="Compile, query, and audit a citation-first legal evidence corpus.",
+        description="Run the Stonewall evidence demo over synthetic legal records.",
     )
     parser.add_argument(
         "--corpus",
@@ -214,6 +214,10 @@ def main(argv: list[str] | None = None) -> int:
         return run(args)
     except StonewallError as exc:
         print(f"stonewall: {exc}", file=sys.stderr)
+        return 2
+    except OSError as exc:
+        # Do not print filesystem paths or data from the underlying exception.
+        print(f"stonewall: filesystem_error: {type(exc).__name__}", file=sys.stderr)
         return 2
 
 

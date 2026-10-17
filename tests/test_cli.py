@@ -41,6 +41,31 @@ class CommandTests(unittest.TestCase):
         self.assertIn("NOT GROUNDED", out)
         self.assertEqual(run("audit-answer", str(answers / "missing.md"))[0], 2)
 
+    def test_build_reports_conflicting_output_without_changing_it(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            output = Path(raw) / "existing-file"
+            output.write_bytes(b"keep this file")
+            for destination in (output, output / "bundle"):
+                with self.subTest(destination=destination.name):
+                    code, out, err = run("build", "--output", str(destination))
+                    self.assertEqual((code, out), (2, ""))
+                    self.assertEqual(err, "stonewall: filesystem_error: FileExistsError\n")
+                    self.assertEqual(output.read_bytes(), b"keep this file")
+                    self.assertEqual(list(Path(raw).iterdir()), [output])
+
+    def test_cite_refuses_oversized_line_numbers(self) -> None:
+        previous_limit = sys.get_int_max_str_digits()
+        try:
+            sys.set_int_max_str_digits(4300)
+            oversized = "9" * 5000
+            for address in (f"T0002:{oversized}", f"T0002:12-{oversized}"):
+                with self.subTest(position="end" if "-" in address else "start"):
+                    code, out, err = run("cite", address)
+                    self.assertEqual((code, out), (2, ""))
+                    self.assertEqual(err, "stonewall: citation address is malformed\n")
+        finally:
+            sys.set_int_max_str_digits(previous_limit)
+
     def test_cite_prints_verified_lines(self) -> None:
         code, out, _ = run("cite", "T0002:15-15")
         self.assertEqual(code, 0)

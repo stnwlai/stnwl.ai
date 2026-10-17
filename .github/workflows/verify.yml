@@ -15,8 +15,8 @@ concurrency:
 
 jobs:
   verify:
-    # Pinned rather than ubuntu-latest: the build claims byte-for-byte
-    # reproducibility, so the runner image moves only when this line does.
+    # Select an Ubuntu release; GitHub still updates the image within it.
+    # Reproducibility is checked by comparing builds across Python hash seeds.
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "stonewall-evidence"
 version = "0.2.0"
-description = "Source-bound evidence contracts for legal AI: grounded answers, confidential-safe retrieval, checks that can fail"
+description = "Stonewall's public evidence demo over synthetic legal records"
 readme = "README.md"
 requires-python = ">=3.12"
 license = "LicenseRef-Proprietary"
@@ -15,6 +15,11 @@ classifiers = [
   "Private :: Do Not Upload",
 ]
 dependencies = []
+
+[project.urls]
+Homepage = "https://stnwl.ai"
+Repository = "https://github.com/stnwlai/stnwl.ai"
+Issues = "https://github.com/stnwlai/stnwl.ai/issues"
 
 [project.scripts]
 stonewall = "stonewall.cli:main"
