@@ -1,10 +1,11 @@
-"""Grounded answers: every sentence bound to the evidence packet it cites.
+"""Check answer citations, quotations, figures, and disclosure designations.
 
 An answer declares the question, channel, limit, and digest of the evidence
 packet it was written against. The audit rebuilds that packet and checks each
-sentence against it. It proves provenance, not entailment.
+parsed claim against it. Text matches do not establish that a source supports
+a paraphrase or that a number describes the claimed event.
 
-NORMATIVE RULES
+Audit rules
 
 Front matter
 - Parsed with frontmatter.parse_document. The keys are exactly channel, limit,
@@ -117,7 +118,7 @@ Quotation check, for each balanced quotation
 - It is found in a span when text.quotation_in holds and, if the span comes
   from a transcript, holds within one turn's text. A transcript span with no
   turns, such as a heading, holds no quotation.
-- Found in a contributed span: proven, then speaker-checked.
+- Found in a contributed span: matched, then speaker-checked.
 - Else, when a contributed transcript span holds it outside any one turn:
   unsupported_quote, detail 'spans turns', or 'outside turns' when no such
   span has turns.

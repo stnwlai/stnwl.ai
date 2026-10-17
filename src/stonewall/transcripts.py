@@ -3,15 +3,13 @@
 A transcript block opens with a line that is exactly '```console', closes with
 a line that is exactly '```', and starts with '$ <command>'. Any other fence
 of three or more backticks or tildes closes only on a line of the same
-character, at least as long, and nothing else. Only a few
-read-only commands may appear, and they run in-process from the repository
-root, so the output is deterministic and independent of the hash seed. A file
-a command reads must be in the publishable candidate set.
+character, at least as long, and nothing else. Allowed commands run in-process
+from the repository root; input files must be in the publishable candidate set.
 
-Publishability is checked before drift: a block whose rendered output or
-written body contains a whole body line of a record the publish channel may
-not carry is refused and never written. Findings carry the document path, the
-block line and a rule id, never block text.
+Restricted-text screening runs before drift comparison. It checks the rendered
+output and existing block text against disclosure.unpublishable_lines, which
+excludes lines shorter than twenty characters. Matches prevent writing.
+Findings carry the document path, block line, and rule id, not block text.
 """
 
 from __future__ import annotations

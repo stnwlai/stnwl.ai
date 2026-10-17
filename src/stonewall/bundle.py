@@ -1,4 +1,4 @@
-"""Reproducible evidence bundles with a content-addressed attestation."""
+"""Build evidence bundles and record their SHA-256 digests."""
 
 from __future__ import annotations
 
@@ -109,7 +109,7 @@ def bundle_bytes(output_dir: Path) -> dict[str, bytes]:
 
 
 def verify_bundle(corpus_root: Path, output_dir: Path) -> dict[str, Any]:
-    """Rebuild independently and require byte-for-byte output parity."""
+    """Rebuild in a temporary directory and compare output bytes and digests."""
     actual = bundle_bytes(output_dir)
     with tempfile.TemporaryDirectory(prefix="stonewall-verify-") as raw:
         candidate_dir = Path(raw) / "bundle"

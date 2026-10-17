@@ -1,4 +1,4 @@
-"""Stonewall's public evidence-fabric reference implementation."""
+"""Stonewall's local evidence demo over synthetic legal records."""
 
 from .models import ArtifactRecord, Citation, EvidenceHit, Finding
 

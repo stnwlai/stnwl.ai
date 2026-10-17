@@ -1,4 +1,4 @@
-"""Deterministic hashing primitives used by every generated surface."""
+"""SHA-256 digests, canonical JSON, and binary Merkle roots."""
 
 from __future__ import annotations
 
@@ -34,8 +34,7 @@ def canonical_json_bytes(value: Any) -> bytes:
 def merkle_root(leaves: Iterable[tuple[str, str]]) -> str:
     """Build a deterministic binary Merkle root from ``(path, digest)`` leaves.
 
-    Leaf ordering is part of the contract. Odd levels duplicate the final node,
-    which makes the result stable and independently reproducible.
+    Sort leaves by path and digest. At odd-width levels, duplicate the last node.
     """
     nodes = [
         hashlib.sha256(f"leaf\0{path}\0{digest}".encode("utf-8")).digest()

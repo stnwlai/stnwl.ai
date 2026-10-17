@@ -1,4 +1,4 @@
-"""Fail-closed publication boundary for the public reference repository.
+"""Check candidate paths, content patterns, and the public-tree manifest.
 
 Reports contain rule identifiers and locations only. A matched value is never
 included in an exception, log line, JSON result, or command exit message.

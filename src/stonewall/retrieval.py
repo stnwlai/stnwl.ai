@@ -1,4 +1,4 @@
-"""Transparent BM25 retrieval that returns verifiable evidence spans."""
+"""BM25 retrieval with heading and phrase boosts and source-line citations."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ def query_corpus(
     k1: float = 1.35,
     b: float = 0.72,
 ) -> list[EvidenceHit]:
-    """Rank chunks and expose every component of the resulting score."""
+    """Rank chunks and return BM25, heading, and phrase score totals."""
     query_terms = tokenize(query)
     if not query_terms or limit <= 0 or not corpus.chunks:
         return []
@@ -103,7 +103,7 @@ def query_corpus(
 
 
 def verify_citation(corpus_root: Path, citation: Citation) -> str:
-    """Resolve a citation and prove both its artifact and line-span hashes."""
+    """Read a citation's source lines and check the artifact and span digests."""
     root = corpus_root.resolve()
     path = (root / citation.path).resolve()
     try:

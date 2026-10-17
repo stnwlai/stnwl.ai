@@ -10,17 +10,14 @@ Lead the README with the product introduction and website link. Keep the
 demo's commands, transcripts, and detailed limitations in an expandable
 section. Keep the synthetic-data scope and legal-correctness limit visible.
 
-The bundled evidence demo uses synthetic records to illustrate
-content-addressed evidence, line-verifiable citations, explainable BM25
-retrieval, a fail-closed publication boundary, grounded answers, speaker-bound
-quotations, designation flow control, and checks that can fail. Describe these
-as demo behavior, not as proof of the private product's capabilities.
+Describe only what the local demo checks against its synthetic records.
+Do not use its results to claim capabilities for the private product.
 
 `README.md` is the only narrative surface. Do not add a Pages site, portal,
 archive mirror, product brief, operational runbook, integration sample, agent
-configuration, or production architecture. No model calls, no network access,
-no hosted surface. Keep private product code, corpus data, credentials, and
-implementation details out of this repository.
+configuration, or production architecture. Keep the demo local, with no model
+calls, network access, or hosted surface. Exclude private code, corpus data,
+credentials, and implementation details.
 
 ## Commands
 
@@ -52,9 +49,8 @@ Generate transcripts with Python 3.12, the CI version.
   `packet_mismatch` by design; records above the channel's ceiling do not
   affect it. Refresh an answer's `packet:` line by hand, from
   `stonewall packet`, only when the change is intended.
-- A check or audit rule is not done until a seeded defect or a pinned test
-  proves it fails for its named rule. A check lands with its defects in the
-  same change.
+- Add each check with its seeded defects in the same change. Each check or
+  audit rule needs a seeded defect or pinned test that triggers its named rule.
 - Never delete, weaken, or retarget a seeded defect, an expected-failure
   answer, or `FIXED_DECISIONS` to make a run pass; fix the check. A defect
   that no longer applies is a fixture to update.
@@ -63,9 +59,9 @@ Generate transcripts with Python 3.12, the CI version.
 - Checks read; they never write. Build output goes to a scratch directory.
 - Tests never run `stonewall checks` on this repository; harness tests build
   synthetic trees.
-- Findings, errors, and reports carry rule ids, locations, handles,
-  designations, and speaker labels. Never a quotation, figure, source text, or
-  matched value.
+- Limit findings, errors, and reports to rule ids, locations, handles,
+  designations, and speaker labels. Exclude quotations, figures, source text,
+  and matched values.
 - README ```console blocks are generated transcripts; use ```bash for
   instructions. Counts appear only in generated command output.
 - Example data is synthetic and role-labelled: no personal, firm, tribunal, or
@@ -77,6 +73,6 @@ Generate transcripts with Python 3.12, the CI version.
   assigned a value of 12 or more characters; use names such as `ref`.
 - Never commit credentials, personal information, environment-specific paths,
   generated bundles, caches, or local reports.
-- Treat manifest drift as a review requirement, not as a formatting chore.
+- Review every manifest change.
 - Keep the remote to `main` plus branches with open pull requests; delete
   merged branches.
