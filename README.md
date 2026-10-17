@@ -1,28 +1,41 @@
 # Stonewall
 
-[![Verify](https://github.com/stnwlai/stnwl.ai/actions/workflows/verify.yml/badge.svg)](https://github.com/stnwlai/stnwl.ai/actions/workflows/verify.yml)
+Find, read, and reason from the legal record.
 
-Stonewall helps legal teams find, read, and reason from the record.
+**[Visit Stonewall](https://stnwl.ai)**
 
-This is Stonewall's public marketing repository. It includes a runnable
-example of evidence retrieval and answer auditing using synthetic legal
-records. The product and real corpus are maintained in
-[stnwlai/stonewall](https://github.com/stnwlai/stonewall).
+This is Stonewall's public marketing repository. The product and real corpus
+live in [stnwlai/stonewall](https://github.com/stnwlai/stonewall).
 
-[Website](https://stnwl.ai) · [Example records](examples/corpus) · [Source](src/stonewall)
+## Evidence demo
 
-## Try the demo
+The included demo uses fictional legal records to:
 
-Requires Python 3.12 or later and Git. No third-party Python packages,
-credentials, or services are needed to run the demo.
+- Trace citations to retrieved evidence and exact source lines.
+- Check quotations, numbers, and speaker attributions against their sources.
+- Apply disclosure rules to retrieval and answer release.
+
+The audit checks provenance. A passing result does not establish legal correctness.
+
+[Explore the records](examples/corpus) · [Read the source](src/stonewall)
+
+<details>
+<summary>Run the evidence demo</summary>
+
+Requires Python 3.12 or later and Git. The demo uses only the Python standard
+library and runs locally, without credentials, services, or model calls.
 
 ```bash
 git clone https://github.com/stnwlai/stnwl.ai.git
 cd stnwl.ai
 alias stonewall='PYTHONPATH=src python3 -m stonewall'
+stonewall audit-answer examples/answers/grounded.md
+stonewall cite T0002:12-15
 ```
 
-Audit the [deliberately incorrect answer](examples/answers/fabricated.md):
+The [grounded answer](examples/answers/grounded.md) passes its evidence audit.
+The citation command prints the source passage after verifying its digest.
+Compare that with the [deliberately incorrect answer](examples/answers/fabricated.md):
 
 ```console
 $ stonewall audit-answer examples/answers/fabricated.md
@@ -40,51 +53,28 @@ claim 8  14:16  unknown_handle  S9
 [exit 1]
 ```
 
-The failure is expected. Compare it with the [grounded answer](examples/answers/grounded.md)
-and inspect its source:
+This failure is expected. CI checks the displayed output against the command.
+
+To check whether the grounded answer can be published:
 
 ```bash
-stonewall audit-answer examples/answers/grounded.md
-stonewall cite T0002:12-15
+stonewall audit-answer examples/answers/grounded.md --release-to publish
 ```
 
-The grounded answer passes its evidence audit. Adding `--release-to publish`
-rejects release because its packet includes confidential example material.
-Release rules apply to the whole packet, even if an answer cites only public
-sources. All designations and records in this demo are fictional.
+This also exits with status 1: its packet includes confidential example
+material. Release rules apply to the whole packet, even if an answer cites
+only public sources. These designations are fictional, not legal privilege decisions.
 
-## What the example checks
+**Audit limits.** The checks do not decide whether a paraphrase fairly represents
+its source or which event a number describes. Text parsing uses a limited
+Markdown grammar. Restricted-text screening can miss shorter excerpts, partial
+lines, and paraphrases. See the [audit implementation](src/stonewall/grounding.py)
+for the matching rules.
 
-- Citations resolve to retrieved evidence and verified source lines.
-- Quotations, figures, and registered speaker attributions match their sources.
-- Record designations restrict retrieval and answer release.
-- Content hashes and reproducible builds detect changes to evidence.
-- Publication checks reject unreviewed files, and seeded defects test the checks.
+</details>
 
-The audit checks provenance. It does not establish legal correctness, decide
-whether a paraphrase fairly represents its source, or determine which event a
-number describes. Text parsing uses a limited Markdown grammar.
-Restricted-text screening can miss shorter excerpts, partial lines, and
-paraphrases. The detailed rules live with the
-[audit implementation](src/stonewall/grounding.py).
+[Contributor guide](AGENTS.md) · [Verification](https://github.com/stnwlai/stnwl.ai/actions/workflows/verify.yml) · [Evaluation license](LICENSE)
 
-The demo runs locally and makes no model calls. CI checks the generated
-console output above against the command.
-
-## Development
-
-Run the unit tests and the checks against seeded defects:
-
-```bash
-PYTHONPATH=src python3 -m unittest discover -s tests -p "test_*.py"
-PYTHONPATH=src python3 -m stonewall checks
-```
-
-See [AGENTS.md](AGENTS.md) for contributor rules, all CI commands, and the
-steps for refreshing generated transcripts and the publication manifest.
-
-## License
-
-Source-available for internal, non-production evaluation under [LICENSE](LICENSE).
-Modification, production use, redistribution, and model training or evaluation
-require a separate agreement. GitHub viewing and forking rights are unaffected.
+Source-available for internal, non-production evaluation. Modification,
+production use, redistribution, and model training or evaluation require a
+separate agreement. GitHub viewing and forking rights are unaffected.
