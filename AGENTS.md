@@ -6,6 +6,10 @@
 real corpus belong in `stnwlai/stonewall`. Keep public copy short, factual,
 and clear about that distinction.
 
+Lead the README with the product introduction and website link. Keep the
+demo's commands, transcripts, and detailed limitations in an expandable
+section. Keep the synthetic-data scope and legal-correctness limit visible.
+
 The bundled evidence demo uses synthetic records to illustrate
 content-addressed evidence, line-verifiable citations, explainable BM25
 retrieval, a fail-closed publication boundary, grounded answers, speaker-bound
