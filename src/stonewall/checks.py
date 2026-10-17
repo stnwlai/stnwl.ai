@@ -1,10 +1,9 @@
-"""Checks that can fail: every check is run against seeded defects it must reject.
+"""Run repository checks against unmodified and deliberately defective copies.
 
 Each check runs on a staged copy of exactly the publishable tree. On the
 unmodified copy it must report nothing and write nothing. Each seeded defect is
 applied to a fresh copy, and its check must reject it for the named rule.
-Checks read; they never write. Reports carry check names, defect names, rule ids
-and paths, never the content of a defect or of the tree.
+Reports carry check names, defect names, rule ids and paths, not source text.
 
 Only the bundle and unit checks start subprocesses, and they run the staged
 tree's own src, so they are the only checks a defect in src/ may target.
@@ -347,7 +346,7 @@ def load_defects(
     unit_tests: Sequence[str] = UNIT_TESTS,
     subprocess_checks: frozenset[str] = SUBPROCESS_CHECKS,
 ) -> tuple[SeededDefect, ...]:
-    """Load seeded defects and refuse any that could not prove its check."""
+    """Validate defect fields, target paths, and expected rules."""
     try:
         raw = tomllib.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError) as exc:

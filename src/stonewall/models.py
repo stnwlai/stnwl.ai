@@ -1,4 +1,4 @@
-"""Immutable contracts shared by compilation, retrieval, and the local API."""
+"""Record, citation, search-result, and finding dataclasses."""
 
 from __future__ import annotations
 

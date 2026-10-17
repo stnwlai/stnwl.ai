@@ -143,7 +143,7 @@ def _speaker(raw: object, position: int) -> Speaker:
 
 
 def load_speakers(path: Path) -> SpeakerRegistry:
-    """Load a speaker registry and fail closed on any structural drift."""
+    """Validate registry fields, labels, and alias ownership."""
     try:
         raw = tomllib.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError) as exc:

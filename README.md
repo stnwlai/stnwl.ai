@@ -15,7 +15,8 @@ The included demo uses fictional legal records to:
 - Check quotations, numbers, and speaker attributions against their sources.
 - Apply disclosure rules to retrieval and answer release.
 
-The audit checks provenance. A passing result does not establish legal correctness.
+The audit checks citations and text matches. A passing result does not establish
+legal correctness.
 
 [Explore the records](examples/corpus) · [Read the source](src/stonewall)
 
@@ -33,7 +34,7 @@ stonewall audit-answer examples/answers/grounded.md
 stonewall cite T0002:12-15
 ```
 
-The [grounded answer](examples/answers/grounded.md) passes its evidence audit.
+The [sample answer](examples/answers/grounded.md) passes the audit.
 The citation command prints the source passage after verifying its digest.
 Compare that with the [deliberately incorrect answer](examples/answers/fabricated.md):
 

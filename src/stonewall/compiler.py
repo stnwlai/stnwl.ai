@@ -1,4 +1,4 @@
-"""Strict compiler from Markdown evidence records to immutable artifacts."""
+"""Compile Markdown records into artifacts and search chunks."""
 
 from __future__ import annotations
 
@@ -125,7 +125,7 @@ def _artifact_from_document(
 
 
 def compile_corpus(root: Path) -> CompiledCorpus:
-    """Compile a corpus tree and fail closed on any structural drift."""
+    """Compile Markdown records, validating paths, metadata, and unique IDs."""
     root = root.resolve()
     if not root.is_dir():
         raise CorpusValidationError(f"corpus root does not exist: {root}")
