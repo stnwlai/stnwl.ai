@@ -2,9 +2,9 @@
 
 ## Scope
 
-This repository is one executable engineering reference. It proves eight
-contracts and nothing else: content-addressed evidence, line-verifiable
-citations, explainable BM25 retrieval, a fail-closed publication boundary,
+This repository is an executable engineering reference. It exercises eight
+bounded contracts with synthetic records: content-addressed evidence,
+line-verifiable citations, explainable BM25 retrieval, a fail-closed publication boundary,
 grounded answers, speaker-bound quotations, designation flow control, and
 checks that can fail.
 

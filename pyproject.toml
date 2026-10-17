@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "stonewall-evidence"
 version = "0.2.0"
-description = "Source-bound evidence contracts for legal AI: grounded answers, confidential-safe retrieval, checks that can fail"
+description = "Executable checks for citations, quotations, retrieval, and disclosure rules over synthetic legal records"
 readme = "README.md"
 requires-python = ">=3.12"
 license = "LicenseRef-Proprietary"

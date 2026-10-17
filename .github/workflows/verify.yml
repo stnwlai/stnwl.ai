@@ -15,8 +15,8 @@ concurrency:
 
 jobs:
   verify:
-    # Pinned rather than ubuntu-latest: the build claims byte-for-byte
-    # reproducibility, so the runner image moves only when this line does.
+    # Pin the OS family rather than following ubuntu-latest. Hosted runner
+    # images still receive updates; the two hash-seed runs compare bundle bytes.
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
