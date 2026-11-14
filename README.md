@@ -4,8 +4,8 @@ Find, read, and reason from the legal record.
 
 **[Visit Stonewall](https://stnwl.ai)**
 
-This is Stonewall's public marketing repository. The product and real corpus
-live in [stnwlai/stonewall](https://github.com/stnwlai/stonewall).
+This is Stonewall's public marketing repository. The product is private, and
+no real case record appears here.
 
 ## Evidence demo
 
@@ -13,7 +13,8 @@ The included demo uses fictional legal records to:
 
 - Trace citations to retrieved evidence and exact source lines.
 - Check quotations, numbers, and speaker attributions against their sources.
-- Apply disclosure rules to retrieval and answer release.
+- Limit what each destination may retrieve by a record's designation (public,
+  confidential, or privileged), and flag an answer that may not be released.
 
 The audit checks citations and text matches. A passing result does not establish
 legal correctness.
@@ -55,6 +56,10 @@ claim 8  14:16  unknown_handle  S9
 ```
 
 This failure is expected. CI checks the displayed output against the command.
+Each claim row gives the claim's line and column in the answer, then the rule
+it broke. The packet is the set of passages retrieved for the question; an
+answer may cite only what is in it. A channel, such as `model` or `publish`,
+is a destination with a limit on how restricted its material may be.
 
 To check whether the grounded answer can be published:
 
